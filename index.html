@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RepairLog</title>
 <style>
-  :root{--bg:#0f172a;--card:#1e293b;--card2:#273449;--text:#e2e8f0;--muted:#94a3b8;--accent:#6366f1;--border:#334155;}
+  :root{--bg:#f5f6f8;--card:#ffffff;--card2:#f1f4f8;--text:#1f2937;--muted:#6b7280;--accent:#4f46e5;--border:#e5e7eb;}
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
   body{background:var(--bg);color:var(--text);min-height:100vh;}
-  header{background:var(--card);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+  header{background:var(--card);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.04);}
   header h1{font-size:20px;display:flex;gap:4px 10px;align-items:center;flex-wrap:wrap;}
   header small{color:var(--muted);font-weight:400;font-size:12px;flex-basis:100%;}
   .rolebadge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--card2);border:1px solid var(--border);}
@@ -23,25 +23,25 @@
   .btn.small{padding:6px 12px;font-size:13px;}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:20px;}
-  .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .stat .num{font-size:30px;font-weight:800;}
   .stat .lbl{color:var(--muted);font-size:13px;margin-top:4px;}
-  .insight{background:linear-gradient(135deg,#312e81,#1e293b);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:24px;font-size:14px;line-height:1.6;}
+  .insight{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:24px;font-size:14px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
   .chartbox{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
   .chartbox h3{font-size:14px;margin-bottom:12px;color:var(--muted);}
   .chartbox canvas{max-height:260px;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .card h3{font-size:16px;}
   .row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;}
   .pill{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;}
-  .pill.proses{background:#78350f;color:#fcd34d;}
-  .pill.selesai{background:#064e3b;color:#6ee7b7;}
-  .pill.batal{background:#7f1d1d;color:#fecaca;}
-  .pill.lunas{background:#064e3b;color:#6ee7b7;}
-  .pill.dp{background:#1e3a8a;color:#bfdbfe;}
-  .pill.belum{background:#78350f;color:#fcd34d;}
+  .pill.proses{background:#fef3c7;color:#92400e;}
+  .pill.selesai{background:#d1fae5;color:#065f46;}
+  .pill.batal{background:#fee2e2;color:#991b1b;}
+  .pill.lunas{background:#d1fae5;color:#065f46;}
+  .pill.dp{background:#dbeafe;color:#1e40af;}
+  .pill.belum{background:#fef3c7;color:#92400e;}
   .chip{display:inline-block;background:var(--card2);border:1px solid var(--border);padding:2px 8px;border-radius:6px;font-size:11px;margin:2px 2px 0 0;}
   .muted{color:var(--muted);font-size:13px;}
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
@@ -80,22 +80,22 @@
   .lb .count{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;background:rgba(0,0,0,.5);padding:4px 14px;border-radius:999px;}
   .empty{text-align:center;color:var(--muted);padding:60px 20px;}
   .actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
-  .warn{background:#7f1d1d;color:#fecaca;padding:14px 18px;border-radius:10px;margin:16px 24px;display:none;}
+  .warn{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;padding:14px 18px;border-radius:10px;margin:16px 24px;display:none;}
   .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
   .photo-grid img{width:100%;border-radius:6px;border:1px solid var(--border);}
   body.is-teknisi .ownerOnly{display:none !important;}
   #publicView{display:none;max-width:760px;margin:0 auto;padding:24px;}
   .pub-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;}
   .pub-warranty{font-size:15px;padding:14px;border-radius:12px;text-align:center;margin:14px 0;line-height:1.5;}
-  .pub-warranty.ok{background:#064e3b;color:#6ee7b7;}
-  .pub-warranty.no{background:#7f1d1d;color:#fecaca;}
+  .pub-warranty.ok{background:#d1fae5;color:#065f46;}
+  .pub-warranty.no{background:#fee2e2;color:#991b1b;}
   #printArea{display:none;}
   .auth-screen{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px;z-index:500;}
   .auth-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:380px;width:100%;}
   .auth-box h1{font-size:24px;display:flex;gap:8px;align-items:center;justify-content:center;}
-  .auth-err{color:#fca5a5;font-size:13px;min-height:18px;margin:8px 0;}
+  .auth-err{color:#dc2626;font-size:13px;min-height:18px;margin:8px 0;}
   .bio-circle{width:132px;height:132px;border-radius:50%;background:var(--card2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;margin:6px auto 10px;cursor:pointer;color:var(--accent);transition:transform .15s,background .15s;}
-  .bio-circle:hover{background:#31405a;transform:scale(1.04);}
+  .bio-circle:hover{background:#eef2ff;transform:scale(1.04);}
   .bio-circle:active{transform:scale(.97);}
   .bio-circle svg{width:64px;height:64px;}
   .linklike{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;margin-top:14px;width:100%;padding:6px;}
@@ -380,7 +380,7 @@
 // ====== KONFIGURASI (WAJIB DIISI) ======
 const SUPABASE_URL  = 'https://haaeqypnnocxdecnjfev.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhYWVxeXBubm9jeGRlY25qZmV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NzU4NjcsImV4cCI6MjA5ODQ1MTg2N30.NhAevVIr2zlR6MgGE2pzh7h9w89JvS50cnhZmD26zno';
-const OWNER_EMAIL   = 'khalidstrife@gmail.com'; // email ini SELALU jadi Owner
+const OWNER_EMAIL   = ''; // (opsional) Owner asli ditentukan oleh 'owner_email' pada setup SQL
 
 let db=null;
 try{
@@ -460,17 +460,11 @@ async function fetchMe(){
   const {data:{user}}=await db.auth.getUser();
   if(!user) return;
   ME.user_id=user.id; ME.email=user.email||'';
-  const forceOwner = OWNER_EMAIL && user.email && user.email.toLowerCase()===OWNER_EMAIL.toLowerCase();
-  let role='teknisi';
-  const {data:prof}=await db.from('profiles').select('*').eq('user_id',user.id).maybeSingle();
-  if(prof){ role=prof.role||'teknisi'; ME.name=prof.name||''; }
-  else{
-    role=forceOwner?'owner':'teknisi';
-    ME.name=(user.email||'').split('@')[0];
-    await db.from('profiles').insert({user_id:user.id,email:user.email,name:ME.name,role});
-  }
-  if(forceOwner && role!=='owner'){ role='owner'; await db.from('profiles').update({role:'owner'}).eq('user_id',user.id); }
-  ME.role=role;
+  // Role & bootstrap ditentukan server (RPC ensure_profile) berdasarkan owner_email di database
+  const {data,error}=await db.rpc('ensure_profile');
+  const prof=Array.isArray(data)?data[0]:data;
+  if(!error && prof){ ME.role=prof.role||'teknisi'; ME.name=prof.name||''; }
+  else{ ME.role='teknisi'; ME.name=(user.email||'').split('@')[0]; }
 }
 
 // ====== DROPDOWN & TIKET ======
@@ -492,7 +486,7 @@ function genTicket(jobType){
 // ====== DATA ======
 async function loadAll(){
   if(!db) return;
-  const {data,error}=await db.from('reports').select('*').order('created_at',{ascending:false});
+  const {data,error}=await db.from('reports_view').select('*').order('created_at',{ascending:false});
   if(!error&&data){ reports=data; }
   render();
 }
