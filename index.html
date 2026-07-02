@@ -102,6 +102,14 @@
   .bio-circle svg{width:64px;height:64px;}
   .linklike{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;margin-top:14px;width:100%;padding:6px;}
   .set-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+  .tour-mask{position:fixed;inset:0;z-index:600;display:none;}
+  .tour-mask.open{display:block;}
+  .tour-spot{position:absolute;border-radius:10px;box-shadow:0 0 0 4px var(--accent),0 0 0 9999px rgba(0,0,0,.55);transition:all .25s ease;pointer-events:none;}
+  .tour-tip{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;width:280px;max-width:90vw;z-index:601;box-shadow:0 8px 28px rgba(0,0,0,.25);}
+  .tour-tip h4{margin-bottom:6px;font-size:15px;}
+  .tour-tip p{font-size:13px;color:var(--muted);line-height:1.5;}
+  .tour-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px;}
+  .tour-step{font-size:12px;color:var(--muted);}
   @media print{
     @page{margin:0;}
     body{background:#fff;}
@@ -124,6 +132,9 @@
     .print-ba .photo-grid img{max-height:60mm !important;width:auto !important;max-width:100% !important;object-fit:contain;border:1px solid #bbb;display:block;margin:0 auto 6px;}
     .photo-grid img{border:1px solid #bbb;}
     .print-foot{margin-top:14px;font-size:10px;color:#666;text-align:center;}
+    .receipt-note{font-size:12px;margin:12px 0;line-height:1.7;}
+    .receipt-sign{display:flex;justify-content:space-between;gap:30px;margin-top:30px;font-size:12px;text-align:center;}
+    .receipt-sign div{flex:1;}
   }
   @media(max-width:600px){
     .container{padding:16px;}
@@ -175,6 +186,7 @@
     <button class="btn small" onclick="openForm()">+ Tambah</button>
     <button class="btn small secondary" onclick="openSettings()" title="Pengaturan">⚙️</button>
     <button class="btn small secondary" id="ownerBtn" onclick="openOwner()" title="Pengaturan Owner" style="display:none">🔒</button>
+    <button class="btn small secondary" onclick="startTour()" title="Panduan">❔</button>
     <button class="btn small secondary" onclick="doLogout()">Keluar</button>
   </nav>
 </header>
@@ -210,6 +222,7 @@
         <option value="Selesai">Selesai</option>
         <option value="Batal">Batal / Gagal</option>
       </select>
+      <select id="filterBrand" onchange="render()" style="max-width:160px"><option value="">Semua Merek</option></select>
       <button class="btn" onclick="openForm()">+ Tambah Laporan</button>
     </div>
     <div class="grid" id="listGrid"></div>
@@ -232,16 +245,18 @@
       <div><label>Merek</label><select id="f_brand"></select></div>
       <div><label>Customer</label><input id="f_customer" placeholder="Nama pemilik" /></div>
     </div>
+    <div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div>
     <div class="frow">
-      <div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div>
-      <div><label>Jenis Pekerjaan</label>
-        <select id="f_jobtype"><option>Umum</option><option>Perusahaan</option></select></div>
-    </div>
-    <div class="frow3">
-      <div><label>Biaya Jasa (Rp)</label><input id="f_fee" type="number" min="0" placeholder="0" /></div>
-      <div class="ownerOnly"><label>Modal / HPP (Rp)</label><input id="f_cost" type="number" min="0" placeholder="0" /></div>
+      <div><label>Biaya Jasa (Rp)</label><input id="f_fee" type="number" min="0" placeholder="0" oninput="recomputeCost()" /></div>
       <div><label>Status Pembayaran</label>
         <select id="f_payment"><option>Belum</option><option>DP</option><option>Lunas</option></select></div>
+    </div>
+    <div class="ownerOnly">
+      <label>Rincian Modal / HPP per item <span class="muted" style="font-weight:400">(otomatis mengikuti komponen yang dicentang)</span></label>
+      <div id="costItems"></div>
+      <button type="button" class="btn small secondary" onclick="addCostItem()" style="margin-top:6px">+ Tambah baris modal</button>
+      <div class="row" style="margin-top:12px;font-weight:700"><span>Total Modal / HPP</span><span id="costTotal">Rp0</span></div>
+      <div class="row" style="font-weight:700;color:var(--accent)"><span>Perkiraan Laba (Biaya − Modal)</span><span id="labaPreview">Rp0</span></div>
     </div>
     <div class="frow">
       <div><label>Level Pekerjaan</label>
@@ -352,10 +367,7 @@
         <button class="btn small secondary" type="button" onclick="clearLogo()">Hapus</button>
       </div>
       <div class="muted" id="brLogoStatus" style="font-size:11px;margin-top:4px">Jika diisi, logo PNG dipakai menggantikan emoji.</div>
-      <div class="frow">
-        <div><label>Prefix tiket Perusahaan</label><input id="brPrefixCo" placeholder="RL" /></div>
-        <div><label>Prefix tiket Umum</label><input id="brPrefixSide" placeholder="SVC" /></div>
-      </div>
+      <div><label>Prefix No. Tiket</label><input id="brPrefixCo" placeholder="SVC" /></div>
       <button class="btn small" onclick="saveBrandFromForm()" style="margin-top:12px">💾 Simpan Branding</button>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
       <div style="font-weight:600;margin-bottom:6px">🧩 Fitur Aktif</div>
@@ -410,6 +422,14 @@
   <div class="count" id="lbCount"></div>
 </div>
 
+<div class="tour-mask" id="tourOverlay">
+<div class="tour-spot" id="tourSpot"></div>
+<div class="tour-tip" id="tourTip">
+<h4 id="tourTitle"></h4>
+<p id="tourText"></p>
+<div class="tour-actions"><span class="tour-step" id="tourStep"></span><div style="display:flex;gap:6px"><button class="btn small secondary" onclick="endTour()">Lewati</button><button class="btn small" id="tourNext" onclick="nextTour()">Lanjut →</button></div></div>
+</div>
+</div>
 <div id="printArea"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -468,7 +488,7 @@ async function saveBrand(obj){
   if(db){ await db.from('app_settings').upsert({key:'branding',value:BRAND,updated_at:new Date().toISOString()}); }
 }
 async function saveBrandFromForm(){
-  const obj={name:$('brName').value.trim()||'RepairLog',tagline:$('brTagline').value.trim(),logo:$('brLogo').value.trim()||'🛠️',color:$('brColor').value||'#6366f1',ticketCompany:($('brPrefixCo').value.trim()||'RL').toUpperCase(),ticketSide:($('brPrefixSide').value.trim()||'SVC').toUpperCase()};
+  const obj={name:$('brName').value.trim()||'RepairLog',tagline:$('brTagline').value.trim(),logo:$('brLogo').value.trim()||'🛠️',color:$('brColor').value||'#6366f1',ticketCompany:($('brPrefixCo').value.trim()||'SVC').toUpperCase()};
   await saveBrand(obj);
   alert('Branding tersimpan & disinkron ke semua perangkat.');
 }
@@ -530,15 +550,15 @@ async function fetchMe(){
 
 // ====== DROPDOWN & TIKET ======
 function buildCompChecks(){
-  $('compChecks').innerHTML=COMPONENTS.map(c=>`<label class="chk"><input type="checkbox" value="${esc(c)}"> ${esc(c)}</label>`).join('');
+  $('compChecks').innerHTML=COMPONENTS.map(c=>`<label class="chk"><input type="checkbox" value="${esc(c)}" onchange="onCompToggle()"> ${esc(c)}</label>`).join('');
 }
 function buildBrandOptions(){
   $('f_brand').innerHTML=BRANDS.map(b=>`<option>${esc(b)}</option>`).join('');
 }
 function getSelectedComps(){ return [...document.querySelectorAll('#compChecks input:checked')].map(i=>i.value); }
 function setComps(arr){ document.querySelectorAll('#compChecks input').forEach(i=>{i.checked=(arr||[]).includes(i.value);}); }
-function genTicket(jobType){
-  const p=jobType==='Perusahaan'?(BRAND.ticketCompany||'RL'):(BRAND.ticketSide||'SVC');
+function genTicket(){
+  const p=(BRAND.ticketCompany||'SVC');
   const d=new Date(); const ymd=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
   const rnd=Math.floor(Math.random()*900+100);
   return `${p}-${ymd}-${rnd}`;
@@ -627,9 +647,7 @@ function openForm(id){
   $('f_device').value=r?r.device||'':'';
   $('f_customer').value=r?r.customer||'':'';
   $('f_phone').value=r?r.customer_phone||'':'';
-  $('f_jobtype').value=r?r.job_type||'Umum':'Umum';
   $('f_fee').value=r?r.fee||0:'';
-  $('f_cost').value=r?r.cost||0:'';
   $('f_payment').value=r?r.payment_status||'Belum':'Belum';
   $('f_level').value=r?r.level||1:1;
   $('f_status').value=r?r.status||'Proses':'Proses';
@@ -641,6 +659,8 @@ function openForm(id){
   $('f_beforeNotes').value=r?r.before_notes||'':'';
   $('f_afterNotes').value=r?r.after_notes||'':'';
   setComps(r?r.components:[]);
+  costItemsState=(r&&Array.isArray(r.cost_items)&&r.cost_items.length)?r.cost_items.map(x=>({label:x.label||'',amount:Number(x.amount)||0,auto:!!x.auto})):[];
+  syncCostItemsFromComps(); renderCostItems();
   formMedia.before=r?(r.before_media||[]).map(x=>({...x})):[];
   formMedia.after=r?(r.after_media||[]).map(x=>({...x})):[];
   renderThumbs('before'); renderThumbs('after');
@@ -658,7 +678,7 @@ async function saveReport(){
     const id=$('f_id').value;
     const payload={
       device, brand:$('f_brand').value, customer:$('f_customer').value.trim(),
-      customer_phone:$('f_phone').value.trim(), job_type:$('f_jobtype').value,
+      customer_phone:$('f_phone').value.trim(),
       fee:Number($('f_fee').value)||0, payment_status:$('f_payment').value,
       level:Number($('f_level').value)||1, status:$('f_status').value,
       tasks:$('f_tasks').value.trim(), components:getSelectedComps(),
@@ -667,15 +687,18 @@ async function saveReport(){
       date_out:$('f_dateout').value||null, warranty_days:Number($('f_warranty').value)||0,
       updated_at:new Date().toISOString()
     };
-    if(isOwner()) payload.cost=Number($('f_cost').value)||0;
+    if(isOwner()){ payload.cost=recomputeCost(); payload.cost_items=costItemsState.map(it=>({label:it.label,amount:Number(it.amount)||0,auto:!!it.auto})); }
+    let newTicket=null;
     if(id){
       await db.from('reports').update(payload).eq('id',id);
     }else{
       payload.date_in=$('f_datein').value||new Date().toISOString().slice(0,10);
-      payload.ticket_no=genTicket(payload.job_type);
+      payload.ticket_no=genTicket();
+      newTicket=payload.ticket_no;
       await db.from('reports').insert(payload);
     }
     closeForm(); await loadAll();
+    if(newTicket){ const nr=reports.find(x=>x.ticket_no===newTicket); if(nr && FEATURES.print && confirm('Laporan tersimpan. Cetak Tanda Terima Servis untuk customer sekarang?')) doReceipt(nr.id); }
   }catch(e){ alert('Gagal menyimpan: '+(e.message||e)); }
   finally{ $('saveBtn').disabled=false; $('saveBtn').textContent='Simpan'; }
 }
@@ -686,6 +709,17 @@ async function delFromForm(){
   await db.from('reports').delete().eq('id',id);
   closeForm(); await loadAll();
 }
+
+// ====== RINCIAN MODAL / HPP ======
+let costItemsState=[];
+function onCompToggle(){ syncCostItemsFromComps(); renderCostItems(); }
+function syncCostItemsFromComps(){ const comps=getSelectedComps(); comps.forEach(c=>{ if(!costItemsState.some(it=>it.label===c)) costItemsState.push({label:c,amount:0,auto:true}); }); costItemsState=costItemsState.filter(it=>!it.auto||comps.includes(it.label)); }
+function addCostItem(){ costItemsState.push({label:'',amount:0,auto:false}); renderCostItems(); }
+function removeCostItem(i){ costItemsState.splice(i,1); renderCostItems(); }
+function updCostLabel(i,v){ if(costItemsState[i]) costItemsState[i].label=v; }
+function updCostAmount(i,v){ if(costItemsState[i]) costItemsState[i].amount=Number(v)||0; recomputeCost(); }
+function recomputeCost(){ const tot=costItemsState.reduce((a,it)=>a+(Number(it.amount)||0),0); const ct=$('costTotal'); if(ct) ct.textContent=rp(tot); const fee=Number($('f_fee')&&$('f_fee').value)||0; const lp=$('labaPreview'); if(lp) lp.textContent=rp(fee-tot); return tot; }
+function renderCostItems(){ const box=$('costItems'); if(!box) return; box.innerHTML=costItemsState.map((it,i)=>`<div class="row" style="gap:8px;margin-bottom:6px"><input value="${esc(it.label)}" placeholder="Nama item/part" oninput="updCostLabel(${i},this.value)" ${it.auto?'readonly':''} style="flex:2" /><input type="number" min="0" value="${it.amount||''}" placeholder="0" oninput="updCostAmount(${i},this.value)" style="flex:1" /><button type="button" class="btn small secondary" onclick="removeCostItem(${i})">×</button></div>`).join(''); recomputeCost(); }
 
 // ====== DETAIL ======
 function mediaHtml(arr,label){
@@ -701,7 +735,7 @@ function openDetail(id){
   const lv=LEVELS[r.level]||LEVELS[1];
   const money=(isOwner()&&FEATURES.profit)?`     <tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr>     <tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr>     <tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr>     <tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
   detailMedia={before:(r.before_media||[]),after:(r.after_media||[])};
-  $('detailContent').innerHTML=`     <div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div>     <p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>     <table class="ftbl" style="margin-top:12px">       <tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>       ${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}       <tr><td>Status</td><td>${esc(r.status||'-')}</td></tr>       <tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr>       <tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr>       <tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>       ${money}     </table>     ${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}     ${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}     <div class="ba">       <div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div>       <div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div>     </div>     <div class="actions" style="margin-top:16px;justify-content:flex-end">       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}       ${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Garansi</button>`:''}       ${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}       <button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button>       <button class="btn secondary small" onclick="closeDetail()">Tutup</button>     </div>`;
+  $('detailContent').innerHTML=`     <div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div>     <p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>     <table class="ftbl" style="margin-top:12px">       <tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>       ${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}       <tr><td>Status</td><td>${esc(r.status||'-')}</td></tr>       <tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr>       <tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr>       <tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>       ${money}     </table>     ${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}     ${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}     <div class="ba">       <div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div>       <div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div>     </div>     <div class="actions" style="margin-top:16px;justify-content:flex-end">       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}       ${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Garansi</button>`:''}       ${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}       ${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}       <button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button>       <button class="btn secondary small" onclick="closeDetail()">Tutup</button>     </div>`;
   openModal('detailModal');
 }
 function previewDetail(label,i){ openLightbox(detailMedia[label],i); }
@@ -751,10 +785,12 @@ function render(){
   const q=($('search')?.value||'').toLowerCase();
   const fl=$('filterLevel')?.value||'';
   const fs=$('filterStatus')?.value||'';
+  const fb=$('filterBrand')?.value||'';
   const list=reports.filter(r=>{
     const hay=`${r.device} ${r.customer} ${r.ticket_no} ${r.brand}`.toLowerCase();
     if(q&&!hay.includes(q)) return false;
     if(fl&&String(r.level)!==fl) return false;
+    if(fb&&(r.brand||'')!==fb) return false;
     if(fs){ const s=(r.status||'').toLowerCase(); if(fs==='Batal'){ if(!(s.includes('batal')||s.includes('gagal'))) return false; } else if(!s.includes(fs.toLowerCase())) return false; }
     return true;
   });
@@ -829,7 +865,7 @@ async function afterLogin(){
   await fetchMe(); await fetchConfig(); applyRole();
   await claimSession();
   showApp(); resetIdle();
-  await loadAll(); showTab('dash'); maybeWizard();
+  await loadAll(); showTab('dash'); maybeWizard(); maybeTour();
 }
 async function doLogout(){
   stopIdle();
@@ -960,6 +996,12 @@ function doPrint(id){
   $('printArea').innerHTML=`<div class="print-head">${logo}<h1>${esc(BRAND.name||'RepairLog')} — Laporan Servis</h1></div><div class="print-sub">Tiket: ${esc(r.ticket_no||'-')} &nbsp;•&nbsp; Dicetak ${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</div><table class="print-tbl"><tr><td>Device</td><td>${esc(r.device)}</td><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td><td>No. HP / WA</td><td>${esc(r.customer_phone||'-')}</td></tr><tr><td>Level</td><td>L${r.level} ${lv.name}</td><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td><td>Tgl Ambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Biaya</td><td>${rp(r.fee)}</td><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr><tr><td>Garansi</td><td colspan="3">${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr><tr><td>Komponen</td><td colspan="3">${comps}</td></tr></table><h3>Pekerjaan</h3><p>${esc(r.tasks||'-')}</p><div class="print-ba"><div><h4>BEFORE</h4><p>${esc(r.before_notes||'-')}</p><div class="photo-grid">${imgs(r.before_media)}</div></div><div><h4>AFTER</h4><p>${esc(r.after_notes||'-')}</p><div class="photo-grid">${imgs(r.after_media)}</div></div></div><div class="print-foot">Kartu garansi & bukti servis oleh ${esc(BRAND.name||'RepairLog')} — Dicetak ${new Date().toLocaleString('id-ID')}</div>`;
   window.print();
 }
+function doReceipt(id){
+  const r=reports.find(x=>x.id===id); if(!r) return;
+  const logo=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" alt="logo" />`:`<div class="logo-emoji">${esc(BRAND.logo||'🛠️')}</div>`;
+  $('printArea').innerHTML=`<div class="print-head">${logo}<h1>${esc(BRAND.name||'RepairLog')}</h1></div><div class="print-sub">${esc(BRAND.tagline||'')} — TANDA TERIMA SERVIS</div><table class="print-tbl"><tr><td>No. Tiket</td><td>${esc(r.ticket_no||'-')}</td><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td><td>No. HP / WA</td><td>${esc(r.customer_phone||'-')}</td></tr><tr><td>Device</td><td>${esc(r.device||'-')}</td><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Keluhan</td><td colspan="3">${esc(r.before_notes||'-')}</td></tr><tr><td>Kelengkapan</td><td colspan="3">${esc((r.components||[]).join(', ')||'-')}</td></tr><tr><td>Estimasi Biaya</td><td colspan="3">${r.fee?rp(r.fee):'Menyusul'}</td></tr></table><div class="receipt-note"><b>Catatan:</b><br>• Simpan struk ini sebagai bukti pengambilan barang.<br>• Barang yang tidak diambil lebih dari 30 hari di luar tanggung jawab toko.<br>• Estimasi biaya & waktu dapat berubah sesuai kondisi kerusakan.</div><div class="receipt-sign"><div>Penerima,<br><br><br>( ${esc(BRAND.name||'')} )</div><div>Customer,<br><br><br>( ${esc(r.customer||'')} )</div></div><div class="print-foot">${esc(BRAND.name||'RepairLog')} — Dicetak ${new Date().toLocaleString('id-ID')}</div>`;
+  window.print();
+}
 
 // ====== WHATSAPP, EXPORT, LUPA PASSWORD, WIZARD ======
 function waNumber(phone){ let p=(phone||'').replace(/[^0-9]/g,''); if(!p) return ''; if(p.startsWith('0')) p='62'+p.slice(1); else if(p.startsWith('8')) p='62'+p; return p; }
@@ -1001,8 +1043,27 @@ function closeAllModals(){ const was=anyModalOpen(); document.querySelectorAll('
 window.addEventListener('popstate',()=>{ if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) closeModal(bg.id); }));
 
+// ====== TUTORIAL (guided tour) ======
+const TOUR_KEY='rl_tour_done';
+const TOUR_STEPS=[{sel:'#navDash',title:'Dashboard',text:'Ringkasan jumlah servis, pendapatan, dan grafik performa toko.'},{sel:'#navList',title:'Laporan',text:'Daftar semua pekerjaan servis. Bisa dicari & difilter per level, status, dan merek.'},{sel:'nav .btn.small',title:'Tambah Servis',text:'Klik untuk mencatat servis baru: data device, customer, foto before/after, biaya, dll.'},{sel:'#ownerBtn',title:'Pengaturan Owner',text:'Khusus Owner: ubah branding toko, atur fitur, kelola pengguna, ganti PIN.'},{sel:'#navFinance',title:'Keuangan',text:'Khusus Owner: rekap pendapatan, modal, dan laba per bulan.'}];
+let tourIdx=0;
+function startTour(){ tourIdx=0; $('tourOverlay').classList.add('open'); showTourStep(); }
+function showTourStep(){
+  while(tourIdx<TOUR_STEPS.length){ const e=document.querySelector(TOUR_STEPS[tourIdx].sel); if(e&&e.offsetParent!==null) break; tourIdx++; }
+  if(tourIdx>=TOUR_STEPS.length){ endTour(); return; }
+  const s=TOUR_STEPS[tourIdx]; const el=document.querySelector(s.sel); const rc=el.getBoundingClientRect();
+  const spot=$('tourSpot'); spot.style.top=(rc.top-6)+'px'; spot.style.left=(rc.left-6)+'px'; spot.style.width=(rc.width+12)+'px'; spot.style.height=(rc.height+12)+'px';
+  $('tourTitle').textContent=s.title; $('tourText').textContent=s.text; $('tourStep').textContent=(tourIdx+1)+' / '+TOUR_STEPS.length; $('tourNext').textContent=(tourIdx>=TOUR_STEPS.length-1)?'Selesai':'Lanjut →';
+  const tip=$('tourTip'); const tw=Math.min(280,window.innerWidth-24); let tl=rc.left; if(tl+tw>window.innerWidth-12) tl=window.innerWidth-12-tw; if(tl<12) tl=12; let tt=rc.bottom+14; if(tt+170>window.innerHeight) tt=Math.max(12,rc.top-176); tip.style.left=tl+'px'; tip.style.top=tt+'px';
+}
+function nextTour(){ tourIdx++; showTourStep(); }
+function endTour(){ $('tourOverlay').classList.remove('open'); try{ localStorage.setItem(TOUR_KEY,'1'); }catch(e){} }
+function maybeTour(){ try{ if(localStorage.getItem(TOUR_KEY)) return; }catch(e){} setTimeout(()=>{ if(!anyModalOpen()) startTour(); },700); }
+function buildBrandFilter(){ const el=$('filterBrand'); if(el) el.innerHTML='<option value="">Semua Merek</option>'+BRANDS.map(b=>`<option>${esc(b)}</option>`).join(''); }
+window.addEventListener('resize',()=>{ if($('tourOverlay')&&$('tourOverlay').classList.contains('open')) showTourStep(); });
+
 // ====== BOOT ======
-buildCompChecks(); applyBrand(); applyFeatures();
+buildCompChecks(); buildBrandFilter(); applyBrand(); applyFeatures();
 async function boot(){
   await fetchConfig();
   if(handleRoute()) return;
