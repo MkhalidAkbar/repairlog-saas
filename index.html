@@ -309,7 +309,7 @@
     <div class="actions" style="margin-top:18px">
       <button class="btn danger ownerOnly" id="delBtn" onclick="delFromForm()" style="display:none">🗑️ Hapus</button>
       <div style="display:flex;gap:8px;margin-left:auto">
-        <button class="btn secondary" onclick="closeForm()">Batal</button>
+        <button class="btn secondary" onclick="requestCloseModal('formModal')">Batal</button>
         <button class="btn" id="saveBtn" onclick="saveReport()">Simpan</button>
       </div>
     </div>
@@ -411,6 +411,8 @@
     </div>
   </div>
 </div>
+
+<div class="modal-bg" id="miniModal" style="z-index:150"><div class="modal" style="max-width:360px"><h2 id="miniTitle" style="font-size:18px"></h2><p class="muted" id="miniMsg" style="margin:10px 0 4px;font-size:14px;line-height:1.5"></p><div class="actions" id="miniActions" style="justify-content:flex-end;margin-top:20px"></div></div></div>
 
 <div id="publicView"></div>
 
@@ -665,6 +667,7 @@ function openForm(id){
   formMedia.after=r?(r.after_media||[]).map(x=>({...x})):[];
   renderThumbs('before'); renderThumbs('after');
   $('delBtn').style.display=(r&&isOwner())?'':'none';
+  formDirty=false;
   openModal('formModal');
 }
 function closeForm(){ closeModal('formModal'); }
@@ -698,7 +701,7 @@ async function saveReport(){
       await db.from('reports').insert(payload);
     }
     closeForm(); await loadAll();
-    if(newTicket){ const nr=reports.find(x=>x.ticket_no===newTicket); if(nr && FEATURES.print && confirm('Laporan tersimpan. Cetak Tanda Terima Servis untuk customer sekarang?')) doReceipt(nr.id); }
+    if(newTicket){ const nr=reports.find(x=>x.ticket_no===newTicket); if(nr && FEATURES.print){ showMini('Laporan tersimpan ✅','Cetak Tanda Terima Servis untuk customer sekarang?',[{label:'Nanti',cls:'secondary',fn:null},{label:'🧾 Cetak',fn:()=>doReceipt(nr.id)}]); } }
   }catch(e){ alert('Gagal menyimpan: '+(e.message||e)); }
   finally{ $('saveBtn').disabled=false; $('saveBtn').textContent='Simpan'; }
 }
@@ -981,9 +984,10 @@ async function renderPublic(id){
   let r=null; if(db){ const {data}=await db.from('reports_public').select('*').eq('id',id).maybeSingle(); r=data; }
   if(!r){ pv.innerHTML='<div class="pub-card"><h2>Data tidak ditemukan</h2><p class="muted">Link garansi tidak valid.</p></div>'; return; }
   const lv=LEVELS[r.level]||LEVELS[1]; const w=warrantyStatus(r);
-  const wHtml=r.warranty_days?(w.active?`<div class="pub-warranty ok">✅ Garansi AKTIF — sisa ${w.daysLeft} hari</div>`:`<div class="pub-warranty no">❌ Garansi sudah berakhir</div>`):`<div class="pub-warranty no">Tanpa garansi</div>`;
+  const wend=w.end?fmtDate(w.end):'-';
+  const wHtml=r.warranty_days?(w.active?`<div class="pub-warranty ok">✅ Garansi AKTIF — sisa <b>${w.daysLeft} hari</b><br>Berlaku sampai <b>${wend}</b></div>`:`<div class="pub-warranty no">❌ Garansi sudah berakhir${w.end?' ('+wend+')':''}</div>`):`<div class="pub-warranty no">Tanpa garansi</div>`;
   const bd=BRAND;
-  pv.innerHTML=`<div class="pub-card"><div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">${bd.logoUrl?`<img src="${esc(bd.logoUrl)}" alt="logo" style="height:48px;width:48px;object-fit:contain" />`:esc(bd.logo||'🛠️')}</div><h1>${esc(bd.name||'RepairLog')}</h1><p class="muted">${esc(bd.tagline||'')}</p></div><div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>${wHtml}<table class="ftbl"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr><tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'-'}</td></tr></table>${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><p class="muted" style="text-align:center;margin-top:16px;font-size:12px">Dokumentasi servis oleh ${esc(bd.name||'RepairLog')}</p></div>`;
+  pv.innerHTML=`<div class="pub-card"><div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">${bd.logoUrl?`<img src="${esc(bd.logoUrl)}" alt="logo" style="height:48px;width:48px;object-fit:contain" />`:esc(bd.logo||'🛠️')}</div><h1>${esc(bd.name||'RepairLog')}</h1><p class="muted">${esc(bd.tagline||'')}</p></div><div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">No. Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>${wHtml}<table class="ftbl"><tr><td>Device</td><td>${esc(r.device||'-')}</td></tr><tr><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr><tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Lama Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr></table>${(r.components||[]).length?`<div style="margin-top:10px"><div class="muted" style="margin-bottom:4px">Komponen / bagian yang dikerjakan:</div>${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Sebelum</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ Sesudah</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="insight" style="margin-top:16px"><b>ℹ️ Info garansi untuk customer</b><br>• Simpan halaman ini sebagai bukti servis & garansi.<br>• Garansi berlaku untuk perbaikan yang sama selama masa garansi di atas.<br>• Garansi hangus bila segel rusak, terkena cairan, atau ada kerusakan fisik baru akibat pemakaian.<br>• Tunjukkan halaman ini saat klaim garansi.</div><p class="muted" style="text-align:center;margin-top:16px;font-size:12px">Dokumentasi servis oleh ${esc(bd.name||'RepairLog')}</p></div>`;
 }
 
 // ====== CETAK / PDF ======
@@ -1040,8 +1044,16 @@ function anyModalOpen(){ return !!document.querySelector('.modal-bg.open'); }
 function openModal(id){ document.querySelectorAll('.modal-bg.open').forEach(m=>{ if(m.id!==id) m.classList.remove('open'); }); const el=document.getElementById(id); if(el) el.classList.add('open'); if(!_modalHist){ try{ history.pushState({rlModal:1},''); }catch(e){} _modalHist=true; } }
 function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); if(_modalHist && !anyModalOpen()){ _modalHist=false; try{ history.back(); }catch(e){} } }
 function closeAllModals(){ const was=anyModalOpen(); document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); if(was && _modalHist){ _modalHist=false; try{ history.back(); }catch(e){} } }
-window.addEventListener('popstate',()=>{ if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
-document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) closeModal(bg.id); }));
+window.addEventListener('popstate',()=>{ if($('formModal').classList.contains('open') && formDirty){ try{ history.pushState({rlModal:1},''); }catch(e){} requestCloseModal('formModal'); return; } if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) requestCloseModal(bg.id); }));
+
+// ====== GUARD PERUBAHAN BELUM DISIMPAN + MINI MODAL ======
+let formDirty=false;
+document.getElementById('formModal').addEventListener('input',()=>{ if($('formModal').classList.contains('open')) formDirty=true; });
+document.getElementById('formModal').addEventListener('change',()=>{ if($('formModal').classList.contains('open')) formDirty=true; });
+function showMini(title,msg,buttons){ $('miniTitle').textContent=title||''; $('miniMsg').textContent=msg||''; const box=$('miniActions'); box.innerHTML=''; (buttons||[]).forEach(b=>{ const btn=document.createElement('button'); btn.className='btn small'+(b.cls?' '+b.cls:''); btn.textContent=b.label; btn.onclick=()=>{ hideMini(); if(typeof b.fn==='function') b.fn(); }; box.appendChild(btn); }); $('miniModal').classList.add('open'); }
+function hideMini(){ $('miniModal').classList.remove('open'); }
+function requestCloseModal(id){ if(id==='miniModal'){ hideMini(); return; } if(id==='formModal' && formDirty){ showMini('Perubahan belum disimpan','Ada perubahan yang belum disimpan. Simpan dulu atau buang perubahan?',[{label:'Batal',cls:'secondary',fn:null},{label:'Buang',cls:'danger',fn:()=>{ formDirty=false; closeModal('formModal'); }},{label:'💾 Simpan',fn:()=>saveReport()}]); return; } closeModal(id); }
 
 // ====== TUTORIAL (guided tour) ======
 const TOUR_KEY='rl_tour_done';
