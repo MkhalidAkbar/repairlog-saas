@@ -154,6 +154,7 @@
       <button class="btn" id="authBtn" onclick="doLogin()" style="width:100%;margin-top:14px">Masuk</button>
     </div>
     <button class="linklike" id="pwToggle" onclick="togglePwForm()">Masuk dengan email & password</button>
+    <button class="linklike" id="forgotBtn" onclick="forgotPw()" style="display:none;margin-top:4px">Lupa password?</button>
   </div>
 </div>
 <header>
@@ -176,6 +177,7 @@
   <div id="tab-dash">
     <div class="stat-grid" id="statGrid"></div>
     <div class="insight" id="insight"></div>
+    <div id="warrantyAlert"></div>
     <div class="charts" id="chartsWrap">
       <div class="chartbox"><h3>📊 Pengerjaan 14 Hari Terakhir</h3><canvas id="chartDay"></canvas></div>
       <div class="chartbox"><h3>🍩 Distribusi per Level</h3><canvas id="chartLevel"></canvas></div>
@@ -349,6 +351,10 @@
       <div class="muted" style="font-size:12px">Buat akun teknisi di Supabase → Authentication → Add user. Setelah login pertama, akun muncul di sini.</div>
       <div id="userList" style="margin-top:10px">Memuat...</div>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
+      <div style="font-weight:600;margin-bottom:4px">💾 Data</div>
+      <div class="muted" style="font-size:12px">Unduh semua laporan sebagai CSV (bisa dibuka di Excel).</div>
+      <button class="btn small secondary" onclick="exportCsv()" style="margin-top:10px">⬇️ Export CSV</button>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
       <div style="font-weight:600;margin-bottom:4px">🔑 Ubah PIN Owner</div>
       <div class="frow">
         <div><label>PIN baru</label><input id="newPin" type="password" inputmode="numeric" placeholder="min 4 digit" /></div>
@@ -358,6 +364,23 @@
       <div class="actions" style="justify-content:flex-end;margin-top:18px">
         <button class="btn secondary small" onclick="closeOwner()">Tutup</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="wizardModal">
+  <div class="modal" style="max-width:460px">
+    <h2>👋 Selamat datang!</h2>
+    <p class="muted" style="margin-bottom:6px">Atur identitas toko dulu (bisa diubah lagi nanti di menu 🔒).</p>
+    <label>Nama toko</label>
+    <input id="wzName" placeholder="cth: Service Laptop Jaya" />
+    <div class="frow">
+      <div><label>Logo (emoji)</label><input id="wzLogo" maxlength="4" placeholder="🛠️" /></div>
+      <div><label>Warna aksen</label><input id="wzColor" type="color" value="#4f46e5" style="height:42px;padding:4px" /></div>
+    </div>
+    <div class="actions" style="justify-content:flex-end;margin-top:16px">
+      <button class="btn secondary small" onclick="closeWizard()">Nanti saja</button>
+      <button class="btn small" onclick="saveWizard()">Simpan & Mulai</button>
     </div>
   </div>
 </div>
@@ -376,6 +399,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
 <script>
 // ====== KONFIGURASI (WAJIB DIISI) ======
 const SUPABASE_URL  = 'https://haaeqypnnocxdecnjfev.supabase.co';
@@ -389,6 +413,7 @@ try{
   }
 }catch(e){}
 if(!db){ document.getElementById('configWarn').style.display='block'; }
+if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') setNewPassword(); }); }
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
@@ -640,7 +665,7 @@ function openDetail(id){
   const lv=LEVELS[r.level]||LEVELS[1];
   const money=(isOwner()&&FEATURES.profit)?`     <tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr>     <tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr>     <tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr>     <tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
   detailMedia={before:(r.before_media||[]),after:(r.after_media||[])};
-  $('detailContent').innerHTML=`     <div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div>     <p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>     <table class="ftbl" style="margin-top:12px">       <tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>       ${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}       <tr><td>Status</td><td>${esc(r.status||'-')}</td></tr>       <tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr>       <tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr>       <tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>       ${money}     </table>     ${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}     ${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}     <div class="ba">       <div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div>       <div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div>     </div>     <div class="actions" style="margin-top:16px;justify-content:flex-end">       ${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}')">🔗 Link Garansi</button>`:''}       ${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}       <button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button>       <button class="btn secondary small" onclick="closeDetail()">Tutup</button>     </div>`;
+  $('detailContent').innerHTML=`     <div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div>     <p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>     <table class="ftbl" style="margin-top:12px">       <tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>       ${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}       <tr><td>Status</td><td>${esc(r.status||'-')}</td></tr>       <tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr>       <tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr>       <tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>       ${money}     </table>     ${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}     ${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}     <div class="ba">       <div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div>       <div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div>     </div>     <div class="actions" style="margin-top:16px;justify-content:flex-end">       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}       ${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}')">🔗 Link Garansi</button>`:''}       ${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}       <button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button>       <button class="btn secondary small" onclick="closeDetail()">Tutup</button>     </div>`;
   $('detailModal').classList.add('open');
 }
 function previewDetail(label,i){ openLightbox(detailMedia[label],i); }
@@ -683,8 +708,7 @@ function card(r){
   const firstImg=(r.after_media||[]).concat(r.before_media||[]).find(m=>m.type==='image');
   const thumb=firstImg?`<img src="${firstImg.url||firstImg.data}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" />`:'';
   return `<div class="card">     ${thumb}     <div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div>     <div class="muted">${esc(r.brand||'-')} • ${esc(r.customer||'-')}</div>     <div class="row"><span class="pill ${stClass}">${esc(r.status||'Proses')}</span>${(isOwner()&&FEATURES.profit)?`<span>${rp(r.fee)}</span>`:''}</div>     <div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no||'-')} • ${fmtDate(r.date_in)}</div>     <div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div>   </div>`;
-}
-let charts={};
+}let charts={};
 // ====== RENDER LIST & DASHBOARD ======
 function render(){
   const q=($('search')?.value||'').toLowerCase();
@@ -717,6 +741,8 @@ function renderDash(){
     if(!total){ ins.innerHTML='Belum ada data. Tambahkan laporan pertamamu untuk melihat statistik.'; }
     else{ const lc={1:0,2:0,3:0,4:0}; reports.forEach(r=>lc[r.level]=(lc[r.level]||0)+1); const top=Object.keys(lc).sort((a,b)=>lc[b]-lc[a])[0]; ins.innerHTML=`💡 Total <b>${total}</b> pekerjaan, <b>${selesai}</b> selesai. Paling banyak <b>Level ${top}</b> (${LEVELS[top].name}).`; }
   }
+  const wal=$('warrantyAlert');
+  if(wal){ const soon=reports.filter(r=>{const w=warrantyStatus(r); return w.active && w.daysLeft<=7;}).sort((a,b)=>warrantyStatus(a).daysLeft-warrantyStatus(b).daysLeft); wal.innerHTML=soon.length?`<div class="insight" style="background:#fff7ed;border-color:#fed7aa">⏰ <b>${soon.length}</b> garansi akan berakhir dalam ≤7 hari: `+soon.map(r=>`<span class="chip" style="cursor:pointer" onclick="openDetail('${r.id}')">${esc(r.device)} — sisa ${warrantyStatus(r).daysLeft}h</span>`).join(' ')+`</div>`:''; }
   if(FEATURES.dashboard&&FEATURES.charts) renderCharts();
 }
 function renderCharts(){
@@ -748,8 +774,8 @@ let authReady=false, lastCred=null, sessChannel=null, idleTimer=null, currentSid
 const IDLE_LIMIT_MS=30*60*1000;
 function showAuth(show){ $('authScreen').style.display=show?'flex':'none'; }
 function showApp(){ showAuth(false); }
-function togglePwFormForce(){ $('pwForm').style.display='block'; $('pwToggle').style.display='none'; }
-function togglePwForm(){ const f=$('pwForm'); const show=f.style.display==='none'; f.style.display=show?'block':'none'; $('pwToggle').style.display=show?'none':'block'; }
+function togglePwFormForce(){ $('pwForm').style.display='block'; $('pwToggle').style.display='none'; $('forgotBtn').style.display='block'; }
+function togglePwForm(){ const f=$('pwForm'); const show=f.style.display==='none'; f.style.display=show?'block':'none'; $('pwToggle').style.display=show?'none':'block'; $('forgotBtn').style.display=show?'block':'none'; }
 async function doLogin(){
   const email=$('authEmail').value.trim(), pass=$('authPass').value;
   if(!email||!pass){ $('authError').textContent='Email & password wajib diisi.'; return; }
@@ -766,7 +792,7 @@ async function afterLogin(){
   await fetchMe(); await fetchConfig(); applyRole();
   await claimSession();
   showApp(); resetIdle();
-  await loadAll(); showTab('dash');
+  await loadAll(); showTab('dash'); maybeWizard();
 }
 async function doLogout(){
   stopIdle();
@@ -785,7 +811,7 @@ async function claimSession(){
 }
 function resetIdle(){ if(idleTimer) clearTimeout(idleTimer); idleTimer=setTimeout(lockApp,IDLE_LIMIT_MS); }
 function stopIdle(){ if(idleTimer) clearTimeout(idleTimer); idleTimer=null; }
-function lockApp(){ stopIdle(); showAuth(true); if(bioEnabled()){ $('pwForm').style.display='none'; $('pwToggle').style.display='block'; $('authSub').textContent='Terkunci — tap sidik jari untuk lanjut'; } else { $('authSub').textContent='Terkunci — masuk lagi'; togglePwFormForce(); } }
+function lockApp(){ stopIdle(); showAuth(true); if(bioEnabled()){ $('pwForm').style.display='none'; $('pwToggle').style.display='block'; $('forgotBtn').style.display='none'; $('authSub').textContent='Terkunci — tap sidik jari untuk lanjut'; } else { $('authSub').textContent='Terkunci — masuk lagi'; togglePwFormForce(); } }
 ['click','keydown','mousemove','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{ if(authReady&&$('authScreen').style.display!=='flex') resetIdle(); },{passive:true}));
 
 // ====== BIOMETRIK (WebAuthn) ======
@@ -894,6 +920,37 @@ function doPrint(id){
   $('printArea').innerHTML=`<h1>${esc(BRAND.name||'RepairLog')} — Laporan Servis</h1><div class="print-meta"><span>Tiket: ${esc(r.ticket_no||'-')}</span><span>${fmtDate(r.date_in)}</span></div><table class="print-tbl"><tr><td>Device</td><td>${esc(r.device)} (${esc(r.brand||'-')})</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr><tr><td>Level</td><td>L${r.level} ${lv.name}</td></tr><tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'-'}</td></tr>${money}</table><p><b>Pekerjaan:</b> ${esc(r.tasks||'-')}</p><div class="print-ba"><div><h4>Before</h4><div class="photo-grid">${imgs(r.before_media)}</div></div><div><h4>After</h4><div class="photo-grid">${imgs(r.after_media)}</div></div></div><div class="print-foot">Dicetak ${new Date().toLocaleString('id-ID')} — ${esc(BRAND.name||'RepairLog')}</div>`;
   window.print();
 }
+
+// ====== WHATSAPP, EXPORT, LUPA PASSWORD, WIZARD ======
+function waNumber(phone){ let p=(phone||'').replace(/[^0-9]/g,''); if(!p) return ''; if(p.startsWith('0')) p='62'+p.slice(1); else if(p.startsWith('8')) p='62'+p; return p; }
+function waChat(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ alert('Nomor WhatsApp customer belum diisi.'); return; } window.open('https://wa.me/'+n,'_blank'); }
+function waSend(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ alert('Nomor WhatsApp customer belum diisi.'); return; } const link=location.origin+location.pathname+'#/g/'+r.id; const msg='Halo '+(r.customer||'')+', berikut kartu garansi servis '+r.device+' di '+(BRAND.name||'RepairLog')+':\n'+link; window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank'); }
+function csvCell(v){ v=(v==null?'':String(v)); return '"'+v.replace(/"/g,'""')+'"'; }
+function exportCsv(){
+  if(!isOwner()){ alert('Hanya Owner.'); return; }
+  const head=['Tiket','Masuk','Diambil','Device','Merek','Customer','WhatsApp','Level','Status','Biaya','Modal','Laba','Pembayaran','Garansi(hari)','Pekerjaan'];
+  const lines=[head.map(csvCell).join(',')];
+  reports.forEach(r=>{ const laba=(Number(r.fee)||0)-(Number(r.cost)||0); lines.push([r.ticket_no,(r.date_in||'').slice(0,10),(r.date_out||'').slice(0,10),r.device,r.brand,r.customer,r.customer_phone,'L'+r.level,r.status,Number(r.fee)||0,Number(r.cost)||0,laba,r.payment_status,r.warranty_days||0,(r.tasks||'').replace(/\n/g,' ')].map(csvCell).join(',')); });
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='laporan-servis-'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+async function forgotPw(){
+  const email=($('authEmail').value||'').trim();
+  if(!email){ $('authError').textContent='Isi email dulu, lalu klik "Lupa password?".'; return; }
+  if(!db){ $('authError').textContent='Supabase belum dikonfigurasi.'; return; }
+  const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  $('authError').textContent = error? ('Gagal: '+error.message) : ('Link reset dikirim ke '+email+'. Cek email (termasuk folder spam).');
+}
+async function setNewPassword(){
+  const p=prompt('Setel password baru (minimal 6 karakter):');
+  if(!p) return;
+  if(p.length<6){ alert('Password minimal 6 karakter.'); return; }
+  const {error}=await db.auth.updateUser({password:p});
+  alert(error? ('Gagal: '+error.message) : 'Password berhasil diperbarui. Silakan login dengan password baru.');
+}
+function maybeWizard(){ if(isOwner() && (!BRAND.name || BRAND.name==='RepairLog')){ $('wzName').value=''; $('wzLogo').value=''; $('wzColor').value=BRAND.color||'#4f46e5'; $('wizardModal').classList.add('open'); } }
+function closeWizard(){ $('wizardModal').classList.remove('open'); }
+async function saveWizard(){ const name=$('wzName').value.trim(); if(!name){ alert('Isi nama toko dulu, atau klik "Nanti saja".'); return; } await saveBrand({name, logo:$('wzLogo').value.trim()||'🛠️', color:$('wzColor').value||'#4f46e5'}); closeWizard(); }
 
 // ====== BOOT ======
 buildCompChecks(); applyBrand(); applyFeatures();
