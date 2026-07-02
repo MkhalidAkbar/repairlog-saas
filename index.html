@@ -18,7 +18,7 @@
   .container{max-width:1100px;margin:0 auto;padding:24px;}
   .btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
   .btn:disabled{opacity:.6;cursor:not-allowed;}
-  .btn.secondary{background:var(--card2);}
+  .btn.secondary{background:var(--card2);color:var(--text);border:1px solid var(--border);}
   .btn.danger{background:#dc2626;}
   .btn.small{padding:6px 12px;font-size:13px;}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
@@ -337,6 +337,13 @@
         <div><label>Logo (emoji)</label><input id="brLogo" maxlength="4" placeholder="emoji" /></div>
         <div><label>Warna aksen</label><input id="brColor" type="color" style="height:42px;padding:4px" /></div>
       </div>
+      <label>Logo PNG (opsional — untuk logo custom toko)</label>
+      <div class="row" style="gap:10px;align-items:center">
+        <div id="brLogoPreview" style="width:44px;height:44px;flex:none;border-radius:8px;border:1px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:22px"></div>
+        <input type="file" id="brLogoFile" accept="image/png,image/jpeg,image/webp" onchange="uploadLogo(this)" style="flex:1" />
+        <button class="btn small secondary" type="button" onclick="clearLogo()">Hapus</button>
+      </div>
+      <div class="muted" id="brLogoStatus" style="font-size:11px;margin-top:4px">Jika diisi, logo PNG dipakai menggantikan emoji.</div>
       <div class="frow">
         <div><label>Prefix tiket Perusahaan</label><input id="brPrefixCo" placeholder="RL" /></div>
         <div><label>Prefix tiket Umum</label><input id="brPrefixSide" placeholder="SVC" /></div>
@@ -399,7 +406,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-
 <script>
 // ====== KONFIGURASI (WAJIB DIISI) ======
 const SUPABASE_URL  = 'https://haaeqypnnocxdecnjfev.supabase.co';
@@ -421,7 +427,7 @@ const COMPONENTS=['Kipas/Cooling','Thermal Paste','RAM','SSD/HDD','Baterai','Key
 const LEVELS={1:{name:'Ringan',color:'#22c55e'},2:{name:'Sedang',color:'#3b82f6'},3:{name:'Berat',color:'#f59e0b'},4:{name:'Sangat Berat',color:'#ef4444'}};
 const IMG_MAX_DIM=1600, IMG_QUALITY=0.7, VIDEO_MAX_MB=50;
 
-const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'🛠️',color:'#6366f1',ticketCompany:'RL',ticketSide:'SVC'};
+const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'🛠️',logoUrl:'',color:'#6366f1',ticketCompany:'RL',ticketSide:'SVC'};
 let BRAND={...BRAND_DEFAULT};
 const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true};
 let FEATURES={...FEATURES_DEFAULT};
@@ -442,10 +448,12 @@ const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','
 const fmtDate=d=>d?new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'-';
 
 // ====== BRANDING ======
+function brandLogoImg(px){ return BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" alt="logo" style="height:${px}px;width:${px}px;object-fit:contain;border-radius:6px;vertical-align:middle" />`:''; }
 function applyBrand(){
   document.documentElement.style.setProperty('--accent',BRAND.color||'#6366f1');
   document.title=BRAND.name||'RepairLog';
-  $('brandTitle').innerHTML=`${esc(BRAND.logo||'🛠️')} ${esc(BRAND.name||'RepairLog')} <small>${esc(BRAND.tagline||'')}</small>`;
+  const lg=BRAND.logoUrl?brandLogoImg(28):esc(BRAND.logo||'🛠️');
+  $('brandTitle').innerHTML=`${lg} ${esc(BRAND.name||'RepairLog')} <small>${esc(BRAND.tagline||'')}</small>`;
 }
 async function saveBrand(obj){
   BRAND={...BRAND,...obj}; applyBrand();
@@ -455,6 +463,26 @@ async function saveBrandFromForm(){
   const obj={name:$('brName').value.trim()||'RepairLog',tagline:$('brTagline').value.trim(),logo:$('brLogo').value.trim()||'🛠️',color:$('brColor').value||'#6366f1',ticketCompany:($('brPrefixCo').value.trim()||'RL').toUpperCase(),ticketSide:($('brPrefixSide').value.trim()||'SVC').toUpperCase()};
   await saveBrand(obj);
   alert('Branding tersimpan & disinkron ke semua perangkat.');
+}
+async function uploadLogo(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  if(!db){ alert('Supabase belum dikonfigurasi.'); return; }
+  $('brLogoStatus').textContent='Mengunggah logo...';
+  try{
+    const ext=(f.name.split('.').pop()||'png').toLowerCase();
+    const path='logo-'+Date.now()+'.'+ext;
+    const {error}=await db.storage.from('media').upload(path,f,{contentType:f.type,upsert:true});
+    if(error) throw error;
+    const {data}=db.storage.from('media').getPublicUrl(path);
+    await saveBrand({logoUrl:data.publicUrl});
+    const pv=$('brLogoPreview'); if(pv) pv.innerHTML=`<img src="${esc(data.publicUrl)}" style="width:100%;height:100%;object-fit:contain" />`;
+    $('brLogoStatus').textContent='Logo terpasang ✓ (tersinkron ke semua perangkat).';
+  }catch(e){ $('brLogoStatus').textContent='Gagal upload logo: '+(e.message||e); }
+}
+async function clearLogo(){
+  await saveBrand({logoUrl:''});
+  const pv=$('brLogoPreview'); if(pv) pv.innerHTML=esc(BRAND.logo||'🛠️');
+  $('brLogoStatus').textContent='Logo PNG dihapus — kembali pakai emoji.';
 }
 
 // ====== FITUR (feature flags) ======
@@ -609,9 +637,9 @@ function openForm(id){
   formMedia.after=r?(r.after_media||[]).map(x=>({...x})):[];
   renderThumbs('before'); renderThumbs('after');
   $('delBtn').style.display=(r&&isOwner())?'':'none';
-  $('formModal').classList.add('open');
+  openModal('formModal');
 }
-function closeForm(){ $('formModal').classList.remove('open'); }
+function closeForm(){ closeModal('formModal'); }
 async function saveReport(){
   const device=$('f_device').value.trim();
   if(!device){ alert('Nama device wajib diisi.'); return; }
@@ -666,10 +694,10 @@ function openDetail(id){
   const money=(isOwner()&&FEATURES.profit)?`     <tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr>     <tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr>     <tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr>     <tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
   detailMedia={before:(r.before_media||[]),after:(r.after_media||[])};
   $('detailContent').innerHTML=`     <div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div>     <p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>     <table class="ftbl" style="margin-top:12px">       <tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>       ${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}       <tr><td>Status</td><td>${esc(r.status||'-')}</td></tr>       <tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr>       <tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr>       <tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>       ${money}     </table>     ${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}     ${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}     <div class="ba">       <div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div>       <div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div>     </div>     <div class="actions" style="margin-top:16px;justify-content:flex-end">       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}       ${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}       ${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}')">🔗 Link Garansi</button>`:''}       ${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}       <button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button>       <button class="btn secondary small" onclick="closeDetail()">Tutup</button>     </div>`;
-  $('detailModal').classList.add('open');
+  openModal('detailModal');
 }
 function previewDetail(label,i){ openLightbox(detailMedia[label],i); }
-function closeDetail(){ $('detailModal').classList.remove('open'); }
+function closeDetail(){ closeModal('detailModal'); }
 
 // ====== LIGHTBOX ======
 function openLightbox(list,i){
@@ -708,7 +736,8 @@ function card(r){
   const firstImg=(r.after_media||[]).concat(r.before_media||[]).find(m=>m.type==='image');
   const thumb=firstImg?`<img src="${firstImg.url||firstImg.data}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" />`:'';
   return `<div class="card">     ${thumb}     <div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div>     <div class="muted">${esc(r.brand||'-')} • ${esc(r.customer||'-')}</div>     <div class="row"><span class="pill ${stClass}">${esc(r.status||'Proses')}</span>${(isOwner()&&FEATURES.profit)?`<span>${rp(r.fee)}</span>`:''}</div>     <div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no||'-')} • ${fmtDate(r.date_in)}</div>     <div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div>   </div>`;
-}let charts={};
+}
+let charts={};
 // ====== RENDER LIST & DASHBOARD ======
 function render(){
   const q=($('search')?.value||'').toLowerCase();
@@ -842,8 +871,8 @@ async function doBiometric(){
 }
 
 // ====== PENGATURAN ======
-function openSettings(){ const on=bioEnabled(); $('bioToggleBtn').textContent=on?'Nonaktifkan':'Aktifkan'; $('bioStatus').textContent=on?'Sidik jari aktif di perangkat ini.':'Masuk cukup dengan biometrik di perangkat ini.'; $('settingsModal').classList.add('open'); }
-function closeSettings(){ $('settingsModal').classList.remove('open'); }
+function openSettings(){ const on=bioEnabled(); $('bioToggleBtn').textContent=on?'Nonaktifkan':'Aktifkan'; $('bioStatus').textContent=on?'Sidik jari aktif di perangkat ini.':'Masuk cukup dengan biometrik di perangkat ini.'; openModal('settingsModal'); }
+function closeSettings(){ closeModal('settingsModal'); }
 async function toggleBiometric(){
   if(bioEnabled()){ clearBio(); alert('Biometrik dinonaktifkan.'); }
   else{ const ok=await enableBiometric(); if(ok) alert('Biometrik aktif. Lain kali cukup tap sidik jari.'); }
@@ -853,8 +882,8 @@ async function toggleBiometric(){
 // ====== OWNER (PIN + panel) ======
 async function sha256(t){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)); return bufToB64(b); }
 async function getPinHash(){ if(!db) return null; const {data}=await db.from('app_settings').select('value').eq('key','owner_pin').maybeSingle(); return data&&data.value?data.value.hash:null; }
-function openOwner(){ if(!isOwner()){ alert('Hanya Owner.'); return; } $('ownerPanel').style.display='none'; $('ownerLock').style.display='block'; $('ownerPin').value=''; $('ownerErr').textContent=''; getPinHash().then(h=>{ $('ownerLockMsg').textContent=h?'Masukkan PIN owner.':'Belum ada PIN. Buat PIN baru (min 4 digit) untuk mengunci menu ini.'; }); $('ownerModal').classList.add('open'); }
-function closeOwner(){ $('ownerModal').classList.remove('open'); }
+function openOwner(){ if(!isOwner()){ alert('Hanya Owner.'); return; } $('ownerPanel').style.display='none'; $('ownerLock').style.display='block'; $('ownerPin').value=''; $('ownerErr').textContent=''; getPinHash().then(h=>{ $('ownerLockMsg').textContent=h?'Masukkan PIN owner.':'Belum ada PIN. Buat PIN baru (min 4 digit) untuk mengunci menu ini.'; }); openModal('ownerModal'); }
+function closeOwner(){ closeModal('ownerModal'); }
 async function unlockOwner(){
   const pin=$('ownerPin').value.trim(); if(pin.length<4){ $('ownerErr').textContent='PIN minimal 4 digit.'; return; }
   const h=await getPinHash();
@@ -864,6 +893,8 @@ async function unlockOwner(){
 async function showOwnerPanel(){
   $('ownerLock').style.display='none'; $('ownerPanel').style.display='block';
   $('brName').value=BRAND.name||''; $('brTagline').value=BRAND.tagline||''; $('brLogo').value=BRAND.logo||''; $('brColor').value=BRAND.color||'#6366f1'; $('brPrefixCo').value=BRAND.ticketCompany||''; $('brPrefixSide').value=BRAND.ticketSide||'';
+  const _lp=$('brLogoPreview'); if(_lp) _lp.innerHTML=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" style="width:100%;height:100%;object-fit:contain" />`:esc(BRAND.logo||'🛠️');
+  const _ls=$('brLogoStatus'); if(_ls) _ls.textContent=BRAND.logoUrl?'Logo PNG aktif.':'Jika diisi, logo PNG dipakai menggantikan emoji.';
   buildFeatChecks(); loadUsers();
 }
 async function changePin(){
@@ -908,7 +939,7 @@ async function renderPublic(id){
   const lv=LEVELS[r.level]||LEVELS[1]; const w=warrantyStatus(r);
   const wHtml=r.warranty_days?(w.active?`<div class="pub-warranty ok">✅ Garansi AKTIF — sisa ${w.daysLeft} hari</div>`:`<div class="pub-warranty no">❌ Garansi sudah berakhir</div>`):`<div class="pub-warranty no">Tanpa garansi</div>`;
   const bd=BRAND;
-  pv.innerHTML=`<div class="pub-card"><div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">${esc(bd.logo||'🛠️')}</div><h1>${esc(bd.name||'RepairLog')}</h1><p class="muted">${esc(bd.tagline||'')}</p></div><div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>${wHtml}<table class="ftbl"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr><tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'-'}</td></tr></table>${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Before</h4>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4>${mediaHtml(r.after_media,'after')}</div></div><p class="muted" style="text-align:center;margin-top:16px;font-size:12px">Dokumentasi servis oleh ${esc(bd.name||'RepairLog')}</p></div>`;
+  pv.innerHTML=`<div class="pub-card"><div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">${bd.logoUrl?`<img src="${esc(bd.logoUrl)}" alt="logo" style="height:48px;width:48px;object-fit:contain" />`:esc(bd.logo||'🛠️')}</div><h1>${esc(bd.name||'RepairLog')}</h1><p class="muted">${esc(bd.tagline||'')}</p></div><div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>${wHtml}<table class="ftbl"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr><tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'-'}</td></tr></table>${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Before</h4>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4>${mediaHtml(r.after_media,'after')}</div></div><p class="muted" style="text-align:center;margin-top:16px;font-size:12px">Dokumentasi servis oleh ${esc(bd.name||'RepairLog')}</p></div>`;
 }
 
 // ====== CETAK / PDF ======
@@ -948,9 +979,18 @@ async function setNewPassword(){
   const {error}=await db.auth.updateUser({password:p});
   alert(error? ('Gagal: '+error.message) : 'Password berhasil diperbarui. Silakan login dengan password baru.');
 }
-function maybeWizard(){ if(isOwner() && (!BRAND.name || BRAND.name==='RepairLog')){ $('wzName').value=''; $('wzLogo').value=''; $('wzColor').value=BRAND.color||'#4f46e5'; $('wizardModal').classList.add('open'); } }
-function closeWizard(){ $('wizardModal').classList.remove('open'); }
+function maybeWizard(){ if(isOwner() && (!BRAND.name || BRAND.name==='RepairLog')){ $('wzName').value=''; $('wzLogo').value=''; $('wzColor').value=BRAND.color||'#4f46e5'; openModal('wizardModal'); } }
+function closeWizard(){ closeModal('wizardModal'); }
 async function saveWizard(){ const name=$('wzName').value.trim(); if(!name){ alert('Isi nama toko dulu, atau klik "Nanti saja".'); return; } await saveBrand({name, logo:$('wzLogo').value.trim()||'🛠️', color:$('wzColor').value||'#4f46e5'}); closeWizard(); }
+
+// ====== MODAL SYSTEM (auto-close modal lain, klik luar = tutup, tombol back HP) ======
+let _modalHist=false;
+function anyModalOpen(){ return !!document.querySelector('.modal-bg.open'); }
+function openModal(id){ document.querySelectorAll('.modal-bg.open').forEach(m=>{ if(m.id!==id) m.classList.remove('open'); }); const el=document.getElementById(id); if(el) el.classList.add('open'); if(!_modalHist){ try{ history.pushState({rlModal:1},''); }catch(e){} _modalHist=true; } }
+function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); if(_modalHist && !anyModalOpen()){ _modalHist=false; try{ history.back(); }catch(e){} } }
+function closeAllModals(){ const was=anyModalOpen(); document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); if(was && _modalHist){ _modalHist=false; try{ history.back(); }catch(e){} } }
+window.addEventListener('popstate',()=>{ if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) closeModal(bg.id); }));
 
 // ====== BOOT ======
 buildCompChecks(); applyBrand(); applyFeatures();
