@@ -184,7 +184,7 @@
     <button id="navList" onclick="showTab('list')">Laporan</button>
     <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
     <button class="btn small" onclick="openForm()">+ Tambah</button>
-    <button class="btn small secondary" onclick="openSettings()" title="Pengaturan">⚙️</button>
+    <button class="btn small secondary" id="settingsBtn" onclick="openSettings()" title="Pengaturan">⚙️</button>
     <button class="btn small secondary" id="ownerBtn" onclick="openOwner()" title="Pengaturan Owner" style="display:none">🔒</button>
     <button class="btn small secondary" onclick="startTour()" title="Panduan">❔</button>
     <button class="btn small secondary" onclick="doLogout()">Keluar</button>
@@ -229,7 +229,7 @@
   </div>
 
   <div id="tab-finance" style="display:none">
-    <h2 style="margin-bottom:6px">📊 Laporan Keuangan</h2>
+    <div class="row" style="margin-bottom:6px"><h2 style="margin:0">📊 Laporan Keuangan</h2><button class="btn small secondary" onclick="exportCsv()">⬇️ Export CSV (Excel)</button></div>
     <p class="muted" style="margin-bottom:14px">Rekap berdasarkan bulan tanggal masuk. Hanya Owner yang bisa melihat halaman ini.</p>
     <div id="financeBox"></div>
   </div>
@@ -330,6 +330,13 @@
       </div>
       <button class="btn small" id="bioToggleBtn" onclick="toggleBiometric()">Aktifkan</button>
     </div>
+    <div class="set-row ownerOnly" id="ownerSetRow">
+      <div>
+        <div style="font-weight:600">🔒 Pengaturan Owner</div>
+        <div class="muted">Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.</div>
+      </div>
+      <button class="btn small" onclick="openOwner()">Buka</button>
+    </div>
     <div class="actions" style="justify-content:flex-end;margin-top:18px">
       <button class="btn secondary small" onclick="closeSettings()">Tutup</button>
     </div>
@@ -377,10 +384,6 @@
       <div style="font-weight:600;margin-bottom:4px">👥 Kelola Pengguna</div>
       <div class="muted" style="font-size:12px">Buat akun teknisi di Supabase → Authentication → Add user. Setelah login pertama, akun muncul di sini.</div>
       <div id="userList" style="margin-top:10px">Memuat...</div>
-      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
-      <div style="font-weight:600;margin-bottom:4px">💾 Data</div>
-      <div class="muted" style="font-size:12px">Unduh semua laporan sebagai CSV (bisa dibuka di Excel).</div>
-      <button class="btn small secondary" onclick="exportCsv()" style="margin-top:10px">⬇️ Export CSV</button>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
       <div style="font-weight:600;margin-bottom:4px">🔑 Ubah PIN Owner</div>
       <div class="frow">
@@ -534,7 +537,7 @@ function applyFeatures(){
 function applyRole(){
   const owner=isOwner();
   document.body.classList.toggle('is-teknisi',!owner);
-  $('ownerBtn').style.display=owner?'':'none';
+  $('ownerBtn').style.display='none';
   $('navFinance').style.display=(owner&&FEATURES.profit)?'':'none';
   $('roleBadge').textContent=owner?'👑 Owner':'🔧 Teknisi';
 }
@@ -939,7 +942,7 @@ async function unlockOwner(){
 }
 async function showOwnerPanel(){
   $('ownerLock').style.display='none'; $('ownerPanel').style.display='block';
-  $('brName').value=BRAND.name||''; $('brTagline').value=BRAND.tagline||''; $('brLogo').value=BRAND.logo||''; $('brColor').value=BRAND.color||'#6366f1'; $('brPrefixCo').value=BRAND.ticketCompany||''; $('brPrefixSide').value=BRAND.ticketSide||'';
+  $('brName').value=BRAND.name||''; $('brTagline').value=BRAND.tagline||''; $('brLogo').value=BRAND.logo||''; $('brColor').value=BRAND.color||'#6366f1'; $('brPrefixCo').value=BRAND.ticketCompany||'';
   const _lp=$('brLogoPreview'); if(_lp) _lp.innerHTML=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" style="width:100%;height:100%;object-fit:contain" />`:esc(BRAND.logo||'🛠️');
   const _ls=$('brLogoStatus'); if(_ls) _ls.textContent=BRAND.logoUrl?'Logo PNG aktif.':'Jika diisi, logo PNG dipakai menggantikan emoji.';
   buildFeatChecks(); loadUsers();
@@ -1057,7 +1060,7 @@ function requestCloseModal(id){ if(id==='miniModal'){ hideMini(); return; } if(i
 
 // ====== TUTORIAL (guided tour) ======
 const TOUR_KEY='rl_tour_done';
-const TOUR_STEPS=[{sel:'#navDash',title:'Dashboard',text:'Ringkasan jumlah servis, pendapatan, dan grafik performa toko.'},{sel:'#navList',title:'Laporan',text:'Daftar semua pekerjaan servis. Bisa dicari & difilter per level, status, dan merek.'},{sel:'nav .btn.small',title:'Tambah Servis',text:'Klik untuk mencatat servis baru: data device, customer, foto before/after, biaya, dll.'},{sel:'#ownerBtn',title:'Pengaturan Owner',text:'Khusus Owner: ubah branding toko, atur fitur, kelola pengguna, ganti PIN.'},{sel:'#navFinance',title:'Keuangan',text:'Khusus Owner: rekap pendapatan, modal, dan laba per bulan.'}];
+const TOUR_STEPS=[{sel:'#navDash',title:'Dashboard',text:'Ringkasan jumlah servis, pendapatan, dan grafik performa toko.'},{sel:'#navList',title:'Laporan',text:'Daftar semua pekerjaan servis. Bisa dicari & difilter per level, status, dan merek.'},{sel:'nav .btn.small',title:'Tambah Servis',text:'Klik untuk mencatat servis baru: data device, customer, foto before/after, biaya, dll.'},{sel:'#settingsBtn',title:'Pengaturan',text:'Login sidik jari, dan (khusus Owner) Pengaturan Owner: branding toko, fitur aktif, kelola pengguna, export data & PIN.'},{sel:'#navFinance',title:'Keuangan',text:'Khusus Owner: rekap pendapatan, modal, dan laba per bulan.'}];
 let tourIdx=0;
 function startTour(){ tourIdx=0; $('tourOverlay').classList.add('open'); showTourStep(); }
 function showTourStep(){
