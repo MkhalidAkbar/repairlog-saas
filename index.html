@@ -536,11 +536,11 @@ const IMG_MAX_DIM=1600, IMG_QUALITY=0.7, VIDEO_MAX_MB=50;
 const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'🛠️',logoUrl:'',color:'#6366f1',ticketCompany:'RL',ticketSide:'SVC'};
 let BRAND={...BRAND_DEFAULT};
 // versi jual: semua fitur Pro aktif secara default (dikunci Pro)
-const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true};
+const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true,collab:true};
 let FEATURES={...FEATURES_DEFAULT};
-const FEAT_LABELS={dashboard:'Dashboard & statistik',charts:'Grafik',publicLink:'Link garansi publik',print:'Cetak / PDF',biometric:'Login sidik jari',profit:'Modal & Laba',whatsapp:'No. WhatsApp customer'};
+const FEAT_LABELS={dashboard:'Dashboard & statistik',charts:'Grafik',publicLink:'Link garansi publik',print:'Cetak / PDF',biometric:'Login sidik jari',profit:'Modal & Laba',whatsapp:'No. WhatsApp customer',collab:'Kolaborasi (Papan, komentar, notifikasi)'};
 
-let ME={role:'teknisi',name:'',email:'',user_id:null};
+let ME={role:'teknisi',name:'',email:'',user_id:null,store_id:null};
 const isOwner=()=>ME.role==='owner';
 
 let reports=[];
@@ -616,6 +616,8 @@ function applyFeatures(){
   $('chartsWrap').style.display=(FEATURES.dashboard&&FEATURES.charts)?'':'none';
   $('phoneWrap').style.display=FEATURES.whatsapp?'':'none';
   $('bioSetRow').style.display=FEATURES.biometric?'':'none';
+  if($('navBoard')) $('navBoard').style.display=FEATURES.collab?'':'none';
+  if($('notifBtn')) $('notifBtn').style.display=FEATURES.collab?'':'none';
   applyRole();
 }
 
@@ -634,8 +636,19 @@ async function fetchMe(){
   ME.user_id=user.id; ME.email=user.email||'';
   const {data,error}=await db.rpc('ensure_profile',{p_store_id:STORE_ID, p_owner_email:OWNER_EMAIL});
   const prof=Array.isArray(data)?data[0]:data;
-  if(!error && prof){ ME.role=prof.role||'teknisi'; ME.name=prof.name||''; }
-  else{ ME.role='teknisi'; ME.name=(user.email||'').split('@')[0]; }
+  if(!error && prof){ ME.role=prof.role||'teknisi'; ME.name=prof.name||''; ME.store_id=prof.store_id||null; }
+  else{ ME.role='teknisi'; ME.name=(user.email||'').split('@')[0]; ME.store_id=null; }
+}
+// ====== KUNCI TOKO (isolasi antar-toko pada 1 project Supabase bersama) ======
+// Tiap akun terikat ke SATU toko (profiles.store_id). Kalau akun dipakai di toko lain, login ditolak.
+async function guardStore(){
+  if(ME.store_id && STORE_ID && ME.store_id!==STORE_ID){
+    try{ if(ME.user_id) await db.from('active_session').delete().eq('user_id',ME.user_id); }catch(e){}
+    try{ await db.auth.signOut(); }catch(e){}
+    ME={role:'teknisi',name:'',email:'',user_id:null,store_id:null};
+    return false;
+  }
+  return true;
 }
 
 // ====== DROPDOWN & TIKET ======
@@ -759,7 +772,7 @@ function openForm(id){
   formMedia.after=r?(r.after_media||[]).map(x=>({...x})):[];
   renderThumbs('before'); renderThumbs('after');
   $('delBtn').style.display=(r&&isOwner())?'':'none';
-  const _eaw=$('editActWrap'); if(_eaw){ if(id){ _eaw.style.display='block'; _openReportId=id; renderActivity(id); renderComments(id); markRead(id); } else { _eaw.style.display='none'; _openReportId=null; if($('editActLog')) $('editActLog').innerHTML=''; if($('sideCmt')) $('sideCmt').innerHTML=''; } }
+  const _eaw=$('editActWrap'); if(_eaw){ if(id&&FEATURES.collab){ _eaw.style.display='block'; _openReportId=id; renderActivity(id); renderComments(id); markRead(id); } else { _eaw.style.display='none'; _openReportId=null; if($('editActLog')) $('editActLog').innerHTML=''; if($('sideCmt')) $('sideCmt').innerHTML=''; } }
   formDirty=false;
   openModal('formModal');
 }
@@ -963,7 +976,7 @@ async function loadUnread(){ if(!db) return; try{ const {data}=await db.rpc('unr
 function totalUnread(){ return Object.values(unreadMap).reduce((a,b)=>a+(Number(b)||0),0); }
 function paintNavNotif(){ const d=$('notifDot'); if(!d) return; const n=totalUnread(); d.style.display=n>0?'flex':'none'; d.textContent=n>9?'9+':String(n); }
 function subscribeComments(){ if(!db||!ME.user_id) return; if(cmtChannel){ try{db.removeChannel(cmtChannel);}catch(e){} } cmtChannel=db.channel('cmt-'+STORE_ID).on('postgres_changes',{event:'INSERT',schema:'public',table:'comments',filter:'store_id=eq.'+STORE_ID},p=>{ const c=p.new; if(!c) return; if(c.report_id===_openReportId){ renderComments(_openReportId); markRead(_openReportId); } else if(c.user_id!==ME.user_id){ unreadMap[c.report_id]=(unreadMap[c.report_id]||0)+1; paintNavNotif(); renderBoard(); } }).subscribe(); }
-async function initCollab(){ await loadTeam(); await loadUnread(); subscribeComments(); }
+async function initCollab(){ await loadTeam(); if(!FEATURES.collab) return; await loadUnread(); subscribeComments(); }
 
 // ====== KOLABORASI: PANEL DETAIL (Aktivitas / Komentar / Checklist) ======
 function fmtDateTime(d){ if(!d) return '-'; const x=new Date(d); return x.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
@@ -977,7 +990,7 @@ async function delComment(id,rid){ if(!db) return; await db.from('comments').del
 async function markRead(rid){ if(!db||!ME.user_id) return; try{ await db.from('comment_reads').upsert({user_id:ME.user_id,report_id:rid,last_read:new Date().toISOString()},{onConflict:'user_id,report_id'}); }catch(e){} unreadMap[rid]=0; paintNavNotif(); renderBoard(); }
 
 // ====== KOLABORASI: ASSIGN & TAHAP ======
-function assignStageHtml(r){ const opts=boardStages().map(s=>`<option${(r.stage||boardStages()[0])===s?' selected':''}>${esc(s)}</option>`).join(''); return `<div style="margin-top:12px"><label>Tahap</label><select onchange="setStage('${r.id}',this.value)">${opts}</select></div>`; }
+function assignStageHtml(r){ if(!FEATURES.collab) return ''; const opts=boardStages().map(s=>`<option${(r.stage||boardStages()[0])===s?' selected':''}>${esc(s)}</option>`).join(''); return `<div style="margin-top:12px"><label>Tahap</label><select onchange="setStage('${r.id}',this.value)">${opts}</select></div>`; }
 async function setStage(id,stage){ if(!db) return; await db.from('reports').update({stage,updated_at:new Date().toISOString()}).eq('id',id); const r=reports.find(x=>x.id===id); if(r) r.stage=stage; renderBoard(); if($('detailModal').classList.contains('open')&&_openReportId===id) renderActivity(id); }
 async function setAssign(id,uid){ if(!db) return; await db.from('reports').update({assigned_to:uid||null,updated_at:new Date().toISOString()}).eq('id',id); const r=reports.find(x=>x.id===id); if(r) r.assigned_to=uid||null; renderBoard(); render(); if($('detailModal').classList.contains('open')&&_openReportId===id) renderActivity(id); }
 
@@ -1017,7 +1030,9 @@ async function doLogin(){
 }
 async function afterLogin(){
   $('authError').textContent=''; authReady=true;
-  await fetchMe(); await fetchConfig(); applyRole();
+  await fetchMe();
+  if(!(await guardStore())){ authReady=false; showAuth(true); togglePwFormForce(); $('authError').textContent='Akun ini bukan milik toko ini. Gunakan akun yang terdaftar untuk toko ini.'; return; }
+  await fetchConfig(); applyRole();
   await claimSession();
   showApp(); resetIdle();
   await initCollab();
@@ -1063,7 +1078,7 @@ async function doBiometric(){
     const id=localStorage.getItem(BIO_CRED); if(!id){ togglePwFormForce(); return; }
     await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:b64ToBuf(id)}],userVerification:'required',timeout:60000}});
     const {data:{session}}=await db.auth.getSession();
-    if(session){ authReady=true; if(!ME.user_id) await fetchMe(); await fetchConfig(); applyRole(); showApp(); resetIdle(); await initCollab(); await loadAll(); showTab('dash'); return; }
+    if(session){ authReady=true; if(!ME.user_id) await fetchMe(); if(!(await guardStore())){ showAuth(true); togglePwFormForce(); $('authError').textContent='Akun ini bukan milik toko ini. Gunakan akun yang terdaftar untuk toko ini.'; return; } await fetchConfig(); applyRole(); showApp(); resetIdle(); await initCollab(); await loadAll(); showTab('dash'); return; }
     const saved=localStorage.getItem(BIO_LOGIN);
     if(saved){ const c=JSON.parse(atob(saved)); const {error}=await db.auth.signInWithPassword({email:c.email,password:c.password}); if(error){ $('authError').textContent='Sesi berakhir, masuk manual.'; togglePwFormForce(); return; } lastCred=c; await afterLogin(); }
     else togglePwFormForce();
