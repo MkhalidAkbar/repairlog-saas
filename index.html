@@ -86,6 +86,7 @@
   .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
   .photo-grid img{width:100%;border-radius:6px;border:1px solid var(--border);}
   body.is-teknisi .ownerOnly{display:none !important;}
+  body.no-profit .profitOnly{display:none !important;}
   #publicView{display:none;max-width:760px;margin:0 auto;padding:24px;}
   .pub-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;}
   .pub-warranty{font-size:15px;padding:14px;border-radius:12px;text-align:center;margin:14px 0;line-height:1.5;}
@@ -308,7 +309,7 @@
       <div><label>Status Pembayaran</label>
         <select id="f_payment"><option>Belum</option><option>DP</option><option>Lunas</option></select></div>
     </div>
-    <div class="ownerOnly">
+    <div class="ownerOnly profitOnly">
       <label>Rincian Modal / HPP</label>
       <div id="costItems"></div>
       <button type="button" class="btn small secondary" onclick="addCostItem()" style="margin-top:6px">+ Tambah baris modal</button>
@@ -423,6 +424,7 @@
       </div>
     </div>
     <div id="ownerPanel" style="display:none">
+      <div id="brandingSection">
       <div style="font-weight:600;margin-bottom:4px">🏷️ Branding Toko</div>
       <label>Nama toko</label>
       <input id="brName" placeholder="cth: Service Laptop Jaya" />
@@ -442,6 +444,7 @@
       <div><label>Prefix No. Tiket</label><input id="brPrefixCo" placeholder="SVC" /></div>
       <button class="btn small" onclick="saveBrandFromForm()" style="margin-top:12px">💾 Simpan Branding</button>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
+      </div>
       <div style="font-weight:600;margin-bottom:6px">🧩 Fitur Aktif</div>
       <div class="checks" id="featChecks"></div>
       <button class="btn small" onclick="saveFeatures()" style="margin-top:12px">💾 Simpan Fitur</button>
@@ -535,9 +538,11 @@ const LEVELS={1:{name:'Ringan',color:'#22c55e'},2:{name:'Sedang',color:'#3b82f6'
 const IMG_MAX_DIM=1600, IMG_QUALITY=0.7, VIDEO_MAX_MB=50;
 
 const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'🛠️',logoUrl:'',color:'#6366f1',ticketCompany:'RL',ticketSide:'SVC'};
+// brand vendor dipakai saat paket TIDAK punya white-label (Basic)
+const VENDOR_BRAND={name:'TeknoPartner.ID',tagline:'Manajemen Servis Laptop',logo:'🛠️',logoUrl:'',color:'#4f46e5',ticketCompany:'TP',ticketSide:'SVC'};
 let BRAND={...BRAND_DEFAULT};
-// versi jual: semua fitur Pro aktif secara default (dikunci Pro)
-const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true,collab:true};
+// versi jual: semua fitur Pro aktif secara default (dikunci Pro). whitelabel dikontrol dari master panel.
+const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true,collab:true,whitelabel:true};
 let FEATURES={...FEATURES_DEFAULT};
 const FEAT_LABELS={dashboard:'Dashboard & statistik',charts:'Grafik',publicLink:'Link garansi publik',print:'Cetak / PDF',biometric:'Login sidik jari',profit:'Modal & Laba',whatsapp:'No. WhatsApp customer',collab:'Kolaborasi (Papan, komentar, notifikasi)'};
 
@@ -608,11 +613,13 @@ async function fetchConfig(){
   const {data}=await db.from('app_settings').select('key,value').eq('store_id',STORE_ID).in('key',['branding','features','board_stages']);
   if(data){ data.forEach(r=>{ if(r.key==='branding'&&r.value) BRAND={...BRAND_DEFAULT,...r.value}; if(r.key==='features'&&r.value) FEATURES={...FEATURES_DEFAULT,...r.value}; if(r.key==='board_stages'&&Array.isArray(r.value)&&r.value.length) BOARD_STAGES=r.value; }); }
   if(LICENSE_FEATURES){ Object.keys(FEATURES).forEach(k=>{ if(LICENSE_FEATURES[k]===false) FEATURES[k]=false; }); }
+  if(!FEATURES.whitelabel){ BRAND={...VENDOR_BRAND}; } // paket tanpa white-label → kunci ke brand vendor
   applyBrand(); applyFeatures();
 }
 function featAllowed(k){ return !LICENSE_FEATURES || LICENSE_FEATURES[k]!==false; }
 async function checkStorageWarn(){ try{ if(LICENSE_STORAGE_MB==null||!db) return; const {data}=await db.rpc('my_storage_usage'); const used=Number(data)||0; const limit=LICENSE_STORAGE_MB*1048576; if(limit>0 && used>limit) toast('Storage toko melebihi jatah ('+Math.round(used/1048576)+'/'+LICENSE_STORAGE_MB+' MB). Hubungi admin untuk menambah kapasitas.','error'); }catch(e){} }
 function applyFeatures(){
+  document.body.classList.toggle('no-profit',!FEATURES.profit);
   $('navDash').style.display=FEATURES.dashboard?'':'none';
   $('chartsWrap').style.display=(FEATURES.dashboard&&FEATURES.charts)?'':'none';
   $('phoneWrap').style.display=FEATURES.whatsapp?'':'none';
@@ -1112,6 +1119,7 @@ async function showOwnerPanel(){
   $('brName').value=BRAND.name||''; $('brTagline').value=BRAND.tagline||''; $('brLogo').value=BRAND.logo||''; $('brColor').value=BRAND.color||'#6366f1'; $('brPrefixCo').value=BRAND.ticketCompany||'';
   const _lp=$('brLogoPreview'); if(_lp) _lp.innerHTML=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" style="width:100%;height:100%;object-fit:contain" />`:esc(BRAND.logo||'🛠️');
   const _ls=$('brLogoStatus'); if(_ls) _ls.textContent=BRAND.logoUrl?'Logo PNG aktif.':'Jika diisi, logo PNG dipakai menggantikan emoji.';
+  const _bs=$('brandingSection'); if(_bs) _bs.style.display=FEATURES.whitelabel?'':'none';
   buildFeatChecks(); loadUsers();
   const _sc=$('supportContact'); if(_sc) _sc.textContent=SUPPORT_CONTACT?(' ('+SUPPORT_CONTACT+')'):'';
 }
@@ -1266,6 +1274,7 @@ async function checkLicense(){
     if(row.status==='suspended'){ lockScreen('🔒 Layanan dinonaktifkan sementara','Silakan hubungi penyedia layanan untuk mengaktifkan kembali.'); return false; }
     if(row.due_date){ const habis=new Date(row.due_date); habis.setHours(23,59,59,999); if(new Date()>habis){ lockScreen('⏳ Masa aktif telah berakhir',(row.status==='trial'?'Masa uji coba (trial) sudah habis. ':'Masa langganan sudah berakhir. ')+'Silakan lakukan pembayaran untuk melanjutkan.'); return false; } }
     if(row.features){ LICENSE_FEATURES=row.features; Object.keys(FEATURES).forEach(k=>{ if(LICENSE_FEATURES[k]===false) FEATURES[k]=false; }); }
+    if(!FEATURES.whitelabel){ BRAND={...VENDOR_BRAND}; applyBrand(); } // tanpa white-label → brand vendor
     if(row.storage_limit_mb!=null) LICENSE_STORAGE_MB=Number(row.storage_limit_mb);
     return true;
   }catch(e){ return true; } // gagal cek (offline dll) → biarkan toko tetap jalan
