@@ -638,6 +638,7 @@ async function fetchMe(){
   const {data,error}=await db.rpc('ensure_profile',{p_store_id:STORE_ID, p_owner_email:OWNER_EMAIL});
   const prof=Array.isArray(data)?data[0]:data;
   if(!error && prof){ ME.role=prof.role||'teknisi'; ME.name=prof.name||''; ME.store_id=prof.store_id||null; }
+  else if(error && String(error.message||'').indexOf('WRONG_STORE')>=0){ ME.role='teknisi'; ME.name=''; ME.store_id='__WRONG_STORE__'; } // akun milik toko lain → dipaksa mismatch supaya guardStore menolak
   else{ ME.role='teknisi'; ME.name=(user.email||'').split('@')[0]; ME.store_id=null; }
 }
 // ====== KUNCI TOKO (isolasi antar-toko pada 1 project Supabase bersama) ======
