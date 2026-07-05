@@ -5,7 +5,7 @@ window.APP_CONFIG = {
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsd2RkbXludmZoa21hbmdjc3FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NjEyMjksImV4cCI6MjA5ODUzNzIyOX0.GnbmaEspiRzTz5L7pOAwXCwINVjRbyZL0ZX5R2ynoAQ',
 
   // Identitas toko — WAJIB unik & sama dengan store_id di Onboarding + slug di Master
-  STORE_ID: 'teknopartnerid',
+  STORE_ID: 'tokodemo',
 
   // Email OWNER toko ini — akun dengan email ini OTOMATIS jadi Owner saat login pertama
   OWNER_EMAIL: 'khalidstrife@gmail.com',
