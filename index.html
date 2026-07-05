@@ -521,7 +521,8 @@ let LICENSE_STORAGE_MB = null;
 let db=null;
 try{
   if(SUPABASE_URL && !SUPABASE_URL.startsWith('MASUKKAN') && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('MASUKKAN')){
-    db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // storageKey unik per toko → sesi login tiap toko TERPISAH di browser (tidak saling menimpa walau 1 project & 1 origin)
+    db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'rl-auth-'+(STORE_ID||'default'), persistSession:true, autoRefreshToken:true } });
   }
 }catch(e){}
 if(!db){ document.getElementById('configWarn').style.display='block'; }
