@@ -8,7 +8,7 @@ window.APP_CONFIG = {
   STORE_ID: 'tokodemo',
 
   // Email OWNER toko ini — akun dengan email ini OTOMATIS jadi Owner saat login pertama
-  OWNER_EMAIL: 'khalidstrife@gmail.com',
+  OWNER_EMAIL: 'demo@gmail.com',
   
   // Kontak admin/vendor (utk pesan "hubungi admin" saat mau tambah/kurang pengguna). Opsional.
   SUPPORT_CONTACT: 'wa.me/6285182169767',
