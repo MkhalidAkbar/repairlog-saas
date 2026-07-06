@@ -74,6 +74,12 @@
   .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;}
   .thumb .x{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:20px;height:20px;line-height:18px;text-align:center;cursor:pointer;font-size:13px;padding:0;}
   .thumb .vtag{position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.65);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;}
+  .media-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .media-actions .btn{width:auto;}
+  .filepick{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;width:auto;}
+  #camModal video{width:100%;border-radius:12px;background:#000;max-height:56vh;}
+  #camShots{margin-top:10px;}
+  #camModal .thumb{cursor:default;}
   .lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:200;}
   .lb.open{display:flex;}
   .lb #lbMedia img,.lb #lbMedia video{max-width:92vw;max-height:82vh;border-radius:8px;}
@@ -158,6 +164,34 @@
   .bcol-add:hover{background:var(--card);}
   .bcol-addcol{flex:0 0 220px;display:flex;align-items:center;justify-content:center;background:transparent;border:2px dashed var(--border);color:var(--muted);cursor:pointer;font-weight:700;min-height:80px;border-radius:12px;}
   .bcol-addcol:hover{background:var(--card2);}
+  /* ===== ANIMASI & POLISH UI ===== */
+  @keyframes rlFadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes rlModalIn{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes rlPop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+  @keyframes rlSlideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .modal-bg.open{animation:rlFadeIn .22s ease both;}
+  .modal-bg.open .modal{animation:rlModalIn .3s cubic-bezier(.16,1,.3,1) both;}
+  .lb.open{animation:rlFadeIn .2s ease both;}
+  .lb.open #lbMedia{animation:rlPop .26s ease both;}
+  #appMain > div{animation:rlSlideUp .28s ease both;}
+  .btn{transition:background .2s,color .2s,transform .12s,box-shadow .2s,filter .2s;}
+  .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15);filter:brightness(1.06);}
+  .btn:active:not(:disabled){transform:translateY(0) scale(.96);}
+  nav button{transition:background .18s,color .18s,transform .12s;}
+  nav button:hover{transform:translateY(-1px);}
+  .card,.stat{transition:transform .18s ease,box-shadow .18s ease;}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.1);}
+  .stat:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.09);}
+  .bcard{transition:transform .14s ease,box-shadow .14s ease;}
+  .bcard:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.13);}
+  .ctab,.chk,.chip{transition:transform .12s ease,background .18s ease,border-color .18s ease;}
+  .ctab:hover,.chk:hover{transform:translateY(-1px);}
+  .thumb{transition:transform .15s ease;}
+  .thumb:hover{transform:scale(1.05);}
+  .tech-badge{transition:transform .12s ease;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
   @media print{
     @page{margin:0;}
     body{background:#fff;}
@@ -354,7 +388,10 @@
         <label>Catatan kondisi awal</label>
         <textarea id="f_beforeNotes" placeholder="cth: panas berlebih, kipas berisik..."></textarea>
         <label>Foto / Video Before (bisa lebih dari 1)</label>
-        <input type="file" accept="image/*,video/*" multiple onchange="pickFiles(this,'before')" />
+        <div class="media-actions">
+          <button type="button" class="btn small" onclick="openCamera('before')">📷 Ambil Foto (Kamera)</button>
+          <label class="btn small secondary filepick">🖼️ Galeri / File<input type="file" accept="image/*,video/*" multiple onchange="pickFiles(this,'before')" style="display:none" /></label>
+        </div>
         <div class="thumbs" id="thumbs_before"></div>
       </div>
       <div class="box">
@@ -362,7 +399,10 @@
         <label>Catatan hasil</label>
         <textarea id="f_afterNotes" placeholder="cth: suhu normal, kipas senyap..."></textarea>
         <label>Foto / Video After (bisa lebih dari 1)</label>
-        <input type="file" accept="image/*,video/*" multiple onchange="pickFiles(this,'after')" />
+        <div class="media-actions">
+          <button type="button" class="btn small" onclick="openCamera('after')">📷 Ambil Foto (Kamera)</button>
+          <label class="btn small secondary filepick">🖼️ Galeri / File<input type="file" accept="image/*,video/*" multiple onchange="pickFiles(this,'after')" style="display:none" /></label>
+        </div>
         <div class="thumbs" id="thumbs_after"></div>
       </div>
     </div>
@@ -399,6 +439,16 @@
         <div class="muted">Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.</div>
       </div>
       <button class="btn small" onclick="openOwner()">Buka</button>
+    </div>
+    <div class="set-row">
+      <div>
+        <div style="font-weight:600">🌐 Bahasa / Language</div>
+        <div class="muted">Pilih bahasa tampilan aplikasi.</div>
+      </div>
+      <select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:150px">
+        <option value="id">Indonesia</option>
+        <option value="en">English (US)</option>
+      </select>
     </div>
     <div class="set-row">
       <div>
@@ -506,6 +556,23 @@
 <div class="tour-actions"><span class="tour-step" id="tourStep"></span><div style="display:flex;gap:6px"><button class="btn small secondary" onclick="endTour()">Lewati</button><button class="btn small" id="tourNext" onclick="nextTour()">Lanjut →</button></div></div>
 </div>
 </div>
+<div class="modal-bg" id="camModal" style="z-index:210">
+  <div class="modal" style="max-width:540px">
+    <h2 id="camTitle">📷 Ambil Foto</h2>
+    <p class="muted" style="font-size:13px;margin:6px 0 10px">Arahkan kamera lalu tekan Jepret. Bisa ambil banyak foto sekaligus, lalu tekan Selesai.</p>
+    <video id="camVideo" autoplay playsinline muted></video>
+    <div class="thumbs" id="camShots"></div>
+    <div class="actions" style="justify-content:space-between;margin-top:14px">
+      <button class="btn small secondary" type="button" onclick="flipCamera()">🔄 Ganti Kamera</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn small secondary" type="button" onclick="closeCamera()">Batal</button>
+        <button class="btn small" type="button" onclick="snapPhoto()">📸 Jepret</button>
+        <button class="btn small" id="camDone" type="button" onclick="finishCamera()">Selesai (0)</button>
+      </div>
+    </div>
+    <canvas id="camCanvas" style="display:none"></canvas>
+  </div>
+</div>
 <div id="printArea"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -571,6 +638,54 @@ const $=id=>document.getElementById(id);
 const rp=n=>'Rp'+(Number(n)||0).toLocaleString('id-ID');
 const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate=d=>d?new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'-';
+// ====== I18N (multi-bahasa: Indonesia & English US) ======
+let LANG='id'; try{ LANG=localStorage.getItem('rl_lang')||'id'; }catch(e){}
+const I18N_EN={
+  'Dashboard':'Dashboard','Laporan':'Reports','Papan':'Board','Keuangan':'Finance','+ Tambah':'+ Add','+ Tambah Laporan':'+ Add Report',
+  'Simpan':'Save','Batal':'Cancel','Tutup':'Close','Buka':'Open','Hapus':'Delete','Logout':'Logout','Detail':'Details','Edit':'Edit','Menyimpan...':'Saving...',
+  'Tap sidik jari untuk masuk':'Tap fingerprint to sign in','Masuk':'Sign in','Email':'Email','Password':'Password','Masuk dengan email & password':'Sign in with email & password','Lupa password?':'Forgot password?',
+  '⚙️ Pengaturan':'⚙️ Settings','👤 Nama tampilan':'👤 Display name','Nama ini muncul di komentar, aktivitas, & papan — bukan dari email.':'This name shows in comments, activity & board — not your email.',
+  'Login sidik jari':'Fingerprint login','Masuk cukup dengan biometrik di perangkat ini.':'Sign in with biometrics on this device.','Sidik jari aktif di perangkat ini.':'Fingerprint active on this device.','Aktifkan':'Enable','Nonaktifkan':'Disable',
+  '🔒 Pengaturan Owner':'🔒 Owner Settings','Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.':'Store branding, active features, user management, data export & owner PIN.','Keluar dari akun di perangkat ini.':'Sign out of your account on this device.',
+  '🌐 Bahasa / Language':'🌐 Language','Pilih bahasa tampilan aplikasi.':'Choose the app display language.',
+  'Masukkan PIN owner.':'Enter owner PIN.','Belum ada PIN. Buat PIN baru (min 4 digit) untuk mengunci menu ini.':'No PIN yet. Create a new PIN (min 4 digits) to lock this menu.','PIN Owner':'Owner PIN',
+  '🏷️ Branding Toko':'🏷️ Store Branding','Nama toko':'Store name','Tagline':'Tagline','Logo (emoji)':'Logo (emoji)','Warna aksen':'Accent color','Logo PNG (opsional — untuk logo custom toko)':'PNG logo (optional — for custom store logo)','Jika diisi, logo PNG dipakai menggantikan emoji.':'If set, the PNG logo replaces the emoji.','Prefix No. Tiket':'Ticket No. Prefix','💾 Simpan Branding':'💾 Save Branding','🧩 Fitur Aktif':'🧩 Active Features','💾 Simpan Fitur':'💾 Save Features','👥 Kelola Pengguna':'👥 Manage Users','Untuk menambah atau mengurangi pengguna, hubungi admin.':'To add or remove users, contact the admin.','🔑 Ubah PIN Owner':'🔑 Change Owner PIN','PIN baru':'New PIN','Ulangi PIN':'Repeat PIN','Simpan PIN':'Save PIN',
+  '👋 Selamat datang!':'👋 Welcome!','Atur identitas toko dulu (bisa diubah lagi nanti di menu 🔒).':'Set up your store identity first (you can change it later in the 🔒 menu).','Nanti saja':'Later','Simpan & Mulai':'Save & Start',
+  'Tambah Laporan':'Add Report','Edit Laporan':'Edit Report','Nama Device / Laptop *':'Device / Laptop Name *','Merek':'Brand','Customer':'Customer','No. WhatsApp Customer':'Customer WhatsApp No.','Biaya Jasa (Rp)':'Service Fee (Rp)','Status Pembayaran':'Payment Status','Rincian Modal / HPP':'Cost / COGS Breakdown','+ Tambah baris modal':'+ Add cost row','Total Modal / HPP':'Total Cost / COGS','Perkiraan Laba (Biaya − Modal)':'Estimated Profit (Fee − Cost)','Level Pekerjaan':'Work Level','Status':'Status','Tanggal Masuk (terkunci)':'Date In (locked)','Tanggal Pengambilan':'Pickup Date','Lama Garansi':'Warranty Period','No. Tiket dibuat otomatis saat disimpan.':'Ticket No. is generated automatically on save.','Teknisi yang mengerjakan':'Assigned technician','Komponen / Bagian yang diperbaiki':'Components / Parts repaired','Pekerjaan yang dilakukan':'Work performed','🔧 BEFORE (sebelum perbaikan)':'🔧 BEFORE (pre-repair)','Catatan kondisi awal':'Initial condition notes','Foto / Video Before (bisa lebih dari 1)':'Before Photos / Videos (multiple allowed)','✅ AFTER (sesudah perbaikan)':'✅ AFTER (post-repair)','Catatan hasil':'Result notes','Foto / Video After (bisa lebih dari 1)':'After Photos / Videos (multiple allowed)','📋 Aktivitas & Log':'📋 Activity & Log','💬 Komentar':'💬 Comments','🗑️ Hapus':'🗑️ Delete','📷 Ambil Foto (Kamera)':'📷 Take Photo (Camera)','🖼️ Galeri / File':'🖼️ Gallery / File',
+  '📷 Ambil Foto':'📷 Take Photo','Arahkan kamera lalu tekan Jepret. Bisa ambil banyak foto sekaligus, lalu tekan Selesai.':'Point the camera and tap Snap. Take multiple photos at once, then tap Done.','🔄 Ganti Kamera':'🔄 Switch Camera','📸 Jepret':'📸 Snap','Selesai':'Done',
+  'Total Laporan':'Total Reports','Pendapatan':'Revenue','Laba':'Profit','Belum ada laporan.':'No reports yet.','Belum ada data. Tambahkan laporan pertamamu untuk melihat statistik.':'No data yet. Add your first report to see statistics.','Tidak ada media.':'No media.',
+  'Nama kamu':'Your name','Cari device / customer / tiket...':'Search device / customer / ticket...','Nama pemilik':'Owner name'
+};
+const _i18nOrig=new WeakMap();
+function t(s){ if(LANG==='en'&&I18N_EN[s]!=null) return I18N_EN[s]; return s; }
+function _translateTextNodes(root){
+  if(!root||!root.querySelectorAll) return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  const nodes=[]; let n; while(n=walker.nextNode()) nodes.push(n);
+  nodes.forEach(node=>{
+    const pe=node.parentElement; if(!pe) return;
+    const tag=pe.tagName;
+    if(tag==='SCRIPT'||tag==='STYLE'||tag==='OPTION'||tag==='TEXTAREA') return;
+    if(pe.closest&&pe.closest('.no-i18n')) return;
+    if(!_i18nOrig.has(node)) _i18nOrig.set(node,node.nodeValue);
+    const orig=_i18nOrig.get(node); const key=(orig||'').trim(); if(!key) return;
+    if(LANG==='en'&&I18N_EN[key]!=null) node.nodeValue=orig.replace(key,I18N_EN[key]);
+    else node.nodeValue=orig;
+  });
+}
+function _translatePlaceholders(root){
+  if(!root||!root.querySelectorAll) return;
+  root.querySelectorAll('[placeholder]').forEach(el=>{
+    if(!el.dataset.phOrig) el.dataset.phOrig=el.getAttribute('placeholder')||'';
+    const o=el.dataset.phOrig; el.setAttribute('placeholder',(LANG==='en'&&I18N_EN[o]!=null)?I18N_EN[o]:o);
+  });
+}
+function applyLang(){
+  ['appHeader','appMain','authScreen','formModal','detailModal','settingsModal','ownerModal','wizardModal','camModal'].forEach(id=>{ const el=document.getElementById(id); if(el){ _translateTextNodes(el); _translatePlaceholders(el); } });
+  const ls=document.getElementById('langSelect'); if(ls) ls.value=LANG;
+  try{ document.documentElement.lang=LANG; }catch(e){}
+}
+function setLang(l){ LANG=l; try{ localStorage.setItem('rl_lang',l); }catch(e){} applyLang(); }
 
 // ====== BRANDING ======
 function brandLogoImg(px){ return BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" alt="logo" style="height:${px}px;width:${px}px;object-fit:contain;border-radius:6px;vertical-align:middle" />`:''; }
@@ -740,6 +855,43 @@ function renderThumbs(side){
   }).join('');
 }
 function removeMedia(side,i){ formMedia[side].splice(i,1); renderThumbs(side); }
+// ====== KAMERA (ambil foto langsung, multi-jepret) ======
+let camStream=null, camSide=null, camShots=[], camFacing='environment';
+async function openCamera(side){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ fallbackCapture(side); return; }
+  camSide=side; camShots=[]; camFacing='environment';
+  const sh=$('camShots'); if(sh) sh.innerHTML='';
+  updateCamDone();
+  openModal('camModal');
+  await startCamStream();
+}
+async function startCamStream(){
+  stopCamStream();
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:camFacing}},audio:false});
+    const v=$('camVideo'); if(v){ v.srcObject=camStream; }
+  }catch(e){
+    toast((LANG==='en'?'Cannot access camera':'Tidak bisa mengakses kamera')+': '+(e.message||e),'error');
+    closeCamera(); if(camSide) fallbackCapture(camSide);
+  }
+}
+function stopCamStream(){ if(camStream){ try{ camStream.getTracks().forEach(tr=>tr.stop()); }catch(e){} camStream=null; } const v=$('camVideo'); if(v) v.srcObject=null; }
+async function flipCamera(){ camFacing=(camFacing==='environment')?'user':'environment'; await startCamStream(); }
+function snapPhoto(){
+  const v=$('camVideo'); if(!v||!v.videoWidth){ toast(LANG==='en'?'Camera not ready yet':'Kamera belum siap','error'); return; }
+  let w=v.videoWidth,h=v.videoHeight;
+  if(w>h&&w>IMG_MAX_DIM){ h=h*IMG_MAX_DIM/w; w=IMG_MAX_DIM; } else if(h>=w&&h>IMG_MAX_DIM){ w=w*IMG_MAX_DIM/h; h=IMG_MAX_DIM; }
+  const c=$('camCanvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(v,0,0,w,h);
+  const data=c.toDataURL('image/jpeg',IMG_QUALITY);
+  camShots.push({type:'image',data,name:'cam-'+Date.now()+'.jpg'});
+  const wrap=$('camShots'); if(wrap){ const d=document.createElement('div'); d.className='thumb'; d.innerHTML='<img src="'+data+'" />'; wrap.appendChild(d); }
+  updateCamDone();
+  v.style.filter='brightness(2.2)'; setTimeout(()=>{ v.style.filter=''; },120);
+}
+function updateCamDone(){ const b=$('camDone'); if(b) b.textContent=t('Selesai')+' ('+camShots.length+')'; }
+function finishCamera(){ if(camSide&&camShots.length){ formMedia[camSide]=formMedia[camSide].concat(camShots); renderThumbs(camSide); if($('formModal')&&$('formModal').classList.contains('open')) formDirty=true; } closeCamera(); }
+function closeCamera(){ stopCamStream(); camShots=[]; const sh=$('camShots'); if(sh) sh.innerHTML=''; closeModal('camModal'); }
+function fallbackCapture(side){ try{ const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.setAttribute('capture','environment'); inp.multiple=true; inp.onchange=()=>{ handleFiles([...inp.files],side); }; inp.click(); }catch(e){ toast(LANG==='en'?'Camera not available':'Kamera tidak tersedia','error'); } }
 function previewForm(side,i){ openLightbox(formMedia[side],i); }
 async function uploadMedia(m){
   if(m.url) return m;
@@ -928,6 +1080,7 @@ function render(){
   const rec=$('recentGrid'); if(rec){ const rr=recentReports(); rec.innerHTML=rr.length?rr.map(card).join(''):`<div class="empty">Tidak ada pekerjaan dalam ${recentDays} hari terakhir. Semua tetap tersimpan di menu Papan.</div>`; }
   renderDash();
   renderBoard();
+  try{ applyLang(); }catch(e){}
 }
 function renderDash(){
   const total=reports.length;
@@ -1024,8 +1177,8 @@ function boardDrop(e,stage){ e.preventDefault(); const id=_dragId||((e.dataTrans
 let authReady=false, lastCred=null, sessChannel=null, idleTimer=null, currentSid=null;
 const IDLE_LIMIT_MS=30*60*1000;
 function hideBoot(){ const b=$('bootLoader'); if(b) b.style.display='none'; }
-function showAuth(show){ hideBoot(); $('authScreen').style.display=show?'flex':'none'; }
-function showApp(){ showAuth(false); const h=$('appHeader'); if(h) h.style.display=''; const m=$('appMain'); if(m) m.style.display=''; }
+function showAuth(show){ hideBoot(); $('authScreen').style.display=show?'flex':'none'; try{ applyLang(); }catch(e){} }
+function showApp(){ showAuth(false); const h=$('appHeader'); if(h) h.style.display=''; const m=$('appMain'); if(m) m.style.display=''; try{ applyLang(); }catch(e){} }
 function togglePwFormForce(){ $('pwForm').style.display='block'; $('pwToggle').style.display='none'; $('forgotBtn').style.display='block'; }
 function togglePwForm(){ const f=$('pwForm'); const show=f.style.display==='none'; f.style.display=show?'block':'none'; $('pwToggle').style.display=show?'none':'block'; $('forgotBtn').style.display=show?'block':'none'; }
 async function doLogin(){
@@ -1225,8 +1378,8 @@ async function saveWizard(){ const name=$('wzName').value.trim(); if(!name){ toa
 // ====== MODAL SYSTEM (auto-close modal lain, klik luar = tutup, tombol back HP) ======
 let _modalHist=false;
 function anyModalOpen(){ return !!document.querySelector('.modal-bg.open'); }
-function openModal(id){ document.querySelectorAll('.modal-bg.open').forEach(m=>{ if(m.id!==id) m.classList.remove('open'); }); const el=document.getElementById(id); if(el) el.classList.add('open'); if(!_modalHist){ try{ history.pushState({rlModal:1},''); }catch(e){} _modalHist=true; } }
-function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); if(_modalHist && !anyModalOpen()){ _modalHist=false; try{ history.back(); }catch(e){} } }
+function openModal(id){ document.querySelectorAll('.modal-bg.open').forEach(m=>{ if(m.id!==id) m.classList.remove('open'); }); const el=document.getElementById(id); if(el) el.classList.add('open'); if(!_modalHist){ try{ history.pushState({rlModal:1},''); }catch(e){} _modalHist=true; } try{ applyLang(); }catch(e){} }
+function closeModal(id){ if(id==='camModal'){ try{ stopCamStream(); }catch(e){} } const el=document.getElementById(id); if(el) el.classList.remove('open'); if(_modalHist && !anyModalOpen()){ _modalHist=false; try{ history.back(); }catch(e){} } }
 function closeAllModals(){ const was=anyModalOpen(); document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); if(was && _modalHist){ _modalHist=false; try{ history.back(); }catch(e){} } }
 window.addEventListener('popstate',()=>{ if($('formModal').classList.contains('open') && formDirty){ try{ history.pushState({rlModal:1},''); }catch(e){} requestCloseModal('formModal'); return; } if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) requestCloseModal(bg.id); }));
@@ -1244,7 +1397,7 @@ document.getElementById('formModal').addEventListener('input',()=>{ if($('formMo
 document.getElementById('formModal').addEventListener('change',()=>{ if($('formModal').classList.contains('open')) formDirty=true; });
 function showMini(title,msg,buttons){ $('miniTitle').textContent=title||''; $('miniMsg').textContent=msg||''; const box=$('miniActions'); box.innerHTML=''; (buttons||[]).forEach(b=>{ const btn=document.createElement('button'); btn.className='btn small'+(b.cls?' '+b.cls:''); btn.textContent=b.label; btn.onclick=()=>{ hideMini(); if(typeof b.fn==='function') b.fn(); }; box.appendChild(btn); }); $('miniModal').classList.add('open'); }
 function hideMini(){ $('miniModal').classList.remove('open'); }
-function requestCloseModal(id){ if(id==='miniModal'){ hideMini(); return; } if(id==='formModal' && formDirty){ showMini('Perubahan belum disimpan','Ada perubahan yang belum disimpan. Simpan dulu atau buang perubahan?',[{label:'Batal',cls:'secondary',fn:null},{label:'Buang',cls:'danger',fn:()=>{ formDirty=false; closeModal('formModal'); }},{label:'💾 Simpan',fn:()=>saveReport()}]); return; } closeModal(id); }
+function requestCloseModal(id){ if(id==='camModal'){ closeCamera(); return; } if(id==='miniModal'){ hideMini(); return; } if(id==='formModal' && formDirty){ showMini('Perubahan belum disimpan','Ada perubahan yang belum disimpan. Simpan dulu atau buang perubahan?',[{label:'Batal',cls:'secondary',fn:null},{label:'Buang',cls:'danger',fn:()=>{ formDirty=false; closeModal('formModal'); }},{label:'💾 Simpan',fn:()=>saveReport()}]); return; } closeModal(id); }
 
 // ====== TUTORIAL (guided tour) ======
 const TOUR_KEY='rl_tour_done';
