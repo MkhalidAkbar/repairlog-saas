@@ -862,7 +862,9 @@ async function openCamera(side){
   camSide=side; camShots=[]; camFacing='environment';
   const sh=$('camShots'); if(sh) sh.innerHTML='';
   updateCamDone();
-  openModal('camModal');
+  // buka kamera DI ATAS form (jangan tutup form) supaya setelah Selesai form + fotonya tetap ada
+  const _cm=$('camModal'); if(_cm) _cm.classList.add('open');
+  try{ applyLang(); }catch(e){}
   await startCamStream();
 }
 async function startCamStream(){
@@ -890,7 +892,7 @@ function snapPhoto(){
 }
 function updateCamDone(){ const b=$('camDone'); if(b) b.textContent=t('Selesai')+' ('+camShots.length+')'; }
 function finishCamera(){ if(camSide&&camShots.length){ formMedia[camSide]=formMedia[camSide].concat(camShots); renderThumbs(camSide); if($('formModal')&&$('formModal').classList.contains('open')) formDirty=true; } closeCamera(); }
-function closeCamera(){ stopCamStream(); camShots=[]; const sh=$('camShots'); if(sh) sh.innerHTML=''; closeModal('camModal'); }
+function closeCamera(){ stopCamStream(); camShots=[]; const sh=$('camShots'); if(sh) sh.innerHTML=''; const _cm=$('camModal'); if(_cm) _cm.classList.remove('open'); }
 function fallbackCapture(side){ try{ const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.setAttribute('capture','environment'); inp.multiple=true; inp.onchange=()=>{ handleFiles([...inp.files],side); }; inp.click(); }catch(e){ toast(LANG==='en'?'Camera not available':'Kamera tidak tersedia','error'); } }
 function previewForm(side,i){ openLightbox(formMedia[side],i); }
 async function uploadMedia(m){
@@ -1381,7 +1383,7 @@ function anyModalOpen(){ return !!document.querySelector('.modal-bg.open'); }
 function openModal(id){ document.querySelectorAll('.modal-bg.open').forEach(m=>{ if(m.id!==id) m.classList.remove('open'); }); const el=document.getElementById(id); if(el) el.classList.add('open'); if(!_modalHist){ try{ history.pushState({rlModal:1},''); }catch(e){} _modalHist=true; } try{ applyLang(); }catch(e){} }
 function closeModal(id){ if(id==='camModal'){ try{ stopCamStream(); }catch(e){} } const el=document.getElementById(id); if(el) el.classList.remove('open'); if(_modalHist && !anyModalOpen()){ _modalHist=false; try{ history.back(); }catch(e){} } }
 function closeAllModals(){ const was=anyModalOpen(); document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); if(was && _modalHist){ _modalHist=false; try{ history.back(); }catch(e){} } }
-window.addEventListener('popstate',()=>{ if($('formModal').classList.contains('open') && formDirty){ try{ history.pushState({rlModal:1},''); }catch(e){} requestCloseModal('formModal'); return; } if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
+window.addEventListener('popstate',()=>{ if($('camModal')&&$('camModal').classList.contains('open')){ try{ history.pushState({rlModal:1},''); }catch(e){} closeCamera(); return; } if($('formModal').classList.contains('open') && formDirty){ try{ history.pushState({rlModal:1},''); }catch(e){} requestCloseModal('formModal'); return; } if(anyModalOpen()){ document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open')); _modalHist=false; } });
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) requestCloseModal(bg.id); }));
 
 // ====== TOAST (notifikasi ringan pengganti alert) ======
