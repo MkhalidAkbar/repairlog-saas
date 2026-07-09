@@ -272,6 +272,7 @@
     <button id="navList" onclick="showTab('list')">Laporan</button>
     <button id="navBoard" onclick="showTab('board')">Papan</button>
     <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
+    <button id="navAttend" onclick="showTab('attend')" style="display:none">Absensi</button>
     <button class="btn small" onclick="openForm()">+ Tambah</button>
     <button class="btn small secondary notifwrap" id="notifBtn" onclick="showTab('board')" title="Notifikasi komentar">🔔<span class="notif-dot" id="notifDot" style="display:none">0</span></button>
     <button class="btn small secondary" id="settingsBtn" onclick="openSettings()" title="Pengaturan">⚙️</button>
@@ -327,6 +328,13 @@
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">📊 Laporan Keuangan</h2><button class="btn small secondary" onclick="exportCsv()">⬇️ Export CSV (Excel)</button></div>
     <p class="muted" style="margin-bottom:14px">Rekap berdasarkan bulan tanggal masuk. Hanya Owner yang bisa melihat halaman ini.</p>
     <div id="financeBox"></div>
+  </div>
+
+  <div id="tab-attend" style="display:none">
+    <div class="row" style="margin-bottom:6px"><h2 style="margin:0">🕐 Absensi Teknisi</h2></div>
+    <p class="muted" style="margin-bottom:14px">Catat jam masuk & pulang. Owner melihat semua teknisi; teknisi melihat riwayatnya sendiri.</p>
+    <div id="attendSelf" style="margin-bottom:18px"></div>
+    <div id="attendBox"></div>
   </div>
 </div>
 
@@ -612,9 +620,9 @@ const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'
 const VENDOR_BRAND={name:'TeknoPartner.ID',tagline:'Manajemen Servis Laptop',logo:'🛠️',logoUrl:'',color:'#4f46e5',ticketCompany:'TP',ticketSide:'SVC'};
 let BRAND={...BRAND_DEFAULT};
 // versi jual: semua fitur Pro aktif secara default (dikunci Pro). whitelabel dikontrol dari master panel.
-const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true,collab:true,whitelabel:true};
+const FEATURES_DEFAULT={dashboard:true,charts:true,publicLink:true,print:true,biometric:true,profit:true,whatsapp:true,collab:true,waNotif:true,qrReceipt:true,publicTracking:true,attendance:true,whitelabel:true};
 let FEATURES={...FEATURES_DEFAULT};
-const FEAT_LABELS={dashboard:'Dashboard & statistik',charts:'Grafik',publicLink:'Link garansi publik',print:'Cetak / PDF',biometric:'Login sidik jari',profit:'Modal & Laba',whatsapp:'No. WhatsApp customer',collab:'Kolaborasi (Papan, komentar, notifikasi)'};
+const FEAT_LABELS={dashboard:'Dashboard & statistik',charts:'Grafik',publicLink:'Link garansi publik',print:'Cetak / PDF',biometric:'Login sidik jari',profit:'Modal & Laba',whatsapp:'No. WhatsApp customer',collab:'Kolaborasi (Papan, komentar, notifikasi)',waNotif:'Notifikasi WhatsApp (selesai & reminder)',qrReceipt:'QR code di struk',publicTracking:'Status tracking publik',attendance:'Absensi teknisi'};
 
 let ME={role:'teknisi',name:'',email:'',user_id:null,store_id:null};
 const isOwner=()=>ME.role==='owner';
@@ -744,6 +752,7 @@ function applyFeatures(){
   $('bioSetRow').style.display=FEATURES.biometric?'':'none';
   if($('navBoard')) $('navBoard').style.display=FEATURES.collab?'':'none';
   if($('notifBtn')) $('notifBtn').style.display=FEATURES.collab?'':'none';
+  if($('navAttend')) $('navAttend').style.display=FEATURES.attendance?'':'none';
   applyRole();
 }
 
@@ -808,13 +817,16 @@ function showTab(t){
   $('tab-list').style.display=t==='list'?'':'none';
   $('tab-board').style.display=t==='board'?'':'none';
   $('tab-finance').style.display=t==='finance'?'':'none';
+  const _ta=$('tab-attend'); if(_ta) _ta.style.display=t==='attend'?'':'none';
   $('navDash').classList.toggle('active',t==='dash');
   $('navList').classList.toggle('active',t==='list');
   $('navBoard').classList.toggle('active',t==='board');
   $('navFinance').classList.toggle('active',t==='finance');
+  const _na=$('navAttend'); if(_na) _na.classList.toggle('active',t==='attend');
   if(t==='dash') renderDash();
   if(t==='board') renderBoard();
   if(t==='finance') renderFinance();
+  if(t==='attend') renderAttend();
 }
 
 // ====== MEDIA ======
@@ -977,7 +989,10 @@ async function saveReport(){
     }
     closeForm(); await loadAll();
     checkStorageWarn();
-    if(newTicket){ const nr=reports.find(x=>x.ticket_no===newTicket); if(nr && FEATURES.print){ showMini('Laporan tersimpan ✅','Cetak Tanda Terima Servis untuk customer sekarang?',[{label:'Nanti',cls:'secondary',fn:null},{label:'🧾 Cetak',fn:()=>doReceipt(nr.id)}]); } }
+    const _tgt=id?reports.find(x=>x.id===id):(newTicket?reports.find(x=>x.ticket_no===newTicket):null);
+    const _canWa=_tgt&&FEATURES.waNotif&&FEATURES.whatsapp&&_tgt.customer_phone&&payload.status==='Selesai';
+    const _canPrint=newTicket&&_tgt&&FEATURES.print;
+    if(_canWa||_canPrint){ const _b=[{label:'Nanti',cls:'secondary',fn:null}]; if(_canPrint) _b.push({label:'🧾 Cetak',fn:()=>doReceipt(_tgt.id)}); if(_canWa) _b.push({label:'📲 Info WA',fn:()=>waNotifDone(_tgt.id)}); showMini(_canWa?'Servis selesai ✅':'Laporan tersimpan ✅',_canWa?'Kirim info "sudah selesai" ke WhatsApp customer?':'Cetak Tanda Terima Servis untuk customer sekarang?',_b); }
   }catch(e){ toast('Gagal menyimpan: '+(e.message||e),'error'); }
   finally{ $('saveBtn').disabled=false; $('saveBtn').textContent='Simpan'; }
 }
@@ -1012,7 +1027,7 @@ function openDetail(id){
   const lv=LEVELS[r.level]||LEVELS[1];
   const money=(isOwner()&&FEATURES.profit)?`<tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr><tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr><tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr><tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
   detailMedia={before:(r.before_media||[]),after:(r.after_media||[])}; if($('detailContent')) $('detailContent').style.maxWidth='';
-  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Garansi</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
+  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifDone('${r.id}')">✅ Info Selesai</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifRemind('${r.id}')">⏰ Reminder</button>`:''}${FEATURES.publicTracking?`<button class="btn secondary small" onclick="copyTrackLink('${r.id}',this)">📍 Link Status</button>`:''}${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Garansi</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
   openModal('detailModal');
   afterOpenDetail(r.id);
 }
@@ -1313,7 +1328,8 @@ async function setUserRole(uid,role){
 
 // ====== LINK GARANSI PUBLIK ======
 function copyLink(id,btn){ const url=location.origin+location.pathname+'#/g/'+id; const ok=()=>{ if(btn){ const t=btn.dataset.orig||btn.innerHTML; btn.dataset.orig=t; btn.innerHTML='✅ Link disalin!'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML=t; btn.classList.remove('copied'); },1800); } else { toast('Link garansi disalin.','success'); } }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,()=>showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null)); } else { showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null); } }
-function handleRoute(){ const m=location.hash.match(/^#\/g\/(.+)$/); if(m){ renderPublic(m[1]); return true; } return false; }
+function copyTrackLink(id,btn){ const url=location.origin+location.pathname+'#/t/'+id; const ok=()=>{ if(btn){ const o=btn.dataset.orig||btn.innerHTML; btn.dataset.orig=o; btn.innerHTML='✅ Link disalin!'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML=o; btn.classList.remove('copied'); },1800); } else { toast('Link status disalin.','success'); } }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,()=>showPrompt('Salin Link Status','Salin link ini secara manual:','',url,null)); } else { showPrompt('Salin Link Status','Salin link ini secara manual:','',url,null); } }
+function handleRoute(){ const g=location.hash.match(/^#\/g\/(.+)$/); if(g){ renderPublic(g[1]); return true; } const tk=location.hash.match(/^#\/t\/(.+)$/); if(tk){ renderTracking(tk[1]); return true; } return false; }
 window.addEventListener('hashchange',()=>{ if(!handleRoute()) location.reload(); });
 async function renderPublic(id){
   hideBoot();
@@ -1326,6 +1342,24 @@ async function renderPublic(id){
   const wHtml=r.warranty_days?(w.active?`<div class="pub-warranty ok">✅ Garansi AKTIF — sisa <b>${w.daysLeft} hari</b><br>Berlaku sampai <b>${wend}</b></div>`:`<div class="pub-warranty no">❌ Garansi sudah berakhir${w.end?' ('+wend+')':''}</div>`):`<div class="pub-warranty no">Tanpa garansi</div>`;
   const bd=BRAND;
   pv.innerHTML=`<div class="pub-card"><div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">${bd.logoUrl?`<img src="${esc(bd.logoUrl)}" alt="logo" style="height:48px;width:48px;object-fit:contain" />`:esc(bd.logo||'🛠️')}</div><h1>${esc(bd.name||'RepairLog')}</h1><p class="muted">${esc(bd.tagline||'')}</p></div><div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">No. Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p>${wHtml}<table class="ftbl"><tr><td>Device</td><td>${esc(r.device||'-')}</td></tr><tr><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr><tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Lama Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr></table>${(r.components||[]).length?`<div style="margin-top:10px"><div class="muted" style="margin-bottom:4px">Komponen / bagian yang dikerjakan:</div>${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}<div class="ba"><div class="box"><h4>🔧 Sebelum</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ Sesudah</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="insight" style="margin-top:16px"><b>ℹ️ Info garansi untuk customer</b><br>• Simpan halaman ini sebagai bukti servis & garansi.<br>• Garansi berlaku untuk perbaikan yang sama selama masa garansi di atas.<br>• Garansi hangus bila segel rusak, terkena cairan, atau ada kerusakan fisik baru akibat pemakaian.<br>• Tunjukkan halaman ini saat klaim garansi.</div><p class="muted" style="text-align:center;margin-top:16px;font-size:12px">Dokumentasi servis oleh ${esc(bd.name||'RepairLog')}</p></div>`;
+}
+
+// ====== TRACKING STATUS PUBLIK (diperbarui otomatis via polling) ======
+let _trackTimer=null;
+async function renderTracking(id){
+  hideBoot();
+  document.querySelector('header').style.display='none'; document.querySelector('.container').style.display='none'; $('authScreen').style.display='none';
+  const pv=$('publicView'); pv.style.display='block'; pv.innerHTML='<div class="pub-card">Memuat...</div>';
+  async function paint(){
+    let r=null; try{ const {data}=await db.rpc('get_tracking',{p_id:id}); r=data||null; }catch(e){}
+    if(!r){ pv.innerHTML='<div class="pub-card"><h2>Data tidak ditemukan</h2><p class="muted">Link status tidak valid.</p></div>'; if(_trackTimer){ clearInterval(_trackTimer); _trackTimer=null; } return; }
+    const bd=BRAND; const cur=r.stage||'Antri'; let ci=STAGES.indexOf(cur); if(ci<0) ci=0;
+    const steps=STAGES.map((s,i)=>{ const active=i<=ci; const isNow=i===ci; const circle=active?(i<ci?'✓':'●'):(i+1); return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0"><div style="width:28px;height:28px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:${active?stageColor(s):'#cbd5e1'}">${circle}</div><div style="font-weight:${isNow?'800':'500'};color:${isNow?'var(--text)':'var(--muted)'}">${esc(s)}${isNow?' — sekarang':''}</div></div>`; }).join('');
+    const logo=bd.logoUrl?`<img src="${esc(bd.logoUrl)}" alt="logo" style="height:48px;width:48px;object-fit:contain" />`:esc(bd.logo||'🛠️');
+    pv.innerHTML=`<div class="pub-card"><div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">${logo}</div><h1>${esc(bd.name||'RepairLog')}</h1><p class="muted">${esc(bd.tagline||'')}</p></div><div class="row"><h2 style="margin:0">${esc(r.device||'-')}</h2><span class="badge" style="background:${stageColor(cur)}">${esc(cur)}</span></div><p class="muted">No. Tiket: ${esc(r.ticket_no||'-')} • ${esc(r.brand||'-')}</p><div style="margin:16px 0;border:1px solid var(--border);border-radius:12px;padding:6px 16px">${steps}</div><div class="insight">ℹ️ Halaman ini menampilkan status pengerjaan servis Anda. Diperbarui otomatis setiap beberapa detik.</div><p class="muted" style="text-align:center;margin-top:12px;font-size:12px">Masuk: ${fmtDate(r.date_in)} • Dokumentasi oleh ${esc(bd.name||'RepairLog')}</p></div>`;
+  }
+  await paint();
+  if(_trackTimer) clearInterval(_trackTimer); _trackTimer=setInterval(paint,15000);
 }
 
 // ====== CETAK / PDF ======
@@ -1341,7 +1375,7 @@ function doPrint(id){
 function doReceipt(id){
   const r=reports.find(x=>x.id===id); if(!r) return;
   const logo=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" alt="logo" />`:`<div class="logo-emoji">${esc(BRAND.logo||'🛠️')}</div>`;
-  $('printArea').innerHTML=`<div class="print-head">${logo}<h1>${esc(BRAND.name||'RepairLog')}</h1></div><div class="print-sub">${esc(BRAND.tagline||'')} — TANDA TERIMA SERVIS</div><table class="print-tbl"><tr><td>No. Tiket</td><td>${esc(r.ticket_no||'-')}</td><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td><td>No. HP / WA</td><td>${esc(r.customer_phone||'-')}</td></tr><tr><td>Device</td><td>${esc(r.device||'-')}</td><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Keluhan</td><td colspan="3">${esc(r.before_notes||'-')}</td></tr><tr><td>Kelengkapan</td><td colspan="3">${esc((r.components||[]).join(', ')||'-')}</td></tr><tr><td>Estimasi Biaya</td><td colspan="3">${r.fee?rp(r.fee):'Menyusul'}</td></tr></table><div class="receipt-note"><b>Catatan:</b><br>• Simpan struk ini sebagai bukti pengambilan barang.<br>• Barang yang tidak diambil lebih dari 30 hari di luar tanggung jawab toko.<br>• Estimasi biaya & waktu dapat berubah sesuai kondisi kerusakan.</div><div class="receipt-sign"><div>Penerima,<br><br><br>( ${esc(BRAND.name||'')} )</div><div>Customer,<br><br><br>( ${esc(r.customer||'')} )</div></div><div class="print-foot">${esc(BRAND.name||'RepairLog')} — Dicetak ${new Date().toLocaleString('id-ID')}</div>`;
+  $('printArea').innerHTML=`<div class="print-head">${logo}<h1>${esc(BRAND.name||'RepairLog')}</h1></div><div class="print-sub">${esc(BRAND.tagline||'')} — TANDA TERIMA SERVIS</div><table class="print-tbl"><tr><td>No. Tiket</td><td>${esc(r.ticket_no||'-')}</td><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td><td>No. HP / WA</td><td>${esc(r.customer_phone||'-')}</td></tr><tr><td>Device</td><td>${esc(r.device||'-')}</td><td>Merek</td><td>${esc(r.brand||'-')}</td></tr><tr><td>Keluhan</td><td colspan="3">${esc(r.before_notes||'-')}</td></tr><tr><td>Kelengkapan</td><td colspan="3">${esc((r.components||[]).join(', ')||'-')}</td></tr><tr><td>Estimasi Biaya</td><td colspan="3">${r.fee?rp(r.fee):'Menyusul'}</td></tr></table>${FEATURES.qrReceipt?`<div style="text-align:center;margin:12px 0"><img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(location.origin+location.pathname+'#/'+(FEATURES.publicTracking?'t':'g')+'/'+r.id)}" alt="QR" style="width:120px;height:120px" /><div style="font-size:10px;color:#555;margin-top:2px">Scan untuk cek status servis & garansi</div></div>`:''}<div class="receipt-note"><b>Catatan:</b><br>• Simpan struk ini sebagai bukti pengambilan barang.<br>• Barang yang tidak diambil lebih dari 30 hari di luar tanggung jawab toko.<br>• Estimasi biaya & waktu dapat berubah sesuai kondisi kerusakan.</div><div class="receipt-sign"><div>Penerima,<br><br><br>( ${esc(BRAND.name||'')} )</div><div>Customer,<br><br><br>( ${esc(r.customer||'')} )</div></div><div class="print-foot">${esc(BRAND.name||'RepairLog')} — Dicetak ${new Date().toLocaleString('id-ID')}</div>`;
   window.print();
 }
 
@@ -1349,6 +1383,13 @@ function doReceipt(id){
 function waNumber(phone){ let p=(phone||'').replace(/[^0-9]/g,''); if(!p) return ''; if(p.startsWith('0')) p='62'+p.slice(1); else if(p.startsWith('8')) p='62'+p; return p; }
 function waChat(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n,'whatsapp'); }
 function waSend(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } const link=location.origin+location.pathname+'#/g/'+r.id; const msg='Halo '+(r.customer||'')+', berikut kartu garansi servis '+r.device+' di '+(BRAND.name||'RepairLog')+':\n'+link; window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'whatsapp'); }
+// ====== TEMPLATE & KIRIM NOTIFIKASI WHATSAPP (klik-kirim) — boleh diedit sendiri. Placeholder: {nama} {device} {tiket} {toko} {link} ======
+const WA_TPL_DONE='Halo {nama} 👋\n\nKabar baik! Servis *{device}* (No. Tiket {tiket}) di *{toko}* sudah *SELESAI* ✅ dan siap diambil.\n\nCek detail & kartu garansi di sini:\n{link}\n\nTerima kasih sudah mempercayakan servisnya 🙏';
+const WA_TPL_REMIND='Halo {nama} 👋\n\nMengingatkan ya, *{device}* (No. Tiket {tiket}) yang sudah selesai di *{toko}* belum diambil. Kami tunggu kedatangannya 🙏\n\nDetail servis:\n{link}\n\nTerima kasih 🙏';
+function trackOrWarrantyLink(r){ return location.origin+location.pathname+'#/'+(FEATURES.publicTracking?'t':'g')+'/'+r.id; }
+function waFill(tpl,r){ return (tpl||'').replace(/{nama}/g,r.customer||'Kak').replace(/{device}/g,r.device||'').replace(/{tiket}/g,r.ticket_no||'-').replace(/{toko}/g,BRAND.name||'RepairLog').replace(/{link}/g,trackOrWarrantyLink(r)); }
+function waNotifDone(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n+'?text='+encodeURIComponent(waFill(WA_TPL_DONE,r)),'whatsapp'); }
+function waNotifRemind(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n+'?text='+encodeURIComponent(waFill(WA_TPL_REMIND,r)),'whatsapp'); }
 function csvCell(v){ v=(v==null?'':String(v)); return '"'+v.replace(/"/g,'""')+'"'; }
 function exportCsv(){
   if(!isOwner()){ toast('Hanya Owner.','error'); return; }
@@ -1436,6 +1477,22 @@ async function checkLicense(){
     if(row.storage_limit_mb!=null) LICENSE_STORAGE_MB=Number(row.storage_limit_mb);
     return true;
   }catch(e){ return true; } // gagal cek (offline dll) → biarkan toko tetap jalan
+}
+
+// ====== ABSENSI TEKNISI (fitur terpisah) ======
+function fmtTime(t){ return t?new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'-'; }
+function todayStr(){ return new Date().toLocaleDateString('en-CA'); }
+async function loadMyAttendanceToday(){ if(!db||!ME.user_id) return null; const {data}=await db.from('attendance').select('*').eq('user_id',ME.user_id).eq('work_date',todayStr()).order('created_at',{ascending:false}).limit(1); return (data&&data[0])||null; }
+async function attendCheckIn(){ if(!db||!ME.user_id){ toast('Belum siap.','error'); return; } const cur=await loadMyAttendanceToday(); if(cur&&cur.check_in&&!cur.check_out){ toast('Kamu sudah check-in hari ini.','error'); return; } const {error}=await db.from('attendance').insert({store_id:STORE_ID,user_id:ME.user_id,user_name:ME.name||ME.email,check_in:new Date().toISOString(),work_date:todayStr()}); if(error){ toast('Gagal check-in: '+error.message,'error'); return; } toast('Check-in tercatat ✅','success'); renderAttend(); }
+async function attendCheckOut(){ if(!db||!ME.user_id) return; const cur=await loadMyAttendanceToday(); if(!cur||!cur.check_in){ toast('Belum check-in hari ini.','error'); return; } if(cur.check_out){ toast('Sudah check-out hari ini.','error'); return; } const {error}=await db.from('attendance').update({check_out:new Date().toISOString()}).eq('id',cur.id); if(error){ toast('Gagal check-out: '+error.message,'error'); return; } toast('Check-out tercatat ✅','success'); renderAttend(); }
+async function renderAttend(){
+  if(!FEATURES.attendance||!db) return;
+  const cur=await loadMyAttendanceToday();
+  const self=$('attendSelf');
+  if(self){ const inT=cur&&cur.check_in?fmtTime(cur.check_in):'—'; const outT=cur&&cur.check_out?fmtTime(cur.check_out):'—'; const btns=(!cur||!cur.check_in)?`<button class="btn small" onclick="attendCheckIn()">🟢 Check-in</button>`:((cur.check_in&&!cur.check_out)?`<button class="btn small danger" onclick="attendCheckOut()">🔴 Check-out</button>`:`<span class="pill selesai">✅ Absen hari ini selesai</span>`); self.innerHTML=`<div class="card"><div class="row"><h3 style="margin:0">👤 ${esc(ME.name||ME.email||'Saya')}</h3><span class="muted">${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</span></div><div class="row" style="flex-wrap:wrap;gap:10px"><div>Masuk: <b>${inT}</b> &nbsp;•&nbsp; Pulang: <b>${outT}</b></div><div style="display:flex;gap:8px">${btns}</div></div></div>`; }
+  const box=$('attendBox'); if(!box) return;
+  if(isOwner()){ const {data}=await db.from('attendance').select('*').eq('store_id',STORE_ID).order('work_date',{ascending:false}).order('check_in',{ascending:false}).limit(300); if(!data||!data.length){ box.innerHTML='<div class="empty">Belum ada data absensi.</div>'; return; } box.innerHTML=`<h3 style="margin:6px 0 10px">📋 Rekap Semua Teknisi</h3><table class="ftbl"><tr><th>Tanggal</th><th>Teknisi</th><th>Masuk</th><th>Pulang</th></tr>`+data.map(a=>`<tr><td>${fmtDate(a.work_date)}</td><td>${esc(a.user_name||'-')}</td><td>${fmtTime(a.check_in)}</td><td>${fmtTime(a.check_out)}</td></tr>`).join('')+`</table>`; }
+  else{ const {data}=await db.from('attendance').select('*').eq('user_id',ME.user_id).order('work_date',{ascending:false}).limit(60); box.innerHTML=(!data||!data.length)?'<div class="empty">Belum ada riwayat absensi.</div>':(`<h3 style="margin:6px 0 10px">📋 Riwayat Absensi Saya</h3><table class="ftbl"><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th></tr>`+data.map(a=>`<tr><td>${fmtDate(a.work_date)}</td><td>${fmtTime(a.check_in)}</td><td>${fmtTime(a.check_out)}</td></tr>`).join('')+`</table>`); }
 }
 
 // ====== BOOT ======
