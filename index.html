@@ -701,7 +701,9 @@ const APP_VERSION='v2.4';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
 const DEVICE_SPECS={'Laptop':[{key:'seri',label:'Tipe / Seri',ph:'cth: X441UA'},{key:'keluhan',label:'Keluhan',type:'select',opts:['Mati total','Tidak masuk Windows','LCD/Layar','Keyboard','Baterai/Charging','Overheat/Panas','Lemot','Kena air','Lainnya']}],'PC/Komputer':[{key:'prosesor',label:'Prosesor',ph:'cth: Core i5-9400'},{key:'ram',label:'RAM',ph:'cth: 8GB'},{key:'storage',label:'Storage',ph:'cth: SSD 256GB'},{key:'vga',label:'VGA',ph:'cth: GTX 1650 / Onboard'},{key:'keluhan',label:'Keluhan',type:'select',opts:['Mati total','Tidak tampil','Restart sendiri','Lemot','Kena virus','Rakit baru','Lainnya']}],'Printer':[{key:'tipe',label:'Tipe',type:'select',opts:['Inkjet','Laser','Dot Matrix','Infus']},{key:'keluhan',label:'Keluhan',type:'select',opts:['Macet kertas','Hasil bergaris','Tidak narik kertas','Tinta tidak keluar','Error/lampu blink','Lainnya']}],'HP/Smartphone':[{key:'imei',label:'IMEI / SN',ph:'opsional'},{key:'keluhan',label:'Keluhan',type:'select',opts:['LCD/Touchscreen','Baterai','Mati total','Kena air','Software/Bootloop','Konektor charging','Lainnya']}],'CCTV':[{key:'jumlah',label:'Jumlah Kamera',ph:'cth: 4'},{key:'perekam',label:'DVR/NVR',ph:'cth: DVR 8CH'},{key:'keluhan',label:'Keluhan',type:'select',opts:['Tidak tampil','Tidak merekam','Kabur/buram','Offline/remote','Pasang baru','Lainnya']}]};
-const COMPONENTS=['Kipas/Cooling','Thermal Paste','RAM','SSD/HDD','Baterai','Keyboard','LCD/Layar','Motherboard','Charger/Adaptor','Engsel','Casing','Speaker','Sistem Operasi','Lainnya'];
+const COMPONENTS_BY_TYPE={'Laptop':['Kipas/Cooling','Thermal Paste','RAM','SSD/HDD','Baterai','Keyboard','LCD/Layar','Motherboard','Charger/Adaptor','Engsel','Casing','Speaker','Sistem Operasi','Lainnya'],'PC/Komputer':['Prosesor','RAM','SSD/HDD','VGA/GPU','Motherboard','PSU/Power Supply','Cooling/Fan','Casing','Kabel/Konektor','Sistem Operasi','Lainnya'],'Printer':['Head/Cartridge','Roller Penarik','Selang Infus','Mainboard','Sensor','Gear/Gigi','Power Supply','Tinta/Toner','Lainnya'],'HP/Smartphone':['LCD/Touchscreen','Baterai','Konektor Charging','Speaker/Mic','Kamera','Tombol Power/Volume','IC Power','Board/Mainboard','Software/Sistem','Lainnya'],'CCTV':['Kamera','Adaptor/Power','Kabel/Konektor','DVR/NVR','Harddisk','Setting/Konfigurasi','Remote/Akses Online','Lainnya']};
+const COMPONENTS=COMPONENTS_BY_TYPE['Laptop'];
+function componentsFor(t){ return COMPONENTS_BY_TYPE[t]||COMPONENTS_BY_TYPE['Laptop']; }
 const LEVELS={1:{name:'Ringan',color:'#22c55e'},2:{name:'Sedang',color:'#3b82f6'},3:{name:'Berat',color:'#f59e0b'},4:{name:'Sangat Berat',color:'#ef4444'}};
 const IMG_MAX_DIM=1600, IMG_QUALITY=0.7, VIDEO_MAX_MB=50;
 
@@ -880,8 +882,9 @@ async function guardStore(){
 }
 
 // ====== DROPDOWN & TIKET ======
-function buildCompChecks(){
-  $('compChecks').innerHTML=COMPONENTS.map(c=>`<label class="chk"><input type="checkbox" value="${esc(c)}" onchange="onCompToggle()"> ${esc(c)}</label>`).join('');
+function buildCompChecks(type){
+  const list=componentsFor(type||currentDevType());
+  $('compChecks').innerHTML=list.map(c=>`<label class="chk"><input type="checkbox" value="${esc(c)}" onchange="onCompToggle()"> ${esc(c)}</label>`).join('');
 }
 function currentDevType(){ return ($('f_devtype')&&$('f_devtype').value)||'Laptop'; }
 function buildDevTypeOptions(){ const el=$('f_devtype'); if(el) el.innerHTML=DEVICE_TYPES.map(t=>`<option>${esc(t)}</option>`).join(''); }
@@ -889,7 +892,7 @@ function buildBrandOptions(){ const bs=DEVICE_BRANDS[currentDevType()]||BRANDS; 
 function deviceLabelFor(t){ return t==='HP/Smartphone'?'Nama HP/Perangkat *':(t==='CCTV'?'Nama Sistem/Lokasi *':'Nama Perangkat *'); }
 function buildDeviceSpecFields(type,vals){ const box=$('deviceSpecFields'); if(!box) return; vals=vals||{}; const defs=DEVICE_SPECS[type]||[]; box.innerHTML=defs.map(d=>{ const v=vals[d.key]!=null?vals[d.key]:''; if(d.type==='select'){ return `<div><label>${esc(d.label)}</label><select data-spec="${esc(d.key)}"><option value="">— pilih —</option>${(d.opts||[]).map(o=>`<option${String(v)===o?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`; } return `<div><label>${esc(d.label)}</label><input data-spec="${esc(d.key)}" value="${esc(String(v))}" placeholder="${esc(d.ph||'')}" /></div>`; }).join(''); }
 function getDeviceSpecs(){ const o={}; document.querySelectorAll('#deviceSpecFields [data-spec]').forEach(el=>{ const k=el.getAttribute('data-spec'); const val=(el.value||'').trim(); if(val) o[k]=val; }); return o; }
-function onDevTypeChange(){ const t=currentDevType(); buildBrandOptions(); buildDeviceSpecFields(t,{}); const dl=$('f_deviceLabel'); if(dl) dl.textContent=deviceLabelFor(t); }
+function onDevTypeChange(){ const t=currentDevType(); const prev=getSelectedComps(); buildBrandOptions(); buildDeviceSpecFields(t,{}); buildCompChecks(t); setComps(prev); onCompToggle(); const dl=$('f_deviceLabel'); if(dl) dl.textContent=deviceLabelFor(t); }
 function buildAssignOptions(sel){ const el=$('f_assigned'); if(!el) return; el.innerHTML='<option value="">— Belum di-assign —</option>'+TEAM.map(t=>`<option value="${t.user_id}"${sel===t.user_id?' selected':''}>${esc(t.name||t.email)}</option>`).join(''); }
 function getSelectedComps(){ return [...document.querySelectorAll('#compChecks input:checked')].map(i=>i.value); }
 function setComps(arr){ document.querySelectorAll('#compChecks input').forEach(i=>{i.checked=(arr||[]).includes(i.value);}); }
@@ -1030,7 +1033,7 @@ function openForm(id){
   $('formTitle').textContent=r?'Edit Laporan':'Tambah Laporan';
   $('f_id').value=r?r.id:'';
   if($('f_devtype')) $('f_devtype').value=(r&&r.device_type)||'Laptop';
-  buildBrandOptions(); buildDeviceSpecFields((r&&r.device_type)||'Laptop', r?r.device_specs:null);
+  buildBrandOptions(); buildDeviceSpecFields((r&&r.device_type)||'Laptop', r?r.device_specs:null); buildCompChecks((r&&r.device_type)||'Laptop');
   { const _dl=$('f_deviceLabel'); if(_dl) _dl.textContent=deviceLabelFor((r&&r.device_type)||'Laptop'); }
   $('f_device').value=r?r.device||'':'';
   $('f_customer').value=r?r.customer||'':'';
