@@ -338,6 +338,7 @@
 
 <div class="container" id="appMain" style="display:none">
   <div id="tab-dash">
+    <div class="toolbar" style="margin-bottom:12px"><label style="align-self:center;font-weight:600">🔧 Jenis Perangkat:</label><select id="dashDevFilter" onchange="renderDash()" style="max-width:200px"><option value="">Semua Perangkat</option></select></div>
     <div class="stat-grid" id="statGrid"></div>
     <div class="insight" id="insight"></div>
     <div id="warrantyAlert"></div>
@@ -346,6 +347,7 @@
       <div class="chartbox"><h3>🍩 Distribusi per Level</h3><canvas id="chartLevel"></canvas></div>
       <div class="chartbox"><h3>📈 Komponen Paling Sering</h3><canvas id="chartComp"></canvas></div>
       <div class="chartbox"><h3>💻 Merek Paling Sering</h3><canvas id="chartBrand"></canvas></div>
+      <div class="chartbox"><h3>🖥️ Distribusi per Jenis Perangkat</h3><canvas id="chartDevType"></canvas></div>
     </div>
     <div id="techPerf"></div>
     <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px"><h2 style="margin:0">📌 Pekerjaan Terbaru</h2><div id="recentRange" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
@@ -366,6 +368,7 @@
         <option value="Selesai">Selesai</option>
         <option value="Batal">Batal / Gagal</option>
       </select>
+      <select id="filterDevType" onchange="render()" style="max-width:170px"><option value="">Semua Jenis</option></select>
       <select id="filterBrand" onchange="render()" style="max-width:160px"><option value="">Semua Merek</option></select>
       <button class="btn" onclick="openForm()">+ Tambah Laporan</button>
     </div>
@@ -393,6 +396,7 @@
   <div id="tab-stock" style="display:none">
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">📦 Stok Sparepart</h2><button class="btn small" onclick="openPartForm()">+ Tambah Sparepart</button></div>
     <p class="muted" style="margin-bottom:14px">Kelola stok sparepart. Stok otomatis berkurang saat dipakai di laporan (ambil dari stok). Hanya Owner yang bisa melihat halaman ini.</p>
+    <div class="toolbar" style="margin-bottom:12px"><label style="align-self:center;font-weight:600">🔧 Jenis Perangkat:</label><select id="stockDevFilter" onchange="renderStock()" style="max-width:200px"><option value="">Semua Perangkat</option></select></div>
     <div id="stockBox"></div>
   </div>
 </div>
@@ -499,7 +503,9 @@
     <input type="hidden" id="pf_id" />
     <label>Nama Sparepart *</label>
     <input id="pf_name" placeholder="cth: LCD 14 inci Slim" />
-    <label>Kategori</label>
+    <label>Untuk Jenis Perangkat</label>
+     <select id="pf_devtype"></select>
+     <label>Kategori</label>
     <input id="pf_cat" placeholder="cth: Layar / Baterai / Keyboard" />
     <div class="frow">
       <div><label>Stok Saat Ini</label><input id="pf_stock" type="number" min="0" placeholder="0" /></div>
@@ -892,7 +898,7 @@ function buildBrandOptions(){ const bs=DEVICE_BRANDS[currentDevType()]||BRANDS; 
 function deviceLabelFor(t){ return t==='HP/Smartphone'?'Nama HP/Perangkat *':(t==='CCTV'?'Nama Sistem/Lokasi *':'Nama Perangkat *'); }
 function buildDeviceSpecFields(type,vals){ const box=$('deviceSpecFields'); if(!box) return; vals=vals||{}; const defs=DEVICE_SPECS[type]||[]; box.innerHTML=defs.map(d=>{ const v=vals[d.key]!=null?vals[d.key]:''; if(d.type==='select'){ return `<div><label>${esc(d.label)}</label><select data-spec="${esc(d.key)}"><option value="">— pilih —</option>${(d.opts||[]).map(o=>`<option${String(v)===o?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`; } return `<div><label>${esc(d.label)}</label><input data-spec="${esc(d.key)}" value="${esc(String(v))}" placeholder="${esc(d.ph||'')}" /></div>`; }).join(''); }
 function getDeviceSpecs(){ const o={}; document.querySelectorAll('#deviceSpecFields [data-spec]').forEach(el=>{ const k=el.getAttribute('data-spec'); const val=(el.value||'').trim(); if(val) o[k]=val; }); return o; }
-function onDevTypeChange(){ const t=currentDevType(); const prev=getSelectedComps(); buildBrandOptions(); buildDeviceSpecFields(t,{}); buildCompChecks(t); setComps(prev); onCompToggle(); const dl=$('f_deviceLabel'); if(dl) dl.textContent=deviceLabelFor(t); }
+function onDevTypeChange(){ const t=currentDevType(); const prev=getSelectedComps(); buildBrandOptions(); buildDeviceSpecFields(t,{}); buildCompChecks(t); setComps(prev); onCompToggle(); buildStockPick(); const dl=$('f_deviceLabel'); if(dl) dl.textContent=deviceLabelFor(t); }
 function buildAssignOptions(sel){ const el=$('f_assigned'); if(!el) return; el.innerHTML='<option value="">— Belum di-assign —</option>'+TEAM.map(t=>`<option value="${t.user_id}"${sel===t.user_id?' selected':''}>${esc(t.name||t.email)}</option>`).join(''); }
 function getSelectedComps(){ return [...document.querySelectorAll('#compChecks input:checked')].map(i=>i.value); }
 function setComps(arr){ document.querySelectorAll('#compChecks input').forEach(i=>{i.checked=(arr||[]).includes(i.value);}); }
@@ -1112,15 +1118,18 @@ async function delFromForm(){
 let costItemsState=[];
 // ====== STOK SPAREPART ======
 let PARTS=[];
+function ensureDevFilter(id){ const el=$(id); if(!el||el.options.length>1) return; el.innerHTML=`<option value="">${id==='filterDevType'?'Semua Jenis':'Semua Perangkat'}</option>`+DEVICE_TYPES.map(t=>`<option>${esc(t)}</option>`).join(''); }
+function buildPartDevType(sel){ const pf=$('pf_devtype'); if(!pf) return; pf.innerHTML=`<option value="Umum">Umum (semua perangkat)</option>`+DEVICE_TYPES.map(t=>`<option>${esc(t)}</option>`).join(''); pf.value=sel||'Umum'; }
+function stockFilteredParts(){ const dt=($('stockDevFilter')&&$('stockDevFilter').value)||''; return dt?PARTS.filter(p=>{const pd=p.device_type||'Umum'; return pd===dt||pd==='Umum';}):PARTS; }
 async function loadParts(){ if(!db||!FEATURES.stock){ PARTS=[]; return; } try{ const {data,error}=await db.from('parts').select('*').order('name'); if(!error&&data) PARTS=data; }catch(e){} }
 function lowStockParts(){ return PARTS.filter(p=>Number(p.stock)<=Number(p.min_stock||0)); }
 async function consumePart(id,qty){ const p=PARTS.find(x=>x.id===id); let cur=p?Number(p.stock)||0:null; if(cur==null){ const {data}=await db.from('parts').select('stock').eq('id',id).single(); cur=data?Number(data.stock)||0:0; } const nv=Math.max(0,cur-(Number(qty)||0)); await db.from('parts').update({stock:nv,updated_at:new Date().toISOString()}).eq('id',id); if(p) p.stock=nv; }
 function deviceSpecsHtml(r){ const s=r.device_specs; if(!s||typeof s!=='object') return ''; const defs=DEVICE_SPECS[r.device_type]||[]; const rows=Object.keys(s).filter(k=>s[k]).map(k=>{ const d=defs.find(x=>x.key===k); return `<tr><td>${esc(d?d.label:k)}</td><td>${esc(String(s[k]))}</td></tr>`; }).join(''); return rows?`<table class="ftbl" style="margin-top:10px">${rows}</table>`:''; }
-function buildStockPick(){ const el=$('stockPick'); if(!el) return; if(!(FEATURES.stock&&isOwner()&&PARTS.length)){ el.style.display='none'; return; } el.style.display=''; el.innerHTML='<option value="">📦 Ambil dari stok…</option>'+PARTS.map(p=>`<option value="${p.id}">${esc(p.name)} — stok ${p.stock} — ${rp(p.cost_price||0)}</option>`).join(''); }
+function buildStockPick(){ const el=$('stockPick'); if(!el) return; if(!(FEATURES.stock&&isOwner()&&PARTS.length)){ el.style.display='none'; return; } el.style.display=''; const _dt=currentDevType(); const _pl=PARTS.filter(p=>{const pd=p.device_type||'Umum'; return pd==='Umum'||pd===_dt;}); el.innerHTML='<option value="">📦 Ambil dari stok…</option>'+(_pl.length?_pl:PARTS).map(p=>`<option value="${p.id}">${esc(p.name)} — stok ${p.stock} — ${rp(p.cost_price||0)}</option>`).join(''); }
 function addCostItemFromStock(id){ if(!id) return; const p=PARTS.find(x=>x.id===id); if(!p) return; if(Number(p.stock)<=0){ toast('Stok '+p.name+' habis, tetap ditambahkan.','error'); } costItemsState.push({label:p.name,amount:Number(p.cost_price||0)||0,auto:false,partId:p.id,qty:1,consumed:false}); renderCostItems(); const el=$('stockPick'); if(el) el.value=''; }
-function renderStock(){ const box=$('stockBox'); if(!box) return; if(!(isOwner()&&FEATURES.stock)){ box.innerHTML='<div class="empty">Fitur stok tidak aktif atau Anda bukan Owner.</div>'; return; } const low=lowStockParts(); const alertHtml=low.length?`<div class="insight" style="background:#fff7ed;border-color:#fed7aa;margin-bottom:12px">⚠️ <b>${low.length}</b> sparepart menipis: `+low.map(p=>`<span class="chip">${esc(p.name)} (sisa ${p.stock})</span>`).join(' ')+`</div>`:''; const totalAsset=PARTS.reduce((a,p)=>a+(Number(p.stock)||0)*(Number(p.cost_price)||0),0); const rows=PARTS.length?PARTS.map(p=>{ const lowc=Number(p.stock)<=Number(p.min_stock||0); return `<tr><td>${esc(p.name)}</td><td>${esc(p.category||'-')}</td><td style="${lowc?'color:#ef4444;font-weight:700':''}">${p.stock}${lowc?' ⚠️':''}</td><td>${p.min_stock||0}</td><td>${rp(p.cost_price)}</td><td>${rp(p.sell_price)}</td><td><button class="btn small secondary" onclick="addStockQty('${p.id}')">➕ Masuk</button> <button class="btn small secondary" onclick="openPartForm('${p.id}')">✏️</button> <button class="btn small danger" onclick="delPart('${p.id}')">🗑️</button></td></tr>`; }).join(''):`<tr><td colspan="7" class="muted">Belum ada sparepart. Klik "+ Tambah Sparepart".</td></tr>`; box.innerHTML=alertHtml+`<div class="stat-grid"><div class="stat"><div class="num">${PARTS.length}</div><div class="lbl">Jenis Sparepart</div></div><div class="stat"><div class="num">${low.length}</div><div class="lbl">Stok Menipis</div></div><div class="stat"><div class="num">${rp(totalAsset)}</div><div class="lbl">Nilai Stok (modal)</div></div></div><table class="ftbl" style="margin-top:12px"><tr><th>Nama Sparepart</th><th>Kategori</th><th>Stok</th><th>Min</th><th>Harga Beli</th><th>Harga Jual</th><th>Aksi</th></tr>${rows}</table>`; }
-function openPartForm(id){ const p=id?PARTS.find(x=>x.id===id):null; $('pf_id').value=p?p.id:''; $('pf_name').value=p?p.name||'':''; $('pf_cat').value=p?p.category||'':''; $('pf_stock').value=p?(p.stock||0):0; $('pf_min').value=p?(p.min_stock||0):0; $('pf_cost').value=p?(p.cost_price||0):0; $('pf_sell').value=p?(p.sell_price||0):0; $('partFormTitle').textContent=p?'Edit Sparepart':'Tambah Sparepart'; openModal('partModal'); }
-async function savePart(){ const name=$('pf_name').value.trim(); if(!name){ toast('Nama sparepart wajib diisi.','error'); return; } const payload={store_id:STORE_ID,name,category:$('pf_cat').value.trim(),stock:Number($('pf_stock').value)||0,min_stock:Number($('pf_min').value)||0,cost_price:Number($('pf_cost').value)||0,sell_price:Number($('pf_sell').value)||0,updated_at:new Date().toISOString()}; const id=$('pf_id').value; try{ if(id){ await db.from('parts').update(payload).eq('id',id); } else { await db.from('parts').insert(payload); } closeModal('partModal'); await loadParts(); renderStock(); toast('Sparepart tersimpan.','success'); }catch(e){ toast('Gagal menyimpan: '+(e.message||e),'error'); } }
+function renderStock(){ const box=$('stockBox'); if(!box) return; if(!(isOwner()&&FEATURES.stock)){ box.innerHTML='<div class="empty">Fitur stok tidak aktif atau Anda bukan Owner.</div>'; return; } ensureDevFilter('stockDevFilter'); const LIST=stockFilteredParts(); const low=LIST.filter(p=>Number(p.stock)<=Number(p.min_stock||0)); const alertHtml=low.length?`<div class="insight" style="background:#fff7ed;border-color:#fed7aa;margin-bottom:12px">⚠️ <b>${low.length}</b> sparepart menipis: `+low.map(p=>`<span class="chip">${esc(p.name)} (sisa ${p.stock})</span>`).join(' ')+`</div>`:''; const totalAsset=LIST.reduce((a,p)=>a+(Number(p.stock)||0)*(Number(p.cost_price)||0),0); const rows=LIST.length?LIST.map(p=>{ const lowc=Number(p.stock)<=Number(p.min_stock||0); return `<tr><td>${esc(p.name)}</td><td><span class="chip">${esc(p.device_type||'Umum')}</span></td><td>${esc(p.category||'-')}</td><td style="${lowc?'color:#ef4444;font-weight:700':''}">${p.stock}${lowc?' ⚠️':''}</td><td>${p.min_stock||0}</td><td>${rp(p.cost_price)}</td><td>${rp(p.sell_price)}</td><td><button class="btn small secondary" onclick="addStockQty('${p.id}')">➕ Masuk</button> <button class="btn small secondary" onclick="openPartForm('${p.id}')">✏️</button> <button class="btn small danger" onclick="delPart('${p.id}')">🗑️</button></td></tr>`; }).join(''):`<tr><td colspan="8" class="muted">Belum ada sparepart untuk filter ini. Klik "+ Tambah Sparepart".</td></tr>`; box.innerHTML=alertHtml+`<div class="stat-grid"><div class="stat"><div class="num">${LIST.length}</div><div class="lbl">Jenis Sparepart</div></div><div class="stat"><div class="num">${low.length}</div><div class="lbl">Stok Menipis</div></div><div class="stat"><div class="num">${rp(totalAsset)}</div><div class="lbl">Nilai Stok (modal)</div></div></div><table class="ftbl" style="margin-top:12px"><tr><th>Nama Sparepart</th><th>Perangkat</th><th>Kategori</th><th>Stok</th><th>Min</th><th>Harga Beli</th><th>Harga Jual</th><th>Aksi</th></tr>${rows}</table>`; }
+function openPartForm(id){ const p=id?PARTS.find(x=>x.id===id):null; $('pf_id').value=p?p.id:''; buildPartDevType(p?p.device_type:''); $('pf_name').value=p?p.name||'':''; $('pf_cat').value=p?p.category||'':''; $('pf_stock').value=p?(p.stock||0):0; $('pf_min').value=p?(p.min_stock||0):0; $('pf_cost').value=p?(p.cost_price||0):0; $('pf_sell').value=p?(p.sell_price||0):0; $('partFormTitle').textContent=p?'Edit Sparepart':'Tambah Sparepart'; openModal('partModal'); }
+async function savePart(){ const name=$('pf_name').value.trim(); if(!name){ toast('Nama sparepart wajib diisi.','error'); return; } const payload={store_id:STORE_ID,name,device_type:($('pf_devtype')&&$('pf_devtype').value)||'Umum',category:$('pf_cat').value.trim(),stock:Number($('pf_stock').value)||0,min_stock:Number($('pf_min').value)||0,cost_price:Number($('pf_cost').value)||0,sell_price:Number($('pf_sell').value)||0,updated_at:new Date().toISOString()}; const id=$('pf_id').value; try{ if(id){ await db.from('parts').update(payload).eq('id',id); } else { await db.from('parts').insert(payload); } closeModal('partModal'); await loadParts(); renderStock(); toast('Sparepart tersimpan.','success'); }catch(e){ toast('Gagal menyimpan: '+(e.message||e),'error'); } }
 async function delPart(id){ if(!confirm('Hapus sparepart ini?')) return; try{ await db.from('parts').delete().eq('id',id); await loadParts(); renderStock(); toast('Sparepart dihapus.','success'); }catch(e){ toast('Gagal hapus: '+(e.message||e),'error'); } }
 function addStockQty(id){ showPrompt('Tambah Stok Masuk','Berapa unit masuk?','cth: 5','',async v=>{ const n=parseInt(v,10); if(!n||n<1){ toast('Jumlah tidak valid.','error'); return; } try{ const p=PARTS.find(x=>x.id===id); const nv=(Number(p.stock)||0)+n; await db.from('parts').update({stock:nv,updated_at:new Date().toISOString()}).eq('id',id); await loadParts(); renderStock(); toast('Stok ditambah.','success'); }catch(e){ toast('Gagal: '+(e.message||e),'error'); } }); }
 function onCompToggle(){ syncCostItemsFromComps(); renderCostItems(); }
@@ -1203,11 +1212,14 @@ function render(){
   const fl=$('filterLevel')?.value||'';
   const fs=$('filterStatus')?.value||'';
   const fb=$('filterBrand')?.value||'';
+  const fd=$('filterDevType')?.value||'';
+  ensureDevFilter('filterDevType');
   const list=reports.filter(r=>{
     const hay=`${r.device} ${r.customer} ${r.ticket_no} ${r.brand}`.toLowerCase();
     if(q&&!hay.includes(q)) return false;
     if(fl&&String(r.level)!==fl) return false;
     if(fb&&(r.brand||'')!==fb) return false;
+    if(fd&&(r.device_type||'Laptop')!==fd) return false;
     if(fs){ const s=(r.status||'').toLowerCase(); if(fs==='Batal'){ if(!(s.includes('batal')||s.includes('gagal'))) return false; } else if(!s.includes(fs.toLowerCase())) return false; }
     return true;
   });
@@ -1219,20 +1231,23 @@ function render(){
   try{ applyLang(); }catch(e){}
 }
 function renderDash(){
-  const total=reports.length;
-  const selesai=reports.filter(r=>(r.status||'').toLowerCase().includes('selesai')).length;
-  const proses=reports.filter(r=>(r.status||'').toLowerCase().includes('proses')).length;
-  const revenue=reports.reduce((a,r)=>a+(Number(r.fee)||0),0);
+  ensureDevFilter('dashDevFilter');
+  const _dt=($('dashDevFilter')&&$('dashDevFilter').value)||'';
+  const src=_dt?reports.filter(r=>(r.device_type||'Laptop')===_dt):reports;
+  const total=src.length;
+  const selesai=src.filter(r=>(r.status||'').toLowerCase().includes('selesai')).length;
+  const proses=src.filter(r=>(r.status||'').toLowerCase().includes('proses')).length;
+  const revenue=src.reduce((a,r)=>a+(Number(r.fee)||0),0);
   const sg=$('statGrid');
   if(sg){
     let cards=`<div class="stat"><div class="num">${total}</div><div class="lbl">Total Laporan</div></div><div class="stat"><div class="num">${selesai}</div><div class="lbl">Selesai</div></div><div class="stat"><div class="num">${proses}</div><div class="lbl">Proses</div></div>`;
-    if(isOwner()&&FEATURES.profit){ const cost=reports.reduce((a,r)=>a+(Number(r.cost)||0),0); cards+=`<div class="stat"><div class="num">${rp(revenue)}</div><div class="lbl">Pendapatan</div></div><div class="stat"><div class="num">${rp(revenue-cost)}</div><div class="lbl">Laba</div></div>`; }
+    if(isOwner()&&FEATURES.profit){ const cost=src.reduce((a,r)=>a+(Number(r.cost)||0),0); cards+=`<div class="stat"><div class="num">${rp(revenue)}</div><div class="lbl">Pendapatan</div></div><div class="stat"><div class="num">${rp(revenue-cost)}</div><div class="lbl">Laba</div></div>`; }
     sg.innerHTML=cards;
   }
   const ins=$('insight');
   if(ins){
     if(!total){ ins.innerHTML='Belum ada data. Tambahkan laporan pertamamu untuk melihat statistik.'; }
-    else{ const lc={1:0,2:0,3:0,4:0}; reports.forEach(r=>lc[r.level]=(lc[r.level]||0)+1); const top=Object.keys(lc).sort((a,b)=>lc[b]-lc[a])[0]; ins.innerHTML=`💡 Total <b>${total}</b> pekerjaan, <b>${selesai}</b> selesai. Paling banyak <b>Level ${top}</b> (${LEVELS[top].name}).`; }
+    else{ const lc={1:0,2:0,3:0,4:0}; src.forEach(r=>lc[r.level]=(lc[r.level]||0)+1); const top=Object.keys(lc).sort((a,b)=>lc[b]-lc[a])[0]; ins.innerHTML=`💡 Total <b>${total}</b> pekerjaan, <b>${selesai}</b> selesai. Paling banyak <b>Level ${top}</b> (${LEVELS[top].name}).`; }
   }
   const wal=$('warrantyAlert');
   if(wal){ const soon=reports.filter(r=>{const w=warrantyStatus(r); return w.active && w.daysLeft<=7;}).sort((a,b)=>warrantyStatus(a).daysLeft-warrantyStatus(b).daysLeft); wal.innerHTML=soon.length?`<div class="insight" style="background:#fff7ed;border-color:#fed7aa">⏰ <b>${soon.length}</b> garansi akan berakhir dalam ≤7 hari: `+soon.map(r=>`<span class="chip" style="cursor:pointer" onclick="openDetail('${r.id}')">${esc(r.device)} — sisa ${warrantyStatus(r).daysLeft}h</span>`).join(' ')+`</div>`:''; }
@@ -1242,15 +1257,19 @@ function renderDash(){
 function renderCharts(){
   if(typeof Chart==='undefined') return;
   Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}}); charts={};
+  const _dt=($('dashDevFilter')&&$('dashDevFilter').value)||'';
+  const R=_dt?reports.filter(r=>(r.device_type||'Laptop')===_dt):reports;
   const days=[],counts=[];
-  for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const key=d.toISOString().slice(0,10); days.push(d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})); counts.push(reports.filter(r=>(r.date_in||'').slice(0,10)===key).length); }
+  for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const key=d.toISOString().slice(0,10); days.push(d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})); counts.push(R.filter(r=>(r.date_in||'').slice(0,10)===key).length); }
   const cd=$('chartDay'); if(cd) charts.day=new Chart(cd,{type:'line',data:{labels:days,datasets:[{label:'Pekerjaan',data:counts,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.2)',fill:true,tension:.3}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
-  const lv=[1,2,3,4].map(l=>reports.filter(r=>r.level===l).length);
+  const lv=[1,2,3,4].map(l=>R.filter(r=>r.level===l).length);
   const cl=$('chartLevel'); if(cl) charts.level=new Chart(cl,{type:'doughnut',data:{labels:['L1','L2','L3','L4'],datasets:[{data:lv,backgroundColor:['#22c55e','#3b82f6','#f59e0b','#ef4444']}]},options:{plugins:{legend:{position:'bottom'}}}});
-  const cmp={}; reports.forEach(r=>(r.components||[]).forEach(c=>cmp[c]=(cmp[c]||0)+1)); const ct=Object.entries(cmp).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const cmp={}; R.forEach(r=>(r.components||[]).forEach(c=>cmp[c]=(cmp[c]||0)+1)); const ct=Object.entries(cmp).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const cc=$('chartComp'); if(cc) charts.comp=new Chart(cc,{type:'bar',data:{labels:ct.map(x=>x[0]),datasets:[{label:'Jumlah',data:ct.map(x=>x[1]),backgroundColor:'#6366f1'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}});
-  const br={}; reports.forEach(r=>{const b=r.brand||'Lainnya';br[b]=(br[b]||0)+1;}); const bt=Object.entries(br).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const br={}; R.forEach(r=>{const b=r.brand||'Lainnya';br[b]=(br[b]||0)+1;}); const bt=Object.entries(br).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const cb=$('chartBrand'); if(cb) charts.brand=new Chart(cb,{type:'bar',data:{labels:bt.map(x=>x[0]),datasets:[{label:'Jumlah',data:bt.map(x=>x[1]),backgroundColor:'#22c55e'}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+  const dtc={}; reports.forEach(r=>{const t=r.device_type||'Laptop'; dtc[t]=(dtc[t]||0)+1;}); const dtl=Object.keys(dtc);
+  const cdt=$('chartDevType'); if(cdt) charts.devtype=new Chart(cdt,{type:'doughnut',data:{labels:dtl,datasets:[{data:dtl.map(k=>dtc[k]),backgroundColor:['#6366f1','#22c55e','#f59e0b','#ef4444','#06b6d4','#a855f7']}]},options:{plugins:{legend:{position:'bottom'}}}});
 }
 function renderFinance(){
   const box=$('financeBox'); if(!box) return;
