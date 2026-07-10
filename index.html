@@ -23,6 +23,9 @@
   nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   nav button{background:transparent;color:var(--muted);border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;}
   nav button.active{background:var(--accent);color:#fff;}
+  .navtabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .navactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .menu-toggle{display:none;}
   .container{max-width:1100px;margin:0 auto;padding:24px;}
   .btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
   .btn:disabled{opacity:.6;cursor:not-allowed;}
@@ -275,19 +278,34 @@
     .receipt-sign div{flex:1;}
   }
   @media(max-width:600px){
-    .container{padding:16px;}
-    header{flex-direction:column;align-items:stretch;gap:12px;}
+    .container{padding:14px;}
+    header{flex-direction:column;align-items:stretch;gap:10px;padding:12px 14px;}
     header h1{font-size:18px;justify-content:center;}
     header small{flex-basis:auto;}
-    nav{width:100%;flex-wrap:wrap;gap:8px;justify-content:center;}
-    nav button{flex:1 1 auto;padding:10px 8px;text-align:center;}
+    nav{position:relative;width:100%;flex-wrap:wrap;gap:8px;justify-content:center;}
+    .menu-toggle{display:inline-flex !important;width:100%;justify-content:center;}
+    .navtabs{display:none;width:100%;flex-direction:column;gap:4px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:6px;}
+    .navtabs.open{display:flex;}
+    .navtabs button{width:100%;text-align:left;padding:11px 14px;}
+    .navactions{width:100%;justify-content:center;flex-wrap:wrap;gap:6px;}
+    .navactions .btn{flex:1 1 auto;}
     .ba,.charts,.frow,.frow3,.detail-grid{grid-template-columns:1fr;}
     .stat-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
     .stat{padding:14px;}
     .stat .num{font-size:24px;}
-    .modal{padding:18px;}
+    .modal{padding:16px;max-width:100%;}
     .board{gap:8px;}
     .bcol{flex-basis:82vw;}
+    .toolbar{gap:8px;}
+    .toolbar input,.toolbar select{max-width:none !important;flex:1 1 100%;}
+    .toolbar .btn{flex:1 1 100%;}
+    .toolbar label{flex-basis:100%;}
+    #stockBox,#financeBox,#custBox,#attendBox{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    #stockBox table,#financeBox table,#custBox table,#attendBox table{min-width:640px;}
+    .ftbl td,.ftbl th{padding:7px 8px;font-size:13px;}
+    #detailContent .actions .btn{flex:1 1 auto;}
+    .pub-card{padding:16px;}
+    #publicView{padding:14px;}
   }
 </style>
 </head>
@@ -325,18 +343,23 @@
   <nav>
     <span class="rolebadge" id="roleBadge"></span>
     <span class="rolebadge" id="verBadge" style="background:#eef2ff;color:#4f46e5"></span>
-    <button id="navDash" class="active" onclick="showTab('dash')">Dashboard</button>
-    <button id="navList" onclick="showTab('list')">Laporan</button>
-    <button id="navBoard" onclick="showTab('board')">Papan</button>
-    <button id="navCust" onclick="showTab('cust')" style="display:none">Pelanggan</button>
-    <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
-    <button id="navAttend" onclick="showTab('attend')" style="display:none">Absensi</button>
-    <button id="navStock" onclick="showTab('stock')" style="display:none">Stok</button>
-    <button class="btn small" onclick="openForm()">+ Tambah</button>
-    <button class="btn small secondary notifwrap" id="notifBtn" onclick="showTab('board')" title="Notifikasi komentar">🔔<span class="notif-dot" id="notifDot" style="display:none">0</span></button>
-    <button class="btn small secondary" id="settingsBtn" onclick="openSettings()" title="Pengaturan">⚙️</button>
-    <button class="btn small secondary" id="ownerBtn" onclick="openOwner()" title="Pengaturan Owner" style="display:none">🔒</button>
-    <button class="btn small secondary" onclick="startTour()" title="Panduan">❔</button>
+    <button class="btn small secondary menu-toggle" id="menuToggle" onclick="toggleNavMenu()" title="Menu">☰ Menu</button>
+    <div class="navtabs" id="navTabs">
+      <button id="navDash" class="active" onclick="showTab('dash')">Dashboard</button>
+      <button id="navList" onclick="showTab('list')">Laporan</button>
+      <button id="navBoard" onclick="showTab('board')">Papan</button>
+      <button id="navCust" onclick="showTab('cust')" style="display:none">Pelanggan</button>
+      <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
+      <button id="navAttend" onclick="showTab('attend')" style="display:none">Absensi</button>
+      <button id="navStock" onclick="showTab('stock')" style="display:none">Stok</button>
+    </div>
+    <div class="navactions">
+      <button class="btn small" onclick="openForm()">+ Tambah</button>
+      <button class="btn small secondary notifwrap" id="notifBtn" onclick="showTab('board')" title="Notifikasi komentar">🔔<span class="notif-dot" id="notifDot" style="display:none">0</span></button>
+      <button class="btn small secondary" id="settingsBtn" onclick="openSettings()" title="Pengaturan">⚙️</button>
+      <button class="btn small secondary" id="ownerBtn" onclick="openOwner()" title="Pengaturan Owner" style="display:none">🔒</button>
+      <button class="btn small secondary" onclick="startTour()" title="Panduan">❔</button>
+    </div>
   </nav>
 </header>
 
@@ -785,7 +808,7 @@ const I18N_EN={
   'Tap sidik jari untuk masuk':'Tap fingerprint to sign in','Masuk':'Sign in','Email':'Email','Password':'Password','Masuk dengan email & password':'Sign in with email & password','Lupa password?':'Forgot password?',
   '⚙️ Pengaturan':'⚙️ Settings','👤 Nama tampilan':'👤 Display name','Nama ini muncul di komentar, aktivitas, & papan — bukan dari email.':'This name shows in comments, activity & board — not your email.',
   'Login sidik jari':'Fingerprint login','Masuk cukup dengan biometrik di perangkat ini.':'Sign in with biometrics on this device.','Sidik jari aktif di perangkat ini.':'Fingerprint active on this device.','Aktifkan':'Enable','Nonaktifkan':'Disable',
-  '🔒 Pengaturan Owner':'🔒 Owner Settings','Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.':'Store branding, active features, user management, data export & owner PIN.','Keluar dari akun di perangkat ini.':'Sign out of your account on this device.',
+  '��� Pengaturan Owner':'🔒 Owner Settings','Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.':'Store branding, active features, user management, data export & owner PIN.','Keluar dari akun di perangkat ini.':'Sign out of your account on this device.',
   '🌐 Bahasa / Language':'🌐 Language','Pilih bahasa tampilan aplikasi.':'Choose the app display language.',
   'Masukkan PIN owner.':'Enter owner PIN.','Belum ada PIN. Buat PIN baru (min 4 digit) untuk mengunci menu ini.':'No PIN yet. Create a new PIN (min 4 digits) to lock this menu.','PIN Owner':'Owner PIN',
   '🏷️ Branding Toko':'🏷️ Store Branding','Nama toko':'Store name','Tagline':'Tagline','Logo (emoji)':'Logo (emoji)','Warna aksen':'Accent color','Logo PNG (opsional — untuk logo custom toko)':'PNG logo (optional — for custom store logo)','Jika diisi, logo PNG dipakai menggantikan emoji.':'If set, the PNG logo replaces the emoji.','Prefix No. Tiket':'Ticket No. Prefix','💾 Simpan Branding':'💾 Save Branding','🧩 Fitur Aktif':'🧩 Active Features','💾 Simpan Fitur':'💾 Save Features','👥 Kelola Pengguna':'👥 Manage Users','Untuk menambah atau mengurangi pengguna, hubungi admin.':'To add or remove users, contact the admin.','🔑 Ubah PIN Owner':'🔑 Change Owner PIN','PIN baru':'New PIN','Ulangi PIN':'Repeat PIN','Simpan PIN':'Save PIN',
@@ -976,8 +999,13 @@ function showTab(t){
   if(t==='attend') renderAttend();
   if(t==='stock') renderStock();
   if(t==='cust') renderCustomers();
+  try{ closeNavMenu(); }catch(e){}
   try{ applyLang(); }catch(e){}
 }
+
+// ====== NAV MENU (dropdown mobile) ======
+function toggleNavMenu(){ const n=$('navTabs'); if(n) n.classList.toggle('open'); }
+function closeNavMenu(){ const n=$('navTabs'); if(n) n.classList.remove('open'); }
 
 // ====== MEDIA ======
 function pickFiles(input,side){ handleFiles([...input.files],side); input.value=''; }
@@ -1585,7 +1613,7 @@ async function renderCustomer(id){
     try{ document.documentElement.style.setProperty('--accent',color); }catch(e){}
     const logo=r.brand_logo_url?('<img src="'+esc(r.brand_logo_url)+'" alt="logo" style="height:48px;width:48px;object-fit:contain" />'):esc(r.brand_logo||'🛠️');
     const head='<div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">'+logo+'</div><h1>'+esc(nm)+'</h1><p class="muted">'+esc(tg)+'</p></div><div class="row"><h2 style="margin:0">'+esc(r.device||'-')+'</h2><span class="badge" style="background:'+color+'">'+esc(r.ticket_no||'-')+'</span></div><p class="muted">'+esc(r.brand||'-')+(r.customer?(' • '+esc(r.customer)):'')+'</p>';
-    const done=(r.status||'').toLowerCase().includes('selesai');
+    const done=(r.status||'').toLowerCase().includes('selesai')||r.stage==='Selesai'||r.stage==='Diambil';
     const lunas=(r.payment_status||'').toLowerCase()==='lunas';
     let body='';
     if(!done){
