@@ -621,6 +621,10 @@
         <button class="btn small secondary" type="button" onclick="clearQris()">Hapus</button>
       </div>
       <div class="muted" id="brQrisStatus" style="font-size:11px;margin-top:4px">Dipakai di invoice & halaman tagihan agar customer bisa bayar via QRIS.</div>
+      <label>Rekening Bank (alternatif pembayaran)</label>
+      <input id="brBankName" placeholder="Nama Bank (mis. BCA, Mandiri)" />
+      <div class="row" style="gap:8px;margin-top:6px"><input id="brBankNo" placeholder="Nomor Rekening" style="flex:1" /><input id="brBankHolder" placeholder="Atas Nama" style="flex:1" /></div>
+      <div class="muted" style="font-size:11px;margin-top:4px">Ditampilkan di halaman pembayaran customer & invoice sebagai alternatif QRIS.</div>
       <div><label>Prefix No. Tiket</label><input id="brPrefixCo" placeholder="SVC" /></div>
       <button class="btn small" onclick="saveBrandFromForm()" style="margin-top:12px">💾 Simpan Branding</button>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
@@ -732,7 +736,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.5';
+const APP_VERSION='v2.6';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
 const DEVICE_SPECS={'Laptop':[{key:'seri',label:'Tipe / Seri',ph:'cth: X441UA'},{key:'keluhan',label:'Keluhan',type:'select',opts:['Mati total','Tidak masuk Windows','LCD/Layar','Keyboard','Baterai/Charging','Overheat/Panas','Lemot','Kena air','Lainnya']}],'PC/Komputer':[{key:'prosesor',label:'Prosesor',ph:'cth: Core i5-9400'},{key:'ram',label:'RAM',ph:'cth: 8GB'},{key:'storage',label:'Storage',ph:'cth: SSD 256GB'},{key:'vga',label:'VGA',ph:'cth: GTX 1650 / Onboard'},{key:'keluhan',label:'Keluhan',type:'select',opts:['Mati total','Tidak tampil','Restart sendiri','Lemot','Kena virus','Rakit baru','Lainnya']}],'Printer':[{key:'tipe',label:'Tipe',type:'select',opts:['Inkjet','Laser','Dot Matrix','Infus']},{key:'keluhan',label:'Keluhan',type:'select',opts:['Macet kertas','Hasil bergaris','Tidak narik kertas','Tinta tidak keluar','Error/lampu blink','Lainnya']}],'HP/Smartphone':[{key:'imei',label:'IMEI / SN',ph:'opsional'},{key:'keluhan',label:'Keluhan',type:'select',opts:['LCD/Touchscreen','Baterai','Mati total','Kena air','Software/Bootloop','Konektor charging','Lainnya']}],'CCTV':[{key:'jumlah',label:'Jumlah Kamera',ph:'cth: 4'},{key:'perekam',label:'DVR/NVR',ph:'cth: DVR 8CH'},{key:'keluhan',label:'Keluhan',type:'select',opts:['Tidak tampil','Tidak merekam','Kabur/buram','Offline/remote','Pasang baru','Lainnya']}]};
@@ -742,7 +746,7 @@ function componentsFor(t){ return COMPONENTS_BY_TYPE[t]||COMPONENTS_BY_TYPE['Lap
 const LEVELS={1:{name:'Ringan',color:'#22c55e'},2:{name:'Sedang',color:'#3b82f6'},3:{name:'Berat',color:'#f59e0b'},4:{name:'Sangat Berat',color:'#ef4444'}};
 const IMG_MAX_DIM=1600, IMG_QUALITY=0.7, VIDEO_MAX_MB=50;
 
-const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'🛠️',logoUrl:'',color:'#6366f1',ticketCompany:'RL',ticketSide:'SVC'};
+const BRAND_DEFAULT={name:'RepairLog',tagline:'Portofolio Teknisi Laptop',logo:'🛠️',logoUrl:'',color:'#6366f1',ticketCompany:'RL',ticketSide:'SVC',qrisUrl:'',bankName:'',bankNo:'',bankHolder:''};
 // brand vendor dipakai saat paket TIDAK punya white-label (Basic)
 const VENDOR_BRAND={name:'TeknoPartner.ID',tagline:'Manajemen Servis Laptop',logo:'🛠️',logoUrl:'',color:'#4f46e5',ticketCompany:'TP',ticketSide:'SVC'};
 let BRAND={...BRAND_DEFAULT};
@@ -837,7 +841,7 @@ async function saveBrand(obj){
   if(db){ await db.from('app_settings').upsert({store_id:STORE_ID,key:'branding',value:BRAND,updated_at:new Date().toISOString()},{onConflict:'store_id,key'}); }
 }
 async function saveBrandFromForm(){
-  const obj={name:$('brName').value.trim()||'RepairLog',tagline:$('brTagline').value.trim(),logo:$('brLogo').value.trim()||'🛠️',color:$('brColor').value||'#6366f1',ticketCompany:($('brPrefixCo').value.trim()||'SVC').toUpperCase()};
+  const obj={name:$('brName').value.trim()||'RepairLog',tagline:$('brTagline').value.trim(),logo:$('brLogo').value.trim()||'🛠️',color:$('brColor').value||'#6366f1',ticketCompany:($('brPrefixCo').value.trim()||'SVC').toUpperCase(),bankName:$('brBankName').value.trim(),bankNo:$('brBankNo').value.trim(),bankHolder:$('brBankHolder').value.trim()};
   await saveBrand(obj);
   toast('Branding tersimpan.','success');
 }
@@ -1192,12 +1196,14 @@ function openDetail(id){
   const lv=LEVELS[r.level]||LEVELS[1];
   const money=(isOwner()&&FEATURES.profit)?`<tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr><tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr><tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr><tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
   detailMedia={before:(r.before_media||[]),after:(r.after_media||[])}; if($('detailContent')) $('detailContent').style.maxWidth='';
-  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${r.device_type?esc(r.device_type)+' • ':''}${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}${deviceSpecsHtml(r)}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifDone('${r.id}')">✅ Info Selesai</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifRemind('${r.id}')">⏰ Reminder</button>`:''}${FEATURES.publicTracking?`<button class="btn secondary small" onclick="copyTrackLink('${r.id}',this)">📍 Link Status</button>`:''}${FEATURES.publicLink?`<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Garansi</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${FEATURES.qris?`<button class="btn secondary small" onclick="doInvoice('${r.id}')">📄 Invoice/Bukti Bayar</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
+  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${r.device_type?esc(r.device_type)+' • ':''}${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}${r.payment_proof?`<tr><td>Bukti Transfer</td><td><img src="${r.payment_proof}" style="max-width:110px;border-radius:6px;cursor:pointer" onclick="showProof('${r.id}')" /> <span class="muted" style="font-size:11px">${(r.payment_status||'').toLowerCase()==='lunas'?'✅ terverifikasi':'⏳ belum diverifikasi'}</span></td></tr>`:''}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}${deviceSpecsHtml(r)}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waSend('${r.id}')">📲 Kirim Garansi</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifDone('${r.id}')">✅ Info Selesai</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifRemind('${r.id}')">⏰ Reminder</button>`:''}<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Servis</button>${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${(isOwner()&&r.payment_proof&&(r.payment_status||'').toLowerCase()!=='lunas')?`<button class="btn small" style="background:#16a34a" onclick="verifyPayment('${r.id}')">✅ Verifikasi Bayar</button>`:''}${FEATURES.qris?`<button class="btn secondary small" onclick="doInvoice('${r.id}')">📄 Invoice/Bukti Bayar</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
   openModal('detailModal');
   afterOpenDetail(r.id);
 }
 function previewDetail(label,i){ openLightbox(detailMedia[label],i); }
 function closeDetail(){ _openReportId=null; closeModal('detailModal'); }
+function showProof(id){ const r=reports.find(x=>x.id===id); if(r&&r.payment_proof) openLightbox([{type:'image',data:r.payment_proof}],0); }
+async function verifyPayment(id){ const r=reports.find(x=>x.id===id); if(!r) return; showMini('Verifikasi Pembayaran','Tandai pembayaran tiket '+(r.ticket_no||'-')+' sebagai LUNAS? Pastikan dana sudah benar-benar masuk ke rekening/QRIS toko.',[{label:'Batal',cls:'secondary',fn:null},{label:'✅ Ya, Lunas',fn:async()=>{ if(!db){ toast('Supabase belum dikonfigurasi.','error'); return; } const {error}=await db.from('reports').update({payment_status:'Lunas'}).eq('id',id); if(error){ toast('Gagal: '+(error.message||error),'error'); return; } toast('Pembayaran diverifikasi — LUNAS.','success'); try{ await loadAll(); }catch(e){} openDetail(id); }}]); }
 
 // ====== LIGHTBOX ======
 function openLightbox(list,i){
@@ -1478,6 +1484,7 @@ async function showOwnerPanel(){
   const _ls=$('brLogoStatus'); if(_ls) _ls.textContent=BRAND.logoUrl?'Logo PNG aktif.':'Jika diisi, logo PNG dipakai menggantikan emoji.';
   const _qp=$('brQrisPreview'); if(_qp) _qp.innerHTML=BRAND.qrisUrl?('<img src="'+esc(BRAND.qrisUrl)+'" style="width:100%;height:100%;object-fit:contain" />'):'💳';
   const _qs=$('brQrisStatus'); if(_qs) _qs.textContent=BRAND.qrisUrl?'QRIS aktif ✓':'Dipakai di invoice & halaman tagihan agar customer bisa bayar via QRIS.';
+  if($('brBankName')) $('brBankName').value=BRAND.bankName||''; if($('brBankNo')) $('brBankNo').value=BRAND.bankNo||''; if($('brBankHolder')) $('brBankHolder').value=BRAND.bankHolder||'';
   const _bs=$('brandingSection'); if(_bs) _bs.style.display=FEATURES.whitelabel?'':'none';
   buildFeatChecks(); loadUsers();
   const _sc=$('supportContact'); if(_sc) _sc.textContent=SUPPORT_CONTACT?(' ('+SUPPORT_CONTACT+')'):'';
@@ -1513,9 +1520,9 @@ async function setUserRole(uid,role){
 }
 
 // ====== LINK GARANSI PUBLIK ======
-function copyLink(id,btn){ const url=location.origin+location.pathname+'#/g/'+id; const ok=()=>{ if(btn){ const t=btn.dataset.orig||btn.innerHTML; btn.dataset.orig=t; btn.innerHTML='✅ Link disalin!'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML=t; btn.classList.remove('copied'); },1800); } else { toast('Link garansi disalin.','success'); } }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,()=>showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null)); } else { showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null); } }
+function copyLink(id,btn){ const url=location.origin+location.pathname+'#/c/'+id; const ok=()=>{ if(btn){ const t=btn.dataset.orig||btn.innerHTML; btn.dataset.orig=t; btn.innerHTML='✅ Link disalin!'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML=t; btn.classList.remove('copied'); },1800); } else { toast('Link garansi disalin.','success'); } }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,()=>showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null)); } else { showPrompt('Salin Link Garansi','Salin link ini secara manual:','',url,null); } }
 function copyTrackLink(id,btn){ const url=location.origin+location.pathname+'#/t/'+id; const ok=()=>{ if(btn){ const o=btn.dataset.orig||btn.innerHTML; btn.dataset.orig=o; btn.innerHTML='✅ Link disalin!'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML=o; btn.classList.remove('copied'); },1800); } else { toast('Link status disalin.','success'); } }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,()=>showPrompt('Salin Link Status','Salin link ini secara manual:','',url,null)); } else { showPrompt('Salin Link Status','Salin link ini secara manual:','',url,null); } }
-function handleRoute(){ const g=location.hash.match(/^#\/g\/(.+)$/); if(g){ renderPublic(g[1]); return true; } const tk=location.hash.match(/^#\/t\/(.+)$/); if(tk){ renderTracking(tk[1]); return true; } return false; }
+function handleRoute(){ const m=location.hash.match(/^#\/(?:c|g|t)\/(.+)$/); if(m){ renderCustomer(m[1]); return true; } return false; }
 window.addEventListener('hashchange',()=>{ if(!handleRoute()) location.reload(); });
 async function renderPublic(id){
   hideBoot();
@@ -1548,6 +1555,76 @@ async function renderTracking(id){
   if(_trackTimer) clearInterval(_trackTimer); _trackTimer=setInterval(paint,15000);
 }
 
+// ====== HALAMAN CUSTOMER TERPADU v2.6 (status + pembayaran + garansi) ======
+let _custTimer=null, _custData=null, _custMedia=null;
+function copyText(txt,btn,okLabel){ const done=()=>{ if(btn){ const o=btn.dataset.o||btn.innerHTML; btn.dataset.o=o; btn.innerHTML=okLabel||'✅ Disalin'; btn.classList.add('copied'); setTimeout(()=>{ btn.innerHTML=o; btn.classList.remove('copied'); },1600); } else { toast('Disalin.','success'); } }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,()=>showPrompt('Salin','Salin manual:','',txt,null)); } else { showPrompt('Salin','Salin manual:','',txt,null); } }
+function compressProof(f){ return new Promise((res,rej)=>{ const img=new Image(); const url=URL.createObjectURL(f); img.onload=()=>{ const MX=1000; let w=img.width,h=img.height; if(w>h&&w>MX){h=h*MX/w;w=MX;} else if(h>=w&&h>MX){w=w*MX/h;h=MX;} const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg',0.6)); }; img.onerror=rej; img.src=url; }); }
+function payBoxHtml(r,id){
+  const qris=r.qris_url?('<div style="text-align:center;margin:14px 0"><div style="font-weight:700;margin-bottom:6px">💳 Scan QRIS untuk membayar</div><img src="'+esc(r.qris_url)+'" style="width:210px;height:210px;object-fit:contain;border:1px solid var(--border);border-radius:10px" /></div>'):'';
+  const bank=r.bank_no?('<div style="margin:14px 0;border:1px solid var(--border);border-radius:10px;padding:12px"><div style="font-weight:700;margin-bottom:8px">🏦 Transfer Bank</div><div class="row" style="align-items:center"><div><div class="muted" style="font-size:12px">'+esc(r.bank_name||'Bank')+'</div><div style="font-size:20px;font-weight:800;letter-spacing:1px">'+esc(r.bank_no)+'</div><div class="muted" style="font-size:12px">a.n. '+esc(r.bank_holder||'-')+'</div></div><button class="btn small secondary" onclick="copyText(\''+esc(r.bank_no)+'\',this,\'✅ Tersalin\')">📋 Salin</button></div></div>'):'';
+  const total='<div class="row" style="font-size:17px;margin:12px 0;padding:10px 14px;background:var(--card2);border-radius:10px"><b>Total Biaya</b><b style="color:var(--accent)">'+rp(r.fee)+'</b></div>';
+  if(r.has_proof){ return total+'<div class="pub-warranty" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">⏳ Bukti pembayaran sudah kami terima.<br>Menunggu verifikasi dari toko. Halaman ini otomatis berubah menjadi kartu garansi setelah pembayaran dikonfirmasi.</div>'; }
+  const up='<div style="margin-top:12px"><input type="file" id="pubProofFile" accept="image/*" style="display:none" onchange="submitProof(\''+id+'\',this)" /><button class="btn" style="width:100%" onclick="document.getElementById(\'pubProofFile\').click()">📤 Upload Bukti Pembayaran</button><div class="muted" id="pubProofStatus" style="font-size:12px;text-align:center;margin-top:8px">Setelah transfer / bayar via QRIS, upload foto bukti pembayaran di sini. Toko akan memverifikasi, lalu invoice & kartu garansi muncul otomatis.</div></div>';
+  return total+qris+bank+up;
+}
+async function submitProof(id,input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const st=$('pubProofStatus'); if(st) st.textContent='Mengompres & mengunggah bukti...';
+  try{ const b64=await compressProof(f); const {error}=await db.rpc('submit_payment_proof',{p_id:id,p_data:b64}); if(error) throw error; if(st) st.textContent='Bukti terkirim ✓ Menunggu verifikasi toko.'; _custData=null; renderCustomer(id); }
+  catch(e){ if(st) st.textContent='Gagal upload: '+(e.message||e); }
+}
+async function renderCustomer(id){
+  hideBoot();
+  document.querySelector('header').style.display='none'; document.querySelector('.container').style.display='none'; $('authScreen').style.display='none';
+  const pv=$('publicView'); pv.style.display='block'; if(!_custData) pv.innerHTML='<div class="pub-card">Memuat...</div>';
+  async function paint(){
+    let r=null; try{ const {data}=await db.rpc('get_tracking',{p_id:id}); r=data||null; }catch(e){}
+    if(!r){ pv.innerHTML='<div class="pub-card"><h2>Data tidak ditemukan</h2><p class="muted">Link tidak valid atau sudah dihapus.</p></div>'; if(_custTimer){ clearInterval(_custTimer); _custTimer=null; } return; }
+    _custData=r;
+    const nm=r.brand_name||'RepairLog', tg=r.brand_tagline||'', color=r.brand_color||'#4f46e5';
+    try{ document.documentElement.style.setProperty('--accent',color); }catch(e){}
+    const logo=r.brand_logo_url?('<img src="'+esc(r.brand_logo_url)+'" alt="logo" style="height:48px;width:48px;object-fit:contain" />'):esc(r.brand_logo||'🛠️');
+    const head='<div style="text-align:center;margin-bottom:10px"><div style="font-size:34px">'+logo+'</div><h1>'+esc(nm)+'</h1><p class="muted">'+esc(tg)+'</p></div><div class="row"><h2 style="margin:0">'+esc(r.device||'-')+'</h2><span class="badge" style="background:'+color+'">'+esc(r.ticket_no||'-')+'</span></div><p class="muted">'+esc(r.brand||'-')+(r.customer?(' • '+esc(r.customer)):'')+'</p>';
+    const done=(r.status||'').toLowerCase().includes('selesai');
+    const lunas=(r.payment_status||'').toLowerCase()==='lunas';
+    let body='';
+    if(!done){
+      const cur=r.stage||'Antri'; let ci=STAGES.indexOf(cur); if(ci<0) ci=0;
+      const steps=STAGES.map((s,i)=>{ const active=i<=ci; const isNow=i===ci; const circle=active?(i<ci?'✓':'●'):(i+1); return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0"><div style="width:28px;height:28px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:'+(active?stageColor(s):'#cbd5e1')+'">'+circle+'</div><div style="font-weight:'+(isNow?'800':'500')+';color:'+(isNow?'var(--text)':'var(--muted)')+'">'+esc(s)+(isNow?' — sekarang':'')+'</div></div>'; }).join('');
+      body='<div style="margin:16px 0;border:1px solid var(--border);border-radius:12px;padding:6px 16px">'+steps+'</div><div class="insight">ℹ️ Halaman ini menampilkan status pengerjaan servis Anda dan diperbarui otomatis. Setelah servis selesai, informasi pembayaran akan muncul di sini.</div>';
+    } else if(!lunas){
+      body='<div class="pub-warranty ok" style="background:#dbeafe;color:#1e40af;border-color:#93c5fd">✅ Servis sudah SELESAI. Silakan lakukan pembayaran di bawah ini.</div>'+payBoxHtml(r,id);
+    } else {
+      const w=warrantyStatus(r); const wend=w.end?fmtDate(w.end):'-';
+      const wHtml=r.warranty_days?(w.active?('<div class="pub-warranty ok">🛡️ Garansi AKTIF — sisa <b>'+w.daysLeft+' hari</b><br>Berlaku sampai <b>'+wend+'</b></div>'):('<div class="pub-warranty no">❌ Garansi sudah berakhir'+(w.end?' ('+wend+')':'')+'</div>')):'<div class="pub-warranty no">Tanpa garansi</div>';
+      let mediaBox=''; if(_custMedia){ mediaBox='<div class="ba"><div class="box"><h4>🔧 Sebelum</h4><p class="muted">'+esc(_custMedia.before_notes||'-')+'</p>'+mediaHtml(_custMedia.before_media,'before')+'</div><div class="box"><h4>✅ Sesudah</h4><p class="muted">'+esc(_custMedia.after_notes||'-')+'</p>'+mediaHtml(_custMedia.after_media,'after')+'</div></div>'; }
+      const comps=(r.components&&r.components.length)?('<div style="margin-top:10px">'+r.components.map(c=>'<span class="chip">'+esc(c)+'</span>').join('')+'</div>'):'';
+      body='<div class="pub-warranty ok" style="margin-bottom:10px">✅ Pembayaran LUNAS — terima kasih!</div>'+wHtml+'<table class="ftbl"><tr><td>Perangkat</td><td>'+esc(r.device||'-')+'</td></tr><tr><td>Merek</td><td>'+esc(r.brand||'-')+'</td></tr><tr><td>Status</td><td>'+esc(r.status||'-')+'</td></tr><tr><td>Total Biaya</td><td>'+rp(r.fee)+'</td></tr><tr><td>Tgl Masuk</td><td>'+fmtDate(r.date_in)+'</td></tr><tr><td>Tgl Selesai</td><td>'+fmtDate(r.date_out)+'</td></tr><tr><td>Garansi</td><td>'+(r.warranty_days?r.warranty_days+' hari':'Tanpa garansi')+'</td></tr></table>'+comps+mediaBox+'<div style="text-align:center;margin-top:16px"><button class="btn" onclick="pubInvoice()">📄 Unduh Invoice / Bukti Bayar (PDF)</button></div><div class="insight" style="margin-top:14px"><b>ℹ️ Info garansi</b><br>• Simpan halaman ini sebagai bukti servis & garansi.<br>• Tunjukkan halaman ini saat klaim garansi.</div>';
+    }
+    pv.innerHTML='<div class="pub-card">'+head+body+'<p class="muted" style="text-align:center;margin-top:16px;font-size:12px">Dokumentasi servis oleh '+esc(nm)+'</p></div>';
+    if(lunas&&!_custMedia){ try{ const {data}=await db.from('reports_public').select('before_media,after_media,before_notes,after_notes').eq('id',id).maybeSingle(); if(data){ _custMedia=data; paint(); } }catch(e){} }
+    if(lunas&&_custTimer){ clearInterval(_custTimer); _custTimer=null; }
+  }
+  await paint();
+  if(_custTimer) clearInterval(_custTimer);
+  if(!(_custData&&(_custData.payment_status||'').toLowerCase()==='lunas')) _custTimer=setInterval(paint,15000);
+}
+async function pubInvoice(){
+  const r=_custData; if(!r) return;
+  if(!window.jspdf||typeof html2canvas==='undefined'){ toast('Library PDF belum termuat, tunggu sebentar lalu coba lagi.','error'); return; }
+  const lunas=(r.payment_status||'').toLowerCase()==='lunas'; const ac=r.brand_color||'#4f46e5';
+  const stamp=lunas?'<div style="position:absolute;top:58px;right:22px;transform:rotate(-14deg);border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:22px;padding:4px 16px;border-radius:8px">LUNAS</div>':'';
+  const logo=r.brand_logo_url?('<img src="'+esc(r.brand_logo_url)+'" crossorigin="anonymous" style="height:46px;width:46px;object-fit:contain" />'):('<div style="font-size:34px">'+esc(r.brand_logo||'🛠️')+'</div>');
+  const comps=(r.components&&r.components.length)?esc(r.components.join(', ')):'';
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;left:-9999px;top:0;width:600px;background:#fff;color:#111;padding:30px;font-family:Segoe UI,system-ui,sans-serif';
+  host.innerHTML='<div style="position:relative">'+stamp+'<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid '+ac+';padding-bottom:12px"><div style="display:flex;gap:10px;align-items:center">'+logo+'<div><div style="font-size:20px;font-weight:800">'+esc(r.brand_name||'RepairLog')+'</div><div style="font-size:12px;color:#666">'+esc(r.brand_tagline||'')+'</div></div></div><div style="text-align:right"><div style="font-size:18px;font-weight:800;color:'+ac+'">INVOICE</div><div style="font-size:12px;color:#666">No. '+esc(r.ticket_no||'-')+'</div><div style="font-size:12px;color:#666">'+new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})+'</div></div></div><div style="display:flex;justify-content:space-between;margin-top:14px;font-size:13px"><div><div style="color:#888;font-size:11px">DITAGIHKAN KEPADA</div><div style="font-weight:700">'+esc(r.customer||'-')+'</div></div><div style="text-align:right"><div style="color:#888;font-size:11px">PERANGKAT</div><div style="font-weight:700">'+esc(r.device||'-')+'</div><div>'+esc(r.brand||'')+'</div></div></div><table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:13px"><tr style="background:'+ac+';color:#fff"><th style="text-align:left;padding:8px">Deskripsi</th><th style="text-align:right;padding:8px">Jumlah</th></tr><tr><td style="padding:8px;border-bottom:1px solid #eee">Jasa servis '+esc(r.device||'')+(comps?(' — '+comps):'')+'</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">'+rp(r.fee)+'</td></tr><tr><td style="padding:8px;text-align:right;font-weight:800">TOTAL</td><td style="padding:8px;text-align:right;font-weight:800;color:'+ac+'">'+rp(r.fee)+'</td></tr><tr><td style="padding:8px;text-align:right">Status Pembayaran</td><td style="padding:8px;text-align:right;font-weight:700">'+esc(r.payment_status||'-')+'</td></tr></table><div style="margin-top:18px;font-size:11px;color:#777;text-align:center;border-top:1px solid #eee;padding-top:10px">'+(lunas?'Terima kasih! Invoice ini sah sebagai bukti pembayaran.':'Silakan lakukan pembayaran. Simpan invoice ini sebagai bukti.')+'<br>'+esc(r.brand_name||'RepairLog')+' • '+new Date().toLocaleString('id-ID')+'</div></div>';
+  document.body.appendChild(host);
+  try{ const canvas=await html2canvas(host,{scale:2,useCORS:true,backgroundColor:'#ffffff'}); const img=canvas.toDataURL('image/png'); const jsPDF=window.jspdf.jsPDF; const pdf=new jsPDF('p','mm','a4'); const pw=pdf.internal.pageSize.getWidth(); let ph=canvas.height*pw/canvas.width; if(ph>297) ph=297; pdf.addImage(img,'PNG',0,0,pw,ph); pdf.save('Invoice-'+(r.ticket_no||'servis')+'.pdf'); toast(lunas?'Bukti pembayaran (PDF) dibuat.':'Invoice PDF dibuat.','success'); }
+  catch(e){ toast('Gagal membuat PDF: '+(e.message||e),'error'); }
+  finally{ host.remove(); }
+}
+
 // ====== CETAK / PDF ======
 function doPrint(id){
   const r=reports.find(x=>x.id===id); if(!r) return;
@@ -1573,7 +1650,7 @@ async function doInvoice(id){
   const ac=BRAND.color||'#4f46e5';
   const stamp=lunas?'<div style="position:absolute;top:58px;right:22px;transform:rotate(-14deg);border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:22px;padding:4px 16px;border-radius:8px">LUNAS</div>':'';
   const logo=BRAND.logoUrl?('<img src="'+esc(BRAND.logoUrl)+'" crossorigin="anonymous" style="height:46px;width:46px;object-fit:contain" />'):('<div style="font-size:34px">'+esc(BRAND.logo||'🛠️')+'</div>');
-  const qris=(FEATURES.qris&&BRAND.qrisUrl&&!lunas)?('<div style="text-align:center;margin-top:16px"><div style="font-weight:700;margin-bottom:6px">💳 Scan QRIS untuk membayar</div><img src="'+esc(BRAND.qrisUrl)+'" crossorigin="anonymous" style="width:180px;height:180px;object-fit:contain;border:1px solid #ddd;border-radius:8px" /><div style="font-size:12px;color:#555;margin-top:4px">Nominal: <b>'+rp(r.fee)+'</b></div></div>'):'';
+  const _bank=(!lunas&&BRAND.bankNo)?('<div style="margin-top:10px;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:12px;text-align:center">🏦 Transfer Bank: <b>'+esc(BRAND.bankName||'')+'</b> '+esc(BRAND.bankNo)+' a.n. '+esc(BRAND.bankHolder||'')+'</div>'):''; const qris=((FEATURES.qris&&BRAND.qrisUrl&&!lunas)?('<div style="text-align:center;margin-top:16px"><div style="font-weight:700;margin-bottom:6px">💳 Scan QRIS untuk membayar</div><img src="'+esc(BRAND.qrisUrl)+'" crossorigin="anonymous" style="width:180px;height:180px;object-fit:contain;border:1px solid #ddd;border-radius:8px" /><div style="font-size:12px;color:#555;margin-top:4px">Nominal: <b>'+rp(r.fee)+'</b></div></div>'):'')+_bank;
   const comps=(r.components||[]).length?esc(r.components.join(', ')):'';
   const host=document.createElement('div');
   host.style.cssText='position:fixed;left:-9999px;top:0;width:600px;background:#fff;color:#111;padding:30px;font-family:Segoe UI,system-ui,sans-serif';
@@ -1593,11 +1670,11 @@ async function doInvoice(id){
 // ====== WHATSAPP, EXPORT, LUPA PASSWORD, WIZARD ======
 function waNumber(phone){ let p=(phone||'').replace(/[^0-9]/g,''); if(!p) return ''; if(p.startsWith('0')) p='62'+p.slice(1); else if(p.startsWith('8')) p='62'+p; return p; }
 function waChat(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n,'whatsapp'); }
-function waSend(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } const link=location.origin+location.pathname+'#/g/'+r.id; const msg='Halo '+(r.customer||'')+', berikut kartu garansi servis '+r.device+' di '+(BRAND.name||'RepairLog')+':\n'+link; window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'whatsapp'); }
+function waSend(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } const link=location.origin+location.pathname+'#/c/'+r.id; const msg='Halo '+(r.customer||'')+', berikut kartu garansi servis '+r.device+' di '+(BRAND.name||'RepairLog')+':\n'+link; window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'whatsapp'); }
 // ====== TEMPLATE & KIRIM NOTIFIKASI WHATSAPP (klik-kirim) — boleh diedit sendiri. Placeholder: {nama} {device} {tiket} {toko} {link} ======
 const WA_TPL_DONE='Halo {nama} 👋\n\nKabar baik! Servis *{device}* (No. Tiket {tiket}) di *{toko}* sudah *SELESAI* ✅ dan siap diambil.\n\nCek detail & kartu garansi di sini:\n{link}\n\nTerima kasih sudah mempercayakan servisnya 🙏';
 const WA_TPL_REMIND='Halo {nama} 👋\n\nMengingatkan ya, *{device}* (No. Tiket {tiket}) yang sudah selesai di *{toko}* belum diambil. Kami tunggu kedatangannya 🙏\n\nDetail servis:\n{link}\n\nTerima kasih 🙏';
-function trackOrWarrantyLink(r){ return location.origin+location.pathname+'#/'+(FEATURES.publicTracking?'t':'g')+'/'+r.id; }
+function trackOrWarrantyLink(r){ return location.origin+location.pathname+'#/c/'+r.id; }
 function waFill(tpl,r){ return (tpl||'').replace(/{nama}/g,r.customer||'Kak').replace(/{device}/g,r.device||'').replace(/{tiket}/g,r.ticket_no||'-').replace(/{toko}/g,BRAND.name||'RepairLog').replace(/{link}/g,trackOrWarrantyLink(r)); }
 function waNotifDone(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n+'?text='+encodeURIComponent(waFill(WA_TPL_DONE,r)),'whatsapp'); }
 function waNotifRemind(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n+'?text='+encodeURIComponent(waFill(WA_TPL_REMIND,r)),'whatsapp'); }
