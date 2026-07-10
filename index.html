@@ -323,6 +323,7 @@
     <button id="navDash" class="active" onclick="showTab('dash')">Dashboard</button>
     <button id="navList" onclick="showTab('list')">Laporan</button>
     <button id="navBoard" onclick="showTab('board')">Papan</button>
+    <button id="navCust" onclick="showTab('cust')" style="display:none">Pelanggan</button>
     <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
     <button id="navAttend" onclick="showTab('attend')" style="display:none">Absensi</button>
     <button id="navStock" onclick="showTab('stock')" style="display:none">Stok</button>
@@ -380,6 +381,13 @@
     <div class="board" id="boardWrap"></div>
   </div>
 
+  <div id="tab-cust" style="display:none">
+    <div class="row" style="margin-bottom:6px"><h2 style="margin:0">👥 Pelanggan</h2></div>
+    <p class="muted" style="margin-bottom:14px">Direktori pelanggan otomatis dari riwayat servis. Klik <b>Riwayat</b> untuk melihat semua servis pelanggan.</p>
+    <div class="toolbar" style="margin-bottom:12px"><input id="custSearch" placeholder="Cari nama / no. WhatsApp..." oninput="renderCustomers()" style="max-width:280px" /></div>
+    <div id="custBox"></div>
+  </div>
+
   <div id="tab-finance" style="display:none">
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">📊 Laporan Keuangan</h2><button class="btn small secondary" onclick="exportCsv()">⬇️ Export CSV (Excel)</button></div>
     <p class="muted" style="margin-bottom:14px">Rekap berdasarkan bulan tanggal masuk. Hanya Owner yang bisa melihat halaman ini.</p>
@@ -411,7 +419,7 @@
     </div>
     <div class="frow">
       <div><label>Merek</label><select id="f_brand"></select></div>
-      <div><label>Customer</label><input id="f_customer" placeholder="Nama pemilik" /></div>
+      <div><label>Customer</label><input id="f_customer" list="custDatalist" placeholder="Nama pemilik" onchange="onCustomerPick()" /><datalist id="custDatalist"></datalist></div>
     </div>
     <div class="frow3" id="deviceSpecFields"></div>
     <div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div>
@@ -852,6 +860,7 @@ function applyFeatures(){
   if($('navBoard')) $('navBoard').style.display=FEATURES.collab?'':'none';
   if($('notifBtn')) $('notifBtn').style.display=FEATURES.collab?'':'none';
   if($('navAttend')) $('navAttend').style.display=FEATURES.attendance?'':'none';
+  if($('navCust')) $('navCust').style.display='';
   applyRole();
 }
 
@@ -925,17 +934,20 @@ function showTab(t){
   $('tab-finance').style.display=t==='finance'?'':'none';
   const _ta=$('tab-attend'); if(_ta) _ta.style.display=t==='attend'?'':'none';
   const _ts=$('tab-stock'); if(_ts) _ts.style.display=t==='stock'?'':'none';
+  const _tc=$('tab-cust'); if(_tc) _tc.style.display=t==='cust'?'':'none';
   $('navDash').classList.toggle('active',t==='dash');
   $('navList').classList.toggle('active',t==='list');
   $('navBoard').classList.toggle('active',t==='board');
   $('navFinance').classList.toggle('active',t==='finance');
   const _na=$('navAttend'); if(_na) _na.classList.toggle('active',t==='attend');
   const _nsa=$('navStock'); if(_nsa) _nsa.classList.toggle('active',t==='stock');
+  const _nca=$('navCust'); if(_nca) _nca.classList.toggle('active',t==='cust');
   if(t==='dash') renderDash();
   if(t==='board') renderBoard();
   if(t==='finance') renderFinance();
   if(t==='attend') renderAttend();
   if(t==='stock') renderStock();
+  if(t==='cust') renderCustomers();
 }
 
 // ====== MEDIA ======
@@ -1033,7 +1045,7 @@ async function uploadList(arr){ const out=[]; for(const m of arr){ out.push(awai
 
 // ====== FORM ======
 function openForm(id){
-  buildDevTypeOptions(); buildCompChecks();
+  buildDevTypeOptions(); buildCompChecks(); buildCustDatalist();
   formMedia={before:[],after:[]}; _newStage=null;
   const r=id?reports.find(x=>x.id===id):null;
   $('formTitle').textContent=r?'Edit Laporan':'Tambah Laporan';
@@ -1192,6 +1204,14 @@ function warrantyStatus(r){
 }
 
 // ====== CARD ======
+let _CUSTS=[];
+function custKey(r){ const p=(r.customer_phone||'').replace(/[^0-9]/g,''); if(p) return 'p:'+p; const n=(r.customer||'').trim().toLowerCase(); return n?'n:'+n:''; }
+function buildCustomerDirectory(){ const map={}; reports.forEach(r=>{ const k=custKey(r); if(!k) return; if(!map[k]) map[k]={key:k,name:r.customer||'-',phone:r.customer_phone||'',count:0,spend:0,last:'',items:[]}; const c=map[k]; c.count++; c.spend+=Number(r.fee)||0; const d=r.date_in||r.created_at||''; if(d>c.last) c.last=d; if(r.customer&&(c.name==='-'||!c.name)) c.name=r.customer; if(r.customer_phone&&!c.phone) c.phone=r.customer_phone; c.items.push(r); }); return Object.values(map); }
+function renderCustomers(){ const box=$('custBox'); if(!box) return; const q=($('custSearch')&&$('custSearch').value||'').toLowerCase(); let list=buildCustomerDirectory(); if(q) list=list.filter(c=>(c.name+' '+c.phone).toLowerCase().includes(q)); list.sort((a,b)=>(b.last||'').localeCompare(a.last||'')); _CUSTS=list; if(!list.length){ box.innerHTML='<div class="empty">Belum ada pelanggan. Data muncul otomatis setelah kamu membuat laporan servis.</div>'; return; } const totSpend=list.reduce((a,c)=>a+c.spend,0),totServ=list.reduce((a,c)=>a+c.count,0); const rows=list.map((c,i)=>`<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.phone||'-')}</td><td style="text-align:center">${c.count}</td><td>${(isOwner()&&FEATURES.profit)?rp(c.spend):'-'}</td><td>${fmtDate(c.last)}</td><td>${c.phone?`<button class="btn small secondary" onclick="waCust('${waNumber(c.phone)}')">\ud83d\udcac WA</button> `:''}<button class="btn small" onclick="openCustomer(${i})">\ud83d\udccb Riwayat</button></td></tr>`).join(''); box.innerHTML=`<div class="stat-grid"><div class="stat"><div class="num">${list.length}</div><div class="lbl">Total Pelanggan</div></div><div class="stat"><div class="num">${totServ}</div><div class="lbl">Total Servis</div></div>${(isOwner()&&FEATURES.profit)?`<div class="stat"><div class="num">${rp(totSpend)}</div><div class="lbl">Total Nilai Servis</div></div>`:''}</div><table class="ftbl" style="margin-top:12px"><tr><th>Nama</th><th>WhatsApp</th><th>Servis</th><th>Total Belanja</th><th>Terakhir</th><th>Aksi</th></tr>${rows}</table>`; }
+function waCust(n){ if(!n){ toast('Nomor WhatsApp tidak valid.','error'); return; } window.open('https://wa.me/'+n,'whatsapp'); }
+function openCustomer(i){ const c=_CUSTS[i]; if(!c) return; const items=c.items.slice().sort((a,b)=>(b.date_in||b.created_at||'').localeCompare(a.date_in||a.created_at||'')); const grid=items.map(card).join(''); const spendLine=(isOwner()&&FEATURES.profit)?(' \u2022 Total '+rp(c.spend)):''; $('detailContent').innerHTML=`<div class="row"><h2>\ud83d\udc64 ${esc(c.name)}</h2></div><p class="muted">${esc(c.phone||'Tanpa no. WhatsApp')} \u2022 ${c.count} servis${spendLine}</p><div class="actions" style="margin:10px 0">${c.phone?`<button class="btn secondary small" onclick="waCust('${waNumber(c.phone)}')">\ud83d\udcac Chat WA</button>`:''}<button class="btn secondary small" onclick="closeDetail()">Tutup</button></div><div class="grid">${grid}</div>`; openModal('detailModal'); }
+function buildCustDatalist(){ const dl=$('custDatalist'); if(!dl) return; const seen={}; const opts=[]; buildCustomerDirectory().forEach(c=>{ const key=(c.name||'').toLowerCase(); if(c.name&&c.name!=='-'&&!seen[key]){ seen[key]=1; opts.push(`<option value="${esc(c.name)}">${esc(c.phone||'')}</option>`); } }); dl.innerHTML=opts.join(''); }
+function onCustomerPick(){ const nm=($('f_customer').value||'').trim().toLowerCase(); if(!nm) return; const ph=$('f_phone'); if(ph&&!ph.value.trim()){ const c=buildCustomerDirectory().find(x=>(x.name||'').trim().toLowerCase()===nm&&x.phone); if(c) ph.value=c.phone; } }
 function card(r){
   const lv=LEVELS[r.level]||LEVELS[1];
   const st=(r.status||'Proses').toLowerCase();
