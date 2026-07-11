@@ -403,7 +403,7 @@
       <select id="filterBrand" onchange="render()" style="max-width:160px"><option value="">Semua Merek</option></select>
       <button class="btn" onclick="openForm()">+ Tambah Laporan</button>
     </div>
-    <div class="grid" id="listGrid"></div>
+    <div style="display:flex;gap:12px;align-items:flex-start"><div id="repMonthNav" style="min-width:96px;flex-shrink:0"></div><div style="flex:1;min-width:0"><div class="grid" id="listGrid"></div><div id="repPager" style="margin-top:14px;display:flex;flex-wrap:wrap"></div></div></div>
   </div>
 
   <div id="tab-board" style="display:none">
@@ -458,7 +458,7 @@
     <div class="frow">
       <div><label>Biaya Jasa (Rp)</label><input id="f_fee" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this);recomputeCost()" /></div>
       <div><label>Status Pembayaran</label>
-        <select id="f_payment"><option value="Belum">Belum</option><option value="DP">DP</option><option value="Lunas">Lunas</option></select></div>
+        <select id="f_payment" onchange="toggleDp()"><option value="Belum">Belum</option><option value="DP">DP</option><option value="Lunas">Lunas</option></select></div><div id="f_dpWrap" style="display:none"><label>Nominal DP (Rp)</label><input id="f_dp" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div>
     </div>
     <div class="ownerOnly profitOnly">
       <label>Rincian Modal / HPP</label>
@@ -763,7 +763,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.6';
+const APP_VERSION='v2.7';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const ROMAN_MONTH=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
@@ -1118,6 +1118,7 @@ async function uploadMedia(m){
 async function uploadList(arr){ const out=[]; for(const m of arr){ out.push(await uploadMedia(m)); } return out; }
 
 // ====== FORM ======
+function toggleDp(){ const w=$('f_dpWrap'); if(w) w.style.display=($('f_payment')&&$('f_payment').value==='DP')?'':'none'; }
 function openForm(id){
   buildDevTypeOptions(); buildCompChecks(); buildCustDatalist();
   formMedia={before:[],after:[]}; _newStage=null;
@@ -1133,6 +1134,7 @@ function openForm(id){
   $('f_phone').value=r?r.customer_phone||'':'';
   $('f_fee').value=r?fmtThousand(r.fee||0):'';
   $('f_payment').value=r?r.payment_status||'Belum':'Belum';
+  $('f_dp').value=r?fmtThousand(r.dp_amount||0):''; if(typeof toggleDp==='function') toggleDp();
   $('f_level').value=r?r.level||1:1;
   $('f_status').value=r?r.status||'Proses':'Proses';
   $('f_datein').value=r?(r.date_in||'').slice(0,10):new Date().toISOString().slice(0,10);
@@ -1167,7 +1169,7 @@ async function saveReport(){
       job_type:($('f_jobtype')&&$('f_jobtype').value)||'Service',
       device, device_type:currentDevType(), device_specs:getDeviceSpecs(), brand:$('f_brand').value, customer:$('f_customer').value.trim(),
       customer_phone:$('f_phone').value.trim(),
-      fee:parseRupiah($('f_fee').value), payment_status:$('f_payment').value,
+      fee:parseRupiah($('f_fee').value), payment_status:$('f_payment').value, dp_amount:(($('f_payment').value==='DP')?parseRupiah($('f_dp').value):0),
       level:Number($('f_level').value)||1, status:$('f_status').value,
       tasks:$('f_tasks').value.trim(), components:getSelectedComps(), assigned_to:$('f_assigned').value||null,
       before_notes:$('f_beforeNotes').value.trim(), after_notes:$('f_afterNotes').value.trim(),
@@ -1179,13 +1181,13 @@ async function saveReport(){
     if(isOwner()){ payload.cost=recomputeCost(); if(FEATURES.stock){ for(const _it of costItemsState){ if(_it.partId && !_it.consumed && (Number(_it.qty)||0)>0){ try{ await consumePart(_it.partId, Number(_it.qty)||0); _it.consumed=true; }catch(e){} } } } payload.cost_items=costItemsState.map(it=>({label:it.label,amount:Number(it.amount)||0,auto:!!it.auto,partId:it.partId||null,qty:it.qty||null,consumed:!!it.consumed})); }
     let newTicket=null;
     if(id){
-      await db.from('reports').update(payload).eq('id',id);
+      let _r=await db.from('reports').update(payload).eq('id',id); if(_r.error&&/dp_amount/.test(_r.error.message||'')){ delete payload.dp_amount; _r=await db.from('reports').update(payload).eq('id',id); toast('Kolom DP belum ada di DB — jalankan SQL v2.7. DP tidak tersimpan.','error'); } if(_r.error) throw _r.error;
     }else{
       payload.date_in=$('f_datein').value||new Date().toISOString().slice(0,10);
       payload.ticket_no=await genTicket();
       payload.stage=_newStage||boardStages()[0]||'Antri';
       newTicket=payload.ticket_no;
-      await db.from('reports').insert(payload);
+      let _ri=await db.from('reports').insert(payload); if(_ri.error&&/dp_amount/.test(_ri.error.message||'')){ delete payload.dp_amount; _ri=await db.from('reports').insert(payload); toast('Kolom DP belum ada di DB — jalankan SQL v2.7. DP tidak tersimpan.','error'); } if(_ri.error) throw _ri.error;
     }
     closeForm(); await loadAll();
     checkStorageWarn();
@@ -1246,7 +1248,7 @@ function openDetail(id){
   const lv=LEVELS[r.level]||LEVELS[1];
   const money=(isOwner()&&FEATURES.profit)?`<tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr><tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr><tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr><tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
   detailMedia={before:(r.before_media||[]),after:(r.after_media||[])}; if($('detailContent')) $('detailContent').style.maxWidth='';
-  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span>${jobTypeBadge(r)}</div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${r.device_type?esc(r.device_type)+' • ':''}${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Jenis Servis</td><td>${isWarranty(r)?'🛡️ Garansi (klaim garansi)':'🔧 Service'}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}${r.payment_proof?`<tr><td>Bukti Transfer</td><td><img src="${r.payment_proof}" style="max-width:110px;border-radius:6px;cursor:pointer" onclick="showProof('${r.id}')" /> <span class="muted" style="font-size:11px">${(r.payment_status||'').toLowerCase()==='lunas'?'✅ terverifikasi':'⏳ belum diverifikasi'}</span></td></tr>`:''}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}${deviceSpecsHtml(r)}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end"><button class="btn secondary small" onclick="setStatus('${r.id}','Proses')">🔧 Proses</button><button class="btn small" style="background:#16a34a" onclick="setStatus('${r.id}','Selesai')">✅ Selesai</button><button class="btn small" style="background:#ef4444" onclick="openCancel('${r.id}')">❌ Gagal / Cancel</button>${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifProgress('${r.id}')">🔧 WA: Dikerjakan</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifDone('${r.id}')">✅ WA: Selesai & Bayar</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifRemind('${r.id}')">📦 WA: Follow-up Ambil</button>`:''}<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Servis</button>${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${(isOwner()&&r.payment_proof&&(r.payment_status||'').toLowerCase()!=='lunas')?`<button class="btn small" style="background:#16a34a" onclick="verifyPayment('${r.id}')">✅ Verifikasi Bayar</button>`:''}${FEATURES.qris?`<button class="btn secondary small" onclick="doInvoice('${r.id}')">📄 Invoice/Bukti Bayar</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
+  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span>${jobTypeBadge(r)}</div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${r.device_type?esc(r.device_type)+' • ':''}${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Jenis Servis</td><td>${isWarranty(r)?'🛡️ Garansi (klaim garansi)':'🔧 Service'}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}${r.payment_proof?`<tr><td>Bukti Transfer</td><td><img src="${r.payment_proof}" style="max-width:110px;border-radius:6px;cursor:pointer" onclick="showProof('${r.id}')" /> <span class="muted" style="font-size:11px">${(r.payment_status||'').toLowerCase()==='lunas'?'✅ terverifikasi':'⏳ belum diverifikasi'}</span></td></tr>`:''}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}${deviceSpecsHtml(r)}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn small" style="background:#25D366" onclick="openWaModal('${r.id}')">💬 WhatsApp</button>`:''}<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Servis</button>${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${(isOwner()&&r.payment_proof&&(r.payment_status||'').toLowerCase()!=='lunas')?`<button class="btn small" style="background:#16a34a" onclick="verifyPayment('${r.id}')">✅ Verifikasi Bayar</button>`:''}${FEATURES.qris?`<button class="btn secondary small" onclick="doInvoice('${r.id}')">📄 Invoice/Bukti Bayar</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
   openModal('detailModal');
   afterOpenDetail(r.id);
 }
@@ -1298,13 +1300,14 @@ function waCust(n){ if(!n){ toast('Nomor WhatsApp tidak valid.','error'); return
 function openCustomer(i){ const c=_CUSTS[i]; if(!c) return; const items=c.items.slice().sort((a,b)=>(b.date_in||b.created_at||'').localeCompare(a.date_in||a.created_at||'')); const grid=items.map(card).join(''); const spendLine=(isOwner()&&FEATURES.profit)?(' \u2022 Total '+rp(c.spend)):''; $('detailContent').innerHTML=`<div class="row"><h2>\ud83d\udc64 ${esc(c.name)}</h2></div><p class="muted">${esc(c.phone||'Tanpa no. WhatsApp')} \u2022 ${c.count} servis${spendLine}</p><div class="actions" style="margin:10px 0">${c.phone?`<button class="btn secondary small" onclick="waCust('${waNumber(c.phone)}')">\ud83d\udcac Chat WA</button>`:''}<button class="btn secondary small" onclick="closeDetail()">Tutup</button></div><div class="grid">${grid}</div>`; openModal('detailModal'); }
 function buildCustDatalist(){ const dl=$('custDatalist'); if(!dl) return; const seen={}; const opts=[]; buildCustomerDirectory().forEach(c=>{ const key=(c.name||'').toLowerCase(); if(c.name&&c.name!=='-'&&!seen[key]){ seen[key]=1; opts.push(`<option value="${esc(c.name)}">${esc(c.phone||'')}</option>`); } }); dl.innerHTML=opts.join(''); }
 function onCustomerPick(){ const nm=($('f_customer').value||'').trim().toLowerCase(); if(!nm) return; const ph=$('f_phone'); if(ph&&!ph.value.trim()){ const c=buildCustomerDirectory().find(x=>(x.name||'').trim().toLowerCase()===nm&&x.phone); if(c) ph.value=c.phone; } }
+function statusBadge(r){ const st=(r.status||'').toLowerCase(); const base='position:absolute;top:6px;right:6px;z-index:3;font-size:15px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))'; if(st.includes('selesai')) return '<span title="Selesai" style="'+base+'">✅</span>'; if(st.includes('batal')||st.includes('gagal')) return '<span title="Batal" style="'+base+'">❌</span>'; return ''; }
 function card(r){
   const lv=LEVELS[r.level]||LEVELS[1];
   const st=(r.status||'Proses').toLowerCase();
   const stClass=st.includes('selesai')?'selesai':((st.includes('batal')||st.includes('gagal'))?'batal':'proses');
   const firstImg=(r.after_media||[]).concat(r.before_media||[]).find(m=>m.type==='image');
   const thumb=firstImg?`<img src="${firstImg.url||firstImg.data}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" />`:'';
-  return `<div class="card">${thumb}<div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div><div class="muted">${esc(r.brand||'-')} • ${esc(r.customer||'-')}${isWarranty(r)?' • <b style="color:#8b5cf6">🛡️ Garansi</b>':''}</div><div class="row"><span class="pill ${stClass}">${esc(r.status||'Proses')}</span>${(isOwner()&&FEATURES.profit)?`<span>${rp(r.fee)}</span>`:''}</div><div class="row">${techBadge(r.assigned_to)}${ageBadge(r)}</div><div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no||'-')} • ${fmtDate(r.date_in)}</div><div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div></div>`;
+  return `<div class="card" style="position:relative">${statusBadge(r)}${thumb}<div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div><div class="muted">${esc(r.brand||'-')} • ${esc(r.customer||'-')}${isWarranty(r)?' • <b style="color:#8b5cf6">🛡️ Garansi</b>':''}</div><div class="row"><span class="pill ${stClass}">${esc(r.status||'Proses')}</span>${(isOwner()&&FEATURES.profit)?`<span>${rp(r.fee)}</span>`:''}</div><div class="row">${techBadge(r.assigned_to)}${ageBadge(r)}</div><div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no||'-')} • ${fmtDate(r.date_in)}</div><div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div></div>`;
 }
 let charts={};
 let recentDays=3; try{ const _rd=parseInt(localStorage.getItem('rl_recent_days'),10); if(_rd&&_rd>0) recentDays=_rd; }catch(e){}
@@ -1313,6 +1316,9 @@ function renderRecentRange(){ const box=$('recentRange'); if(!box) return; const
 function setRecentDays(d){ recentDays=d; try{localStorage.setItem('rl_recent_days',String(d));}catch(e){} renderRecentRange(); render(); }
 function askRecentDays(){ showPrompt('Rentang Kustom','Tampilkan pekerjaan berapa hari terakhir?','cth: 5',String(recentDays),v=>{ const n=parseInt(v,10); if(!n||n<1){ toast('Masukkan jumlah hari yang valid.','error'); return; } setRecentDays(n); }); }
 // ====== RENDER LIST & DASHBOARD ======
+let _repMonth=null,_repPage=1;
+function setRepMonth(m){ _repMonth=m; _repPage=1; render(); }
+function setRepPage(p){ _repPage=p; render(); try{ const g=$('listGrid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
 function render(){
   const q=($('search')?.value||'').toLowerCase();
   const fl=$('filterLevel')?.value||'';
@@ -1331,7 +1337,16 @@ function render(){
     if(fs){ const s=(r.status||'').toLowerCase(); if(fs==='Batal'){ if(!(s.includes('batal')||s.includes('gagal'))) return false; } else if(!s.includes(fs.toLowerCase())) return false; }
     return true;
   });
-  const grid=$('listGrid'); if(grid) grid.innerHTML=list.length?list.map(card).join(''):`<div class="empty">Belum ada laporan.</div>`;
+  const per=9;
+  const _months=[...new Set(reports.map(r=>(r.date_in||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  if(_repMonth&&_months.indexOf(_repMonth)<0) _repMonth=null;
+  const _nav=$('repMonthNav'); const _nb=(lbl,act,oc)=>`<button style="display:block;width:100%;text-align:left;margin-bottom:6px;padding:7px 10px;border-radius:8px;border:1px solid ${act?'#6366f1':'rgba(120,120,120,.3)'};background:${act?'#6366f1':'transparent'};color:${act?'#fff':'inherit'};cursor:pointer;font-size:13px;font-weight:${act?700:500}" onclick="${oc}">${lbl}</button>`;
+  if(_nav) _nav.innerHTML=`<div class="muted" style="font-size:11px;font-weight:600;margin-bottom:6px">BULAN</div>`+_nb('Semua',_repMonth===null,'setRepMonth(null)')+_months.map(m=>_nb(ROMAN_MONTH[parseInt(m.slice(5,7),10)-1]+'/'+m.slice(0,4),_repMonth===m,"setRepMonth('"+m+"')")).join('');
+  const mlist=_repMonth?list.filter(r=>(r.date_in||'').slice(0,7)===_repMonth):list;
+  const _pages=Math.max(1,Math.ceil(mlist.length/per)); if(_repPage>_pages)_repPage=_pages; if(_repPage<1)_repPage=1;
+  const _items=mlist.slice((_repPage-1)*per,_repPage*per);
+  const grid=$('listGrid'); if(grid) grid.innerHTML=_items.length?_items.map(card).join(''):`<div class="empty">Belum ada laporan.</div>`;
+  const _pg=$('repPager'); if(_pg) _pg.innerHTML=_pages>1?Array.from({length:_pages},(_,i)=>i+1).map(p=>`<button style="min-width:34px;padding:6px 10px;margin-right:6px;border-radius:8px;border:1px solid ${p===_repPage?'#6366f1':'rgba(120,120,120,.3)'};background:${p===_repPage?'#6366f1':'transparent'};color:${p===_repPage?'#fff':'inherit'};cursor:pointer;font-weight:${p===_repPage?700:500}" onclick="setRepPage(${p})">${p}</button>`).join(''):'';
   renderRecentRange();
   const rec=$('recentGrid'); if(rec){ const rr=recentReports(); rec.innerHTML=rr.length?rr.map(card).join(''):`<div class="empty">${LANG==='en'?`No jobs in the last ${recentDays} days. Everything is still saved under the Board menu.`:`Tidak ada pekerjaan dalam ${recentDays} hari terakhir. Semua tetap tersimpan di menu Papan.`}</div>`; }
   renderDash();
@@ -1348,7 +1363,7 @@ function renderDash(){
   const revenue=src.reduce((a,r)=>a+(Number(r.fee)||0),0);
   const sg=$('statGrid');
   if(sg){
-    let cards=`<div class="stat"><div class="num">${total}</div><div class="lbl">Total Laporan</div></div><div class="stat"><div class="num">${selesai}</div><div class="lbl">Selesai</div></div><div class="stat"><div class="num">${proses}</div><div class="lbl">Proses</div></div>`;
+    let cards=`<div class="stat"><div class="num">${total}</div><div class="lbl">Total Laporan</div></div><div class="stat"><div class="num">${selesai}</div><div class="lbl">Selesai</div></div><div class="stat"><div class="num">${proses}</div><div class="lbl">Proses</div></div><div class="stat"><div class="num">${src.filter(r=>(r.job_type||'')==='Garansi').length}</div><div class="lbl">Garansi</div></div>`;
     if(isOwner()&&FEATURES.profit){ const cost=src.reduce((a,r)=>a+(Number(r.cost)||0),0); cards+=`<div class="stat"><div class="num">${rp(revenue)}</div><div class="lbl">Pendapatan</div></div><div class="stat"><div class="num">${rp(revenue-cost)}</div><div class="lbl">Laba</div></div>`; }
     sg.innerHTML=cards;
   }
@@ -1379,16 +1394,33 @@ function renderCharts(){
   const cb=$('chartBrand'); if(cb) charts.brand=new Chart(cb,{type:'bar',data:{labels:bt.map(x=>x[0]),datasets:[{label:'Jumlah',data:bt.map(x=>x[1]),backgroundColor:'#22c55e'}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
   const dtc={}; reports.forEach(r=>{const t=r.device_type||'Laptop'; dtc[t]=(dtc[t]||0)+1;}); const dtl=Object.keys(dtc);
   const cdt=$('chartDevType'); if(cdt) charts.devtype=new Chart(cdt,{type:'doughnut',data:{labels:dtl,datasets:[{data:dtl.map(k=>dtc[k]),backgroundColor:['#6366f1','#22c55e','#f59e0b','#ef4444','#06b6d4','#a855f7']}]},options:{plugins:{legend:{position:'bottom'}}}});
+  const _svc=reports.filter(r=>(r.job_type||'Service')!=='Garansi').length, _gar=reports.filter(r=>(r.job_type||'')==='Garansi').length; const cw=$('chartWarranty'); if(cw) charts.warranty=new Chart(cw,{type:'doughnut',data:{labels:['Service','Garansi'],datasets:[{data:[_svc,_gar],backgroundColor:['#6366f1','#8b5cf6']}]},options:{plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:function(c){const tot=_svc+_gar||1; return c.label+': '+c.parsed+' ('+Math.round(c.parsed/tot*100)+'%)';}}}}}});
 }
+let _finSub='Service'; let _finSearch='';
+function finSub(t){ _finSub=t; const a=$('finTabService'), b=$('finTabGaransi'); if(a) a.className='btn small'+(t==='Service'?'':' secondary'); if(b) b.className='btn small'+(t==='Garansi'?'':' secondary'); renderFinance(); }
+function finSearchInput(){ _finSearch=($('finSearch')&&$('finSearch').value||'').toLowerCase(); renderFinance(); }
+function finRows(){ const isGar=_finSub==='Garansi'; let list=reports.filter(r=> isGar ? (r.job_type||'')==='Garansi' : (r.job_type||'Service')!=='Garansi'); if(_finSearch){ const q=_finSearch; list=list.filter(r=>((r.customer||'')+' '+(r.ticket_no||'')+' '+(r.customer_phone||'')).toLowerCase().includes(q)); } list.sort((a,b)=>(b.date_in||b.created_at||'').localeCompare(a.date_in||a.created_at||'')); return list; }
+function payBadge(r){ const ps=(r.payment_status||'Belum'); if(/lunas/i.test(ps)) return '<span class="chip" style="background:#dcfce7;color:#166534">Lunas</span>'; if(/dp/i.test(ps)){ const dp=Number(r.dp_amount)||0; return '<span class="chip" style="background:#fef9c3;color:#854d0e">DP'+(dp?(' '+rp(dp)):'')+'</span>'; } return '<span class="chip" style="background:#fee2e2;color:#991b1b">Belum</span>'; }
 function renderFinance(){
   const box=$('financeBox'); if(!box) return;
   if(!(isOwner()&&FEATURES.profit)){ box.innerHTML=`<div class="empty">Fitur keuangan tidak aktif atau Anda bukan Owner.</div>`; return; }
-  if(!reports.length){ box.innerHTML=`<div class="empty">Belum ada data keuangan.</div>`; return; }
-  const recap=list=>{ const M={}; list.forEach(r=>{ const d=(r.date_in||r.created_at||'').slice(0,7); if(!d) return; if(!M[d]) M[d]={rev:0,cost:0,n:0}; M[d].rev+=Number(r.fee)||0; M[d].cost+=Number(r.cost)||0; M[d].n++; }); return M; };
-  const section=(M,title,accent,note)=>{ const keys=Object.keys(M).sort().reverse(); const tr=keys.reduce((a,k)=>a+M[k].rev,0), tc=keys.reduce((a,k)=>a+M[k].cost,0); const rows=keys.length?keys.map(k=>{ const m=M[k]; const lbl=new Date(k+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'}); return `<tr><td>${lbl}</td><td>${m.n}</td><td>${rp(m.rev)}</td><td>${rp(m.cost)}</td><td><b>${rp(m.rev-m.cost)}</b></td></tr>`; }).join(''):`<tr><td colspan="5" class="muted">Belum ada data.</td></tr>`; return `<div style="margin-bottom:26px"><h3 style="margin:0 0 4px;color:${accent}">${title}</h3>${note?`<p class="muted" style="margin-bottom:10px">${note}</p>`:''}<div class="stat-grid"><div class="stat"><div class="num">${rp(tr)}</div><div class="lbl">Total Pendapatan</div></div><div class="stat"><div class="num">${rp(tc)}</div><div class="lbl">Total Modal</div></div><div class="stat"><div class="num">${rp(tr-tc)}</div><div class="lbl">Total Laba</div></div></div><table class="ftbl" style="margin-top:12px"><tr><th>Bulan</th><th>Jml</th><th>Pendapatan</th><th>Modal</th><th>Laba</th></tr>${rows}</table></div>`; };
-  const service=reports.filter(r=>(r.job_type||'Service')!=='Garansi');
-  const garansi=reports.filter(r=>(r.job_type||'')==='Garansi');
-  box.innerHTML=section(recap(service),'🔧 Service (Berbayar)','var(--accent)','Pendapatan dari servis reguler berbayar.')+section(recap(garansi),'🛡️ Garansi (Klaim)','#8b5cf6','Klaim garansi — umumnya tanpa pendapatan; modal/part yang terpakai dihitung sebagai biaya garansi, terpisah dari Service.');
+  const list=finRows();
+  const totRev=list.reduce((a,r)=>a+(Number(r.fee)||0),0);
+  const totCost=list.reduce((a,r)=>a+(Number(r.cost)||0),0);
+  const head=`<div class="stat-grid"><div class="stat"><div class="num">${list.length}</div><div class="lbl">Jumlah ${_finSub}</div></div><div class="stat"><div class="num">${rp(totRev)}</div><div class="lbl">Total Pendapatan</div></div><div class="stat"><div class="num">${rp(totCost)}</div><div class="lbl">Total Modal</div></div><div class="stat"><div class="num">${rp(totRev-totCost)}</div><div class="lbl">Total Laba</div></div></div>`;
+  const rows=list.length?list.map(r=>{ const parts=(r.components||[]).length?esc(r.components.join(', ')):'-'; return `<tr onclick="openDetail('${r.id}')" style="cursor:pointer"><td>${esc(r.ticket_no||'-')}</td><td>${esc(r.customer||'-')}</td><td>${esc(r.customer_phone||'-')}</td><td>${rp(r.fee)}</td><td>${parts}</td><td>${payBadge(r)}</td></tr>`; }).join(''):`<tr><td colspan="6" class="muted">Belum ada data ${_finSub}.</td></tr>`;
+  box.innerHTML=head+`<table class="ftbl" style="margin-top:12px" id="finTable"><tr><th>No. Tiket</th><th>Nama</th><th>No. WA</th><th>Harga</th><th>Part Diganti</th><th>Status Bayar</th></tr>${rows}</table>`;
+  try{applyLang();}catch(e){}
+}
+function exportFinancePdf(){
+  if(typeof window.jspdf==='undefined'){ toast('Library PDF belum siap.','error'); return; }
+  const { jsPDF }=window.jspdf; const doc=new jsPDF(); const list=finRows();
+  doc.setFontSize(14); doc.text((BRAND.name||'RepairLog')+' - Laporan Keuangan ('+_finSub+')',14,16);
+  doc.setFontSize(9); let y=28; const totRev=list.reduce((a,r)=>a+(Number(r.fee)||0),0);
+  doc.text('No.Tiket',14,y); doc.text('Nama',48,y); doc.text('WA',90,y); doc.text('Harga',125,y); doc.text('Bayar',162,y); y+=4; doc.line(14,y,196,y); y+=6;
+  list.forEach(r=>{ if(y>282){ doc.addPage(); y=16; } doc.text(String(r.ticket_no||'-').slice(0,18),14,y); doc.text(String(r.customer||'-').slice(0,20),48,y); doc.text(String(r.customer_phone||'-').slice(0,16),90,y); doc.text(rp(r.fee),125,y); doc.text(String(r.payment_status||'-'),162,y); y+=6; });
+  y+=4; doc.setFontSize(11); doc.text('Total Pendapatan: '+rp(totRev),14,y);
+  doc.save('keuangan-'+_finSub.toLowerCase()+'.pdf');
 }
 
 function renderTechPerf(){ const box=$('techPerf'); if(!box) return; const assigned=reports.filter(r=>r.assigned_to); const techIds=[...new Set(assigned.map(r=>r.assigned_to))]; if(techIds.length<2){ box.innerHTML=''; return; } const agg={}; assigned.forEach(r=>{ const k=r.assigned_to; if(!agg[k]) agg[k]={total:0,done:0,lv:{1:0,2:0,3:0,4:0}}; agg[k].total++; if((r.status||'').toLowerCase().includes('selesai')) agg[k].done++; agg[k].lv[r.level]=(agg[k].lv[r.level]||0)+1; }); const rowsArr=Object.entries(agg).sort((a,b)=>b[1].total-a[1].total); const top=rowsArr[0]; const rows=rowsArr.map(([uid,d])=>`<tr><td>${techBadge(uid)}</td><td style="text-align:center"><b>${d.total}</b></td><td style="text-align:center">${d.done}</td><td style="text-align:center">${d.lv[1]||0}</td><td style="text-align:center">${d.lv[2]||0}</td><td style="text-align:center">${d.lv[3]||0}</td><td style="text-align:center">${d.lv[4]||0}</td></tr>`).join(''); box.innerHTML=`<div class="insight" style="margin-bottom:24px"><div style="font-weight:700;margin-bottom:8px">👷 Kinerja Teknisi</div><div class="muted" style="margin-bottom:10px">${LANG==='en'?'🏆 Most jobs handled by: ':'🏆 Paling banyak mengerjakan: '}<b>${esc(techName(top[0]))}</b> (${top[1].total}${LANG==='en'?' services':' servis'})</div><div style="overflow-x:auto"><table class="ftbl"><tr><th>Teknisi</th><th>Total</th><th>Selesai</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th></tr>${rows}</table></div></div>`; }
@@ -1420,7 +1452,8 @@ async function markRead(rid){ if(!db||!ME.user_id) return; try{ await db.from('c
 
 // ====== KOLABORASI: ASSIGN & TAHAP ======
 function assignStageHtml(r){ if(!FEATURES.collab) return ''; const opts=boardStages().map(s=>`<option${(r.stage||boardStages()[0])===s?' selected':''}>${esc(s)}</option>`).join(''); return `<div style="margin-top:12px"><label>Tahap</label><select onchange="setStage('${r.id}',this.value)">${opts}</select></div>`; }
-async function setStage(id,stage){ if(!db) return; await db.from('reports').update({stage,updated_at:new Date().toISOString()}).eq('id',id); const r=reports.find(x=>x.id===id); if(r) r.stage=stage; renderBoard(); if($('detailModal').classList.contains('open')&&_openReportId===id) renderActivity(id); }
+function statusFromStage(stage){ if(/batal|cancel|gagal/i.test(stage||'')) return 'Batal'; if(/selesai|diambil/i.test(stage||'')) return 'Selesai'; return 'Proses'; }
+async function setStage(id,stage){ if(!db) return; const r=reports.find(x=>x.id===id); if(/batal|cancel|gagal/i.test(stage||'') && r && !r.cancel_reason){ _pendingCancelStage=stage; openCancel(id); return; } const status=statusFromStage(stage); await db.from('reports').update({stage,status,updated_at:new Date().toISOString()}).eq('id',id); if(r){ r.stage=stage; r.status=status; } renderBoard(); try{render();}catch(e){} if($('detailModal').classList.contains('open')&&_openReportId===id){ renderActivity(id); openDetail(id); } }
 async function setAssign(id,uid){ if(!db) return; await db.from('reports').update({assigned_to:uid||null,updated_at:new Date().toISOString()}).eq('id',id); const r=reports.find(x=>x.id===id); if(r) r.assigned_to=uid||null; renderBoard(); render(); if($('detailModal').classList.contains('open')&&_openReportId===id) renderActivity(id); }
 
 // ====== KOLABORASI: PAPAN KANBAN ======
@@ -1430,8 +1463,12 @@ async function delStage(s){ if(!isOwner()){ toast('Hanya Owner.','error'); retur
 function addBoardCard(stage){ openForm(); _newStage=stage||null; }
 function serviceAge(r){ const start=r.date_in||r.created_at; if(!start) return 0; return Math.floor((Date.now()-new Date(start))/86400000); }
 function ageBadge(r){ const s=(r.status||'').toLowerCase(); if(s.includes('selesai')||r.stage==='Selesai'||r.stage==='Diambil') return ''; const d=serviceAge(r); let cls='age-ok'; if(d>7) cls='age-danger'; else if(d>3) cls='age-warn'; return `<span class="age-badge ${cls}">${d}h</span>`; }
-function renderBoard(){ const wrap=$('boardWrap'); if(!wrap) return; const first=boardStages()[0]; const cols=boardStages().map(s=>{ const items=reports.filter(r=>(r.stage||first)===s); const cards=items.map(boardCard).join('')||`<div class="muted" style="font-size:12px;padding:6px">—</div>`; const del=isOwner()?`<button class="bcol-del" title="Hapus kolom" onclick="delStage('${esc(s)}')">×</button>`:''; return `<div class="bcol" ondragover="boardDragOver(event)" ondrop="boardDrop(event,'${esc(s)}')"><div class="bcol-head" style="border-color:${stageColor(s)}"><span>${esc(s)}</span><span style="display:flex;align-items:center;gap:6px"><span class="bcount">${items.length}</span>${del}</span></div><div class="bcol-body">${cards}</div><button class="bcol-add" onclick="addBoardCard('${esc(s)}')">+ Tambah kartu</button></div>`; }).join(''); const addCol=isOwner()?`<div class="bcol bcol-addcol" onclick="addStage()">+ Tambah kolom</div>`:''; wrap.innerHTML=cols+addCol; try{applyLang();}catch(e){} }
-function boardCard(r){ const un=unreadMap[r.id]?`<span class="notif-dot" style="position:static;display:inline-flex">${unreadMap[r.id]>9?'9+':unreadMap[r.id]}</span>`:''; return `<div class="bcard" draggable="true" ondragstart="boardDragStart(event,'${r.id}')" onclick="openDetail('${r.id}')"><div class="row"><b style="font-size:13px">${esc(r.device)}</b>${ageBadge(r)}</div><div class="muted" style="font-size:11px">${esc(r.customer||'-')} • L${r.level}${isWarranty(r)?' • <b style="color:#8b5cf6">🛡️ Garansi</b>':''}</div><div class="row" style="margin-top:6px">${techBadge(r.assigned_to)}${un}</div></div>`; }
+function boardColOf(r){ const first=boardStages()[0]; const st=r.stage||first; const day=86400000; const t=r.date_out?new Date(r.date_out).getTime():(r.updated_at?new Date(r.updated_at).getTime():0); const aged=t&&(Date.now()-t)>=day; if((st==='Diambil'||st==='Batal Diambil')&&aged) return 'Arsip'; if(st==='Batal') return 'Batal'; if(st==='Batal Diambil') return 'Batal Diambil'; if(boardStages().indexOf(st)>=0) return st; return first; }
+function renderBoard(){ const wrap=$('boardWrap'); if(!wrap) return; const norm=boardStages().filter(s=>['Batal','Batal Diambil','Arsip'].indexOf(s)<0); const placed={}; reports.forEach(r=>{ const c=boardColOf(r); (placed[c]=placed[c]||[]).push(r); });
+  const cols=norm.map(s=>{ const items=placed[s]||[]; const cards=items.map(boardCard).join('')||`<div class="muted" style="font-size:12px;padding:6px">\u2014</div>`; const del=isOwner()?`<button class="bcol-del" title="Hapus kolom" onclick="delStage('${esc(s)}')">\u00d7</button>`:''; return `<div class="bcol" ondragover="boardDragOver(event)" ondrop="boardDrop(event,'${esc(s)}')"><div class="bcol-head" style="border-color:${stageColor(s)}"><span>${esc(s)}</span><span style="display:flex;align-items:center;gap:6px"><span class="bcount">${items.length}</span>${del}</span></div><div class="bcol-body">${cards}</div><button class="bcol-add" onclick="addBoardCard('${esc(s)}')">+ Tambah kartu</button></div>`; }).join('');
+  const special=[['Batal','#ef4444',true],['Batal Diambil','#b91c1c',true],['Arsip','#64748b',false]].map(sp=>{ const s=sp[0],col=sp[1],drop=sp[2]; const items=placed[s]||[]; const cards=items.map(boardCard).join('')||`<div class="muted" style="font-size:12px;padding:6px">\u2014</div>`; const da=drop?`ondragover="boardDragOver(event)" ondrop="boardDrop(event,'${s}')"`:''; const foot=s==='Arsip'?`<button class="bcol-add" onclick="showTab('list')">\u27a1\ufe0f Masuk ke Laporan</button>`:''; return `<div class="bcol" ${da}><div class="bcol-head" style="border-color:${col}"><span>${s}</span><span class="bcount">${items.length}</span></div><div class="bcol-body">${cards}</div>${foot}</div>`; }).join('');
+  const addCol=isOwner()?`<div class="bcol bcol-addcol" onclick="addStage()">+ Tambah kolom</div>`:''; wrap.innerHTML=cols+special+addCol; try{applyLang();}catch(e){} }
+function boardCard(r){ const un=unreadMap[r.id]?`<span class="notif-dot" style="position:static;display:inline-flex">${unreadMap[r.id]>9?'9+':unreadMap[r.id]}</span>`:''; return `<div class="bcard" draggable="true" ondragstart="boardDragStart(event,'${r.id}')" onclick="openDetail('${r.id}')" style="position:relative">${statusBadge(r)}<div class="row"><b style="font-size:13px">${esc(r.device)}</b>${ageBadge(r)}</div><div class="muted" style="font-size:11px">${esc(r.customer||'-')} • L${r.level}${isWarranty(r)?' • <b style="color:#8b5cf6">🛡️ Garansi</b>':''}</div><div class="row" style="margin-top:6px">${techBadge(r.assigned_to)}${un}</div></div>`; }
 function boardDragStart(e,id){ _dragId=id; try{e.dataTransfer.setData('text/plain',id);}catch(_){} }
 function boardDragOver(e){ e.preventDefault(); }
 function boardDrop(e,stage){ e.preventDefault(); const id=_dragId||((e.dataTransfer&&e.dataTransfer.getData('text/plain'))); if(id) setStage(id,stage); _dragId=null; }
@@ -1544,7 +1581,7 @@ async function showOwnerPanel(){
   if($('brBankName')) $('brBankName').value=BRAND.bankName||''; if($('brBankNo')) $('brBankNo').value=BRAND.bankNo||''; if($('brBankHolder')) $('brBankHolder').value=BRAND.bankHolder||'';
   const _bs=$('brandingSection'); if(_bs) _bs.style.display=FEATURES.whitelabel?'':'none';
   buildFeatChecks(); loadUsers();
-  const _sc=$('supportContact'); if(_sc) _sc.textContent=SUPPORT_CONTACT?(' ('+SUPPORT_CONTACT+')'):'';
+  const _sc=$('supportContact'); if(_sc) _sc.textContent=SUPPORT_CONTACT?(' ('+SUPPORT_CONTACT+')'):''; ownerDirty=false;
 }
 async function changePin(){
   const a=$('newPin').value.trim(), b=$('newPin2').value.trim();
@@ -1561,7 +1598,7 @@ async function saveFeatures(){
   Object.keys(obj).forEach(k=>{ if(!featAllowed(k)) obj[k]=false; });
   FEATURES=obj; applyFeatures();
   if(db) await db.from('app_settings').upsert({store_id:STORE_ID,key:'features',value:FEATURES,updated_at:new Date().toISOString()},{onConflict:'store_id,key'});
-  toast('Pengaturan fitur disimpan.','success');
+  toast('Pengaturan fitur disimpan.','success'); ownerDirty=false;
 }
 
 // ====== KELOLA PENGGUNA (owner) ======
@@ -1745,6 +1782,8 @@ function waNotifDone(id){ const r=reports.find(x=>x.id===id); if(!r) return; con
 function waNotifRemind(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n+'?text='+encodeURIComponent(waFill(WA_TPL_REMIND,r)),'whatsapp'); }
 const WA_TPL_CANCEL='Halo {nama} 👋\n\nMohon maaf, setelah pengecekan, *{device}* (No. Tiket {tiket}) di *{toko}* *belum dapat kami servis*.\n\n📝 Alasan: {alasan}\n\n{biaya}\n\nDetail: {link}\n\nTerima kasih atas pengertiannya 🙏';
 function waNotifCancel(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } const cf=Number(r.cancel_fee)||0; const biaya=cf>0?('💳 Dikenakan biaya cek sebesar '+rp(cf)+'. Silakan lakukan pembayaran melalui link di atas, lalu ambil kembali perangkat Anda.'):('📦 Tidak ada biaya. Silakan datang untuk mengambil kembali perangkat Anda di toko kami.'); const txt=waFill(WA_TPL_CANCEL,r).replace(/{alasan}/g,r.cancel_reason||'-').replace(/{biaya}/g,biaya); window.open('https://wa.me/'+n+'?text='+encodeURIComponent(txt),'whatsapp'); }
+function waBlank(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } window.open('https://wa.me/'+n,'whatsapp'); }
+function openWaModal(id){ const r=reports.find(x=>x.id===id); if(!r) return; const n=waNumber(r.customer_phone); if(!n){ toast('Nomor WhatsApp customer belum diisi.','error'); return; } const canceled=/batal|gagal|cancel/i.test(r.status||''); const last=canceled?{label:'📲 Teruskan alasan cancel ke WA',cls:'danger',fn:()=>waNotifCancel(id)}:{label:'❌ Batalkan servis (isi alasan)',cls:'danger',fn:()=>openCancel(id)}; let msg='Pilih pesan WhatsApp untuk '+(r.customer||'customer')+'.'; if(canceled&&r.cancel_reason) msg+=' — Alasan cancel dari teknisi: '+r.cancel_reason; showMini('💬 WhatsApp Customer',msg,[{label:'💬 Chat kosong (tanpa template)',cls:'secondary',fn:()=>waBlank(id)},{label:'🔧 Follow-up: masih proses',cls:'secondary',fn:()=>waNotifProgress(id)},{label:'✅ Selesai + harga + link bayar',fn:()=>waNotifDone(id)},last]); }
 function ticketPreview(){ const el=$('ticketPreviewHint'); if(!el) return; const p=($('brPrefixCo')&&$('brPrefixCo').value||'').trim(); const roman=(typeof ROMAN_MONTH!=='undefined'?ROMAN_MONTH[new Date().getMonth()]:'VII'); const ex=(p?p+' ':'')+roman+'/001'; el.innerHTML='Contoh tiket bulan ini: <b>'+esc(ex)+'</b> — bulan pakai angka Romawi, nomor urut otomatis dari server & reset tiap bulan.'; }
 function csvCell(v){ v=(v==null?'':String(v)); return '"'+v.replace(/"/g,'""')+'"'; }
 function exportCsv(){
@@ -1794,9 +1833,12 @@ async function saveMyName(){ const n=($('setName')&&$('setName').value||'').trim
 let formDirty=false;
 document.getElementById('formModal').addEventListener('input',()=>{ if($('formModal').classList.contains('open')) formDirty=true; });
 document.getElementById('formModal').addEventListener('change',()=>{ if($('formModal').classList.contains('open')) formDirty=true; });
+let ownerDirty=false;
+document.getElementById('ownerModal').addEventListener('input',()=>{ if($('ownerModal').classList.contains('open')&&$('ownerPanel').style.display!=='none') ownerDirty=true; });
+document.getElementById('ownerModal').addEventListener('change',()=>{ if($('ownerModal').classList.contains('open')&&$('ownerPanel').style.display!=='none') ownerDirty=true; });
 function showMini(title,msg,buttons){ $('miniTitle').textContent=title||''; $('miniMsg').textContent=msg||''; const box=$('miniActions'); box.innerHTML=''; (buttons||[]).forEach(b=>{ const btn=document.createElement('button'); btn.className='btn small'+(b.cls?' '+b.cls:''); btn.textContent=b.label; btn.onclick=()=>{ hideMini(); if(typeof b.fn==='function') b.fn(); }; box.appendChild(btn); }); $('miniModal').classList.add('open'); }
 function hideMini(){ $('miniModal').classList.remove('open'); }
-function requestCloseModal(id){ if(id==='camModal'){ closeCamera(); return; } if(id==='miniModal'){ hideMini(); return; } if(id==='formModal' && formDirty){ showMini('Perubahan belum disimpan','Ada perubahan yang belum disimpan. Simpan dulu atau buang perubahan?',[{label:'Batal',cls:'secondary',fn:null},{label:'Buang',cls:'danger',fn:()=>{ formDirty=false; closeModal('formModal'); }},{label:'💾 Simpan',fn:()=>saveReport()}]); return; } closeModal(id); }
+function requestCloseModal(id){ if(id==='camModal'){ closeCamera(); return; } if(id==='miniModal'){ hideMini(); return; } if(id==='formModal' && formDirty){ showMini('Perubahan belum disimpan','Ada perubahan yang belum disimpan. Simpan dulu atau buang perubahan?',[{label:'Batal',cls:'secondary',fn:null},{label:'Buang',cls:'danger',fn:()=>{ formDirty=false; closeModal('formModal'); }},{label:'💾 Simpan',fn:()=>saveReport()}]); return; } if(id==='ownerModal' && ownerDirty){ showMini('Perubahan belum disimpan','Ada perubahan di Control Panel yang belum disimpan. Yakin keluar tanpa menyimpan?',[{label:'Batal',cls:'secondary',fn:null},{label:'Buang & keluar',cls:'danger',fn:()=>{ ownerDirty=false; closeModal('ownerModal'); }}]); return; } closeModal(id); }
 
 // ====== TUTORIAL (guided tour) ======
 const TOUR_KEY='rl_tour_done';
