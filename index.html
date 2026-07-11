@@ -445,14 +445,13 @@
     <h2 id="formTitle">Tambah Laporan</h2>
     <input type="hidden" id="f_id" />
     <div><label>Jenis Servis</label><select id="f_jobtype" onchange="onJobTypeChange()"><option value="Service">🔧 Service (berbayar)</option><option value="Garansi">🛡️ Garansi (klaim garansi)</option></select><div class="muted" id="jobtypeHint" style="font-size:12px;margin-top:6px;display:none">🛡️ Mode Garansi: laporan ini dipisahkan dari pendapatan Service di menu Keuangan & diberi label khusus.</div></div>
-    <div class="frow">
-      <div id="devTypeRow"><label>Jenis Perangkat</label><select id="f_devtype" onchange="onDevTypeChange()"></select></div>
-    </div>
+    <div id="ticketFormRow"><label>No. Tiket</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="f_ticket" placeholder="isi nomor depan, cth: 0001" style="max-width:170px" oninput="ticketFormPreview()" /><span class="muted" id="ticketFormPrev" style="font-size:12px"></span></div><div class="muted" id="ticketFormHint" style="font-size:11px;margin-top:4px">Ketik bagian depannya saja — sisanya otomatis (mis. RL/STTS/bulan/tahun) mengikuti Jenis Servis.</div></div>
+    <div id="devTypeRow"><label>Jenis Perangkat</label><select id="f_devtype" onchange="onDevTypeChange()"></select></div>
     <div class="frow">
       <div><label>Merek</label><select id="f_brand"></select></div>
       <div><label>Customer</label><input id="f_customer" list="custDatalist" placeholder="Nama pemilik" onchange="onCustomerPick()" /><datalist id="custDatalist"></datalist></div>
     </div>
-    <div class="frow3" id="deviceSpecFields"></div>
+    <div class="frow" id="deviceSpecFields"></div>
     <div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div>
     <div class="frow">
       <div><label>Biaya Jasa (Rp)</label><input id="f_fee" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this);recomputeCost()" /></div>
@@ -480,7 +479,6 @@
           <option value="30">30 hari</option><option value="60">60 hari</option><option value="90">90 hari</option>
         </select></div>
     </div>
-    <div><label>No. Tiket</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="f_ticket" placeholder="isi nomor depan, cth: 0001" style="max-width:170px" oninput="ticketFormPreview()" /><span class="muted" id="ticketFormPrev" style="font-size:12px"></span></div><div class="muted" style="font-size:11px;margin-top:4px">Ketik bagian depannya saja \u2014 sisanya otomatis (mis. RL/STTS/bulan/tahun) mengikuti Jenis Servis. Saat mengedit, No. Tiket bisa diubah manual sepenuhnya.</div></div>
     <label>Teknisi yang mengerjakan</label>
     <select id="f_assigned"></select>
     <label>Komponen / Bagian yang diperbaiki</label>
@@ -763,7 +761,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.7.7';
+const APP_VERSION='v2.7.8';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const ROMAN_MONTH=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
@@ -1130,7 +1128,7 @@ function openForm(id){
   const r=id?reports.find(x=>x.id===id):null;
   $('formTitle').textContent=r?'Edit Laporan':'Tambah Laporan';
   $('f_id').value=r?r.id:'';
-  if($('f_ticket')) $('f_ticket').value=r?(r.ticket_no||''):'';
+  if($('f_ticket')){ $('f_ticket').value=r?(r.ticket_no||''):''; $('f_ticket').readOnly=!!r; $('f_ticket').style.opacity=r?'.7':''; $('f_ticket').style.maxWidth=r?'100%':'170px'; } { const _tfh=$('ticketFormHint'); if(_tfh) _tfh.textContent=r?'No. Tiket dikunci — tidak bisa diubah setelah laporan dibuat.':'Ketik bagian depannya saja — sisanya otomatis (mis. RL/STTS/bulan/tahun) mengikuti Jenis Servis.'; const _tfp=$('ticketFormPrev'); if(_tfp&&r) _tfp.textContent=''; }
   if($('f_jobtype')){ $('f_jobtype').value=(r&&r.job_type)||'Service'; onJobTypeChange(); }
   if($('f_devtype')) $('f_devtype').value=(r&&r.device_type)||'Laptop';
   buildBrandOptions(); buildDeviceSpecFields((r&&r.device_type)||'Laptop', r?r.device_specs:null); buildCompChecks((r&&r.device_type)||'Laptop');
@@ -1246,7 +1244,7 @@ function mediaHtml(arr,label){
   }).join('')+`</div>`;
 }
 function isWarranty(r){ return (r&&r.job_type||'')==='Garansi'; }
-function cancelBoxHtml(r){ const _isCancel=/batal|cancel|gagal/i.test(r.status||'')||/batal|cancel|gagal/i.test(r.stage||''); if(!_isCancel) return ''; const rea=esc(r.cancel_reason||''); const fee=Number(r.cancel_fee)||0; return `<div class="box" style="border:1px solid #fecaca;background:#fef2f2;border-radius:12px;padding:14px;margin-top:14px"><h4 style="margin:0 0 8px;color:#b91c1c">❌ Alasan Dibatalkan</h4><textarea id="cxReason" rows="3" placeholder="Tulis alasan servis dibatalkan / tidak bisa diservis (akan tampil ke customer)..." style="width:100%;box-sizing:border-box">${rea}</textarea><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label style="margin:0">Biaya cek (Rp)</label><input id="cxFee" inputmode="numeric" value="${fee>0?fmtThousand(fee):''}" placeholder="0" style="max-width:140px" oninput="this.value=fmtThousand(this.value)" /><button class="btn small" style="background:#ef4444" onclick="saveCancelReason('${r.id}')">💾 Simpan Alasan</button>${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn small" style="background:#25D366" onclick="saveCancelReason('${r.id}',true)">💾 Simpan & Kirim WA</button>`:''}</div></div>`; }
+function cancelBoxHtml(r){ const _isCancel=/batal|cancel|gagal/i.test(r.status||'')||/batal|cancel|gagal/i.test(r.stage||''); if(!_isCancel) return ''; const rea=esc(r.cancel_reason||''); const fee=Number(r.cancel_fee)||0; return `<div class="box" style="border:1px solid #fecaca;background:#fef2f2;border-radius:12px;padding:14px;margin-top:14px"><h4 style="margin:0 0 8px;color:#b91c1c">❌ Alasan Dibatalkan</h4><textarea id="cxReason" rows="3" placeholder="Tulis alasan servis dibatalkan / tidak bisa diservis (akan tampil ke customer)..." style="width:100%;box-sizing:border-box">${rea}</textarea><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label style="margin:0">Biaya cek (Rp)</label><input id="cxFee" inputmode="numeric" value="${fee>0?fmtThousand(fee):''}" placeholder="0" style="max-width:140px" oninput="this.value=fmtThousand(this.value)" /><button class="btn small" style="background:#ef4444" onclick="saveCancelReason('${r.id}')">💾 Simpan Alasan</button></div></div>`; }
 async function saveCancelReason(id,sendWa){ if(!db){ toast('Supabase belum dikonfigurasi.','error'); return; } const reason=($('cxReason')?$('cxReason').value:'').trim(); if(!reason){ toast('Alasan wajib diisi.','error'); return; } const fee=Number(String($('cxFee')?$('cxFee').value:'').replace(/[^0-9]/g,''))||0; const upd={cancel_reason:reason,cancel_fee:fee,status:'Batal',updated_at:new Date().toISOString()}; if(fee>0){ upd.fee=fee; upd.payment_status='Belum'; } const {error}=await db.from('reports').update(upd).eq('id',id); if(error){ toast('Gagal: '+(error.message||error),'error'); return; } await loadAll(); toast('Alasan pembatalan tersimpan.','success'); if(sendWa && FEATURES.whatsapp){ try{ waNotifCancel(id); }catch(e){} } if($('detailModal').classList.contains('open')) openDetail(id); }
 function jobTypeBadge(r){ return isWarranty(r)?'<span class="badge" style="background:#8b5cf6">🛡️ Garansi</span>':''; }
 function onJobTypeChange(){ const h=$('jobtypeHint'); if(h) h.style.display=(($('f_jobtype')&&$('f_jobtype').value)==='Garansi')?'':'none'; if(typeof ticketFormPreview==='function') ticketFormPreview(); }
