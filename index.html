@@ -62,6 +62,8 @@
   textarea{min-height:80px;resize:vertical;}
   input:disabled{opacity:.7;cursor:not-allowed;}
   .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .fs-h{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:22px 0 6px;padding-top:16px;border-top:1px solid var(--border);}
+  .fs-h.first{margin-top:4px;padding-top:0;border-top:none;}
   .frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px;font-weight:600;}
   .checks{display:flex;flex-wrap:wrap;gap:8px;}
@@ -445,8 +447,10 @@
   <div class="modal">
     <h2 id="formTitle">Tambah Laporan</h2>
     <input type="hidden" id="f_id" />
+    <div class="fs-h first">🔧 Info Servis</div>
     <div><label>Jenis Servis</label><select id="f_jobtype" onchange="onJobTypeChange()"><option value="Service">🔧 Service (berbayar)</option><option value="Garansi">🛡️ Garansi (klaim garansi)</option></select><div class="muted" id="jobtypeHint" style="font-size:12px;margin-top:6px;display:none">🛡️ Mode Garansi: laporan ini dipisahkan dari pendapatan Service di menu Keuangan & diberi label khusus.</div></div>
     <div id="ticketFormRow"><label>No. Tiket</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="f_ticket" placeholder="isi nomor depan, cth: 0001" style="max-width:170px" oninput="ticketFormPreview()" /><span class="muted" id="ticketFormPrev" style="font-size:12px"></span></div><div class="muted" id="ticketFormHint" style="font-size:11px;margin-top:4px">Ketik bagian depannya saja — sisanya otomatis (mis. RL/STTS/bulan/tahun) mengikuti Jenis Servis.</div></div>
+    <div class="fs-h">💻 Perangkat & Pelanggan</div>
     <div id="devTypeRow"><label>Jenis Perangkat</label><select id="f_devtype" onchange="onDevTypeChange()"></select></div>
     <div class="frow">
       <div><label>Merek</label><select id="f_brand"></select></div>
@@ -454,11 +458,13 @@
     </div>
     <div class="frow" id="deviceSpecFields"></div>
     <div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div>
+    <div class="fs-h">💰 Biaya & Pembayaran</div>
     <div class="frow">
       <div><label>Ongkos Jasa / Biaya Lain (Rp)</label><input id="f_fee" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this);recomputeCost()" /><div class="muted" style="font-size:12px;margin-top:4px">Biaya jasa/tenaga di luar harga komponen. Harga tiap komponen diisi di tabel di bawah.</div></div>
       <div><label>Status Pembayaran</label>
         <select id="f_payment" onchange="toggleDp()"><option value="Belum">Belum</option><option value="DP">DP</option><option value="Lunas">Lunas</option></select></div><div id="f_dpWrap" style="display:none"><label>Nominal DP (Rp)</label><input id="f_dp" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div>
     </div>
+    <div class="fs-h">🎚️ Level & Garansi</div>
     <div class="frow">
       <div><label>Level Pekerjaan</label>
         <select id="f_level">
@@ -475,6 +481,7 @@
         </select></div>
     </div>
     <div class="muted" style="font-size:12px;margin-top:10px">📌 Status servis (Proses, Menunggu Part, Selesai, Diambil, Batal) & tanggal masuk/diambil diatur otomatis lewat <b>Papan</b> — cukup geser kartu untuk mengubahnya.</div>
+    <div class="fs-h">👷 Pengerjaan & Komponen</div>
     <label>Teknisi yang mengerjakan</label>
     <select id="f_assigned"></select>
     <label>Komponen / Bagian yang diperbaiki</label>
@@ -494,6 +501,7 @@
     <label>Pekerjaan yang dilakukan</label>
     <textarea id="f_tasks" placeholder="cth: bongkar, bersihkan kipas, ganti thermal paste..."></textarea>
 
+    <div class="fs-h">📷 Dokumentasi Before / After</div>
     <div class="ba">
       <div class="box">
         <h4>🔧 BEFORE (sebelum perbaikan)</h4>
@@ -736,6 +744,8 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="config.js"></script>
+
+
 <script>
 // ====== KONFIGURASI: semua nilai diisi di file config.js (index.html TIDAK perlu diubah per toko) ======
 const CFG = (typeof window!=='undefined' && window.APP_CONFIG) ? window.APP_CONFIG : {};
@@ -761,7 +771,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.8.2';
+const APP_VERSION='v2.8.3';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const ROMAN_MONTH=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
