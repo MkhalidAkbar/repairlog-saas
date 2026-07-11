@@ -37,7 +37,7 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:20px;}
   .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-  .stat .num{font-size:30px;font-weight:800;}
+  .stat .num{font-size:clamp(18px,4.8vw,30px);font-weight:800;overflow-wrap:anywhere;}
   .stat .lbl{color:var(--muted);font-size:13px;margin-top:4px;}
   .insight{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:24px;font-size:14px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
@@ -292,7 +292,7 @@
     .ba,.charts,.frow,.frow3,.detail-grid{grid-template-columns:1fr;}
     .stat-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
     .stat{padding:14px;}
-    .stat .num{font-size:24px;}
+    .stat .num{font-size:clamp(16px,5.2vw,24px);overflow-wrap:anywhere;}
     .modal{padding:16px;max-width:100%;}
     .board{gap:8px;}
     .bcol{flex-basis:82vw;}
@@ -367,7 +367,7 @@
 
 <div class="container" id="appMain" style="display:none">
   <div id="tab-dash">
-    <div class="toolbar" id="dashDevFilterWrap" style="margin-bottom:12px"><label style="align-self:center;font-weight:600">🔧 Jenis Perangkat:</label><select id="dashDevFilter" onchange="renderDash()" style="max-width:200px"><option value="">Semua Perangkat</option></select></div>
+    <div class="toolbar" id="dashDevFilterWrap" style="margin-bottom:12px"><label style="align-self:center;font-weight:600">🔧 Jenis Perangkat:</label><select id="dashDevFilter" onchange="renderDash()" style="max-width:200px"><option value="">Semua Perangkat</option></select><label style="align-self:center;font-weight:600">📅 Bulan:</label><select id="dashMonthFilter" onchange="setDashMonth(this.value)" style="max-width:180px"><option value="">Semua Bulan</option></select></div>
     <div class="stat-grid" id="statGrid"></div>
     <div class="insight" id="insight"></div>
     <div id="warrantyAlert"></div>
@@ -414,7 +414,7 @@
   <div id="tab-cust" style="display:none">
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">👥 Pelanggan</h2></div>
     <p class="muted" style="margin-bottom:14px">Direktori pelanggan otomatis dari riwayat servis. Klik <b>Riwayat</b> untuk melihat semua servis pelanggan.</p>
-    <div class="toolbar" style="margin-bottom:12px"><input id="custSearch" placeholder="Cari nama / no. WhatsApp..." oninput="renderCustomers()" style="max-width:280px" /></div>
+    <div class="toolbar" style="margin-bottom:12px"><input id="custSearch" placeholder="Cari nama / no. WhatsApp..." oninput="custSearchInput()" style="max-width:280px" /></div>
     <div id="custBox"></div>
   </div>
 
@@ -422,14 +422,14 @@
     <div class="row" style="margin-bottom:6px;flex-wrap:wrap;gap:8px"><h2 style="margin:0">📊 Laporan Keuangan</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small secondary" onclick="exportCsv()">⬇️ Export CSV</button></div></div>
     <p class="muted" style="margin-bottom:10px">Rincian transaksi per bulan. Hanya Owner yang bisa melihat halaman ini.</p>
     <div class="toolbar" style="margin-bottom:10px;gap:8px;flex-wrap:wrap"><div style="display:flex;gap:6px"><button class="btn small" id="finTabService" onclick="finSub('Service')">🔧 Service</button><button class="btn small secondary" id="finTabGaransi" onclick="finSub('Garansi')">🛡️ Garansi</button></div><input id="finSearch" placeholder="Cari nama / no. tiket..." oninput="finSearchInput()" style="max-width:240px" /></div>
-    <div id="financeBox"></div>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div id="finMonthNav" style="min-width:96px;display:flex;flex-direction:column;gap:6px"></div><div id="financeBox" style="flex:1;min-width:260px"></div></div>
   </div>
 
   <div id="tab-attend" style="display:none">
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">🕐 Absensi Teknisi</h2></div>
     <p class="muted" style="margin-bottom:14px">Catat jam masuk & pulang. Owner melihat semua teknisi; teknisi melihat riwayatnya sendiri.</p>
     <div id="attendSelf" style="margin-bottom:18px"></div>
-    <div id="attendBox"></div>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div id="attMonthNav" style="min-width:96px;display:flex;flex-direction:column;gap:6px"></div><div id="attendBox" style="flex:1;min-width:260px"></div></div>
   </div>
 
   <div id="tab-stock" style="display:none">
@@ -447,7 +447,6 @@
     <div><label>Jenis Servis</label><select id="f_jobtype" onchange="onJobTypeChange()"><option value="Service">🔧 Service (berbayar)</option><option value="Garansi">🛡️ Garansi (klaim garansi)</option></select><div class="muted" id="jobtypeHint" style="font-size:12px;margin-top:6px;display:none">🛡️ Mode Garansi: laporan ini dipisahkan dari pendapatan Service di menu Keuangan & diberi label khusus.</div></div>
     <div class="frow">
       <div id="devTypeRow"><label>Jenis Perangkat</label><select id="f_devtype" onchange="onDevTypeChange()"></select></div>
-      <div><label id="f_deviceLabel">Nama Perangkat *</label><input id="f_device" placeholder="cth: Asus X441 / PC Rakitan / Epson L3110" /></div>
     </div>
     <div class="frow">
       <div><label>Merek</label><select id="f_brand"></select></div>
@@ -459,14 +458,6 @@
       <div><label>Biaya Jasa (Rp)</label><input id="f_fee" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this);recomputeCost()" /></div>
       <div><label>Status Pembayaran</label>
         <select id="f_payment" onchange="toggleDp()"><option value="Belum">Belum</option><option value="DP">DP</option><option value="Lunas">Lunas</option></select></div><div id="f_dpWrap" style="display:none"><label>Nominal DP (Rp)</label><input id="f_dp" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div>
-    </div>
-    <div class="ownerOnly profitOnly">
-      <label>Rincian Modal / HPP</label>
-      <div id="costItems"></div>
-      <button type="button" class="btn small secondary" onclick="addCostItem()" style="margin-top:6px">+ Tambah baris modal</button>
-      <select id="stockPick" onchange="addCostItemFromStock(this.value)" style="margin-top:6px;max-width:280px;display:none"></select>
-      <div class="row" style="margin-top:12px;font-weight:700"><span>Total Modal / HPP</span><span id="costTotal">Rp0</span></div>
-      <div class="row" style="font-weight:700;color:var(--accent)"><span>Perkiraan Laba (Biaya − Modal)</span><span id="labaPreview">Rp0</span></div>
     </div>
     <div class="frow">
       <div><label>Level Pekerjaan</label>
@@ -494,6 +485,14 @@
     <select id="f_assigned"></select>
     <label>Komponen / Bagian yang diperbaiki</label>
     <div class="checks" id="compChecks"></div>
+    <div class="ownerOnly profitOnly">
+      <label>Rincian Modal / HPP</label>
+      <div id="costItems"></div>
+      <button type="button" class="btn small secondary" onclick="addCostItem()" style="margin-top:6px">+ Tambah baris modal</button>
+      <select id="stockPick" onchange="addCostItemFromStock(this.value)" style="margin-top:6px;max-width:280px;display:none"></select>
+      <div class="row" style="margin-top:12px;font-weight:700"><span>Total Modal / HPP</span><span id="costTotal">Rp0</span></div>
+      <div class="row" style="font-weight:700;color:var(--accent)"><span>Perkiraan Laba (Biaya − Modal)</span><span id="labaPreview">Rp0</span></div>
+    </div>
     <label>Pekerjaan yang dilakukan</label>
     <textarea id="f_tasks" placeholder="cth: bongkar, bersihkan kipas, ganti thermal paste..."></textarea>
 
@@ -763,7 +762,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.7.4';
+const APP_VERSION='v2.7.5';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const ROMAN_MONTH=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
@@ -1926,4 +1925,3 @@ boot();
 </script>
 </body>
 </html>
-// hahahahahahah
