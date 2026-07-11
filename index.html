@@ -397,6 +397,7 @@
         <option value="Selesai">Selesai</option>
         <option value="Batal">Batal / Gagal</option>
       </select>
+      <select id="filterJobType" onchange="render()" style="max-width:170px"><option value="">Semua Jenis Servis</option><option value="Service">🔧 Service</option><option value="Garansi">🛡️ Garansi</option></select>
       <select id="filterDevType" onchange="render()" style="max-width:170px"><option value="">Semua Jenis</option></select>
       <select id="filterBrand" onchange="render()" style="max-width:160px"><option value="">Semua Merek</option></select>
       <button class="btn" onclick="openForm()">+ Tambah Laporan</button>
@@ -441,6 +442,7 @@
   <div class="modal">
     <h2 id="formTitle">Tambah Laporan</h2>
     <input type="hidden" id="f_id" />
+    <div><label>Jenis Servis</label><select id="f_jobtype" onchange="onJobTypeChange()"><option value="Service">🔧 Service (berbayar)</option><option value="Garansi">🛡️ Garansi (klaim garansi)</option></select><div class="muted" id="jobtypeHint" style="font-size:12px;margin-top:6px;display:none">🛡️ Mode Garansi: laporan ini dipisahkan dari pendapatan Service di menu Keuangan & diberi label khusus.</div></div>
     <div class="frow">
       <div><label>Jenis Perangkat</label><select id="f_devtype" onchange="onDevTypeChange()"></select></div>
       <div><label id="f_deviceLabel">Nama Perangkat *</label><input id="f_device" placeholder="cth: Asus X441 / PC Rakitan / Epson L3110" /></div>
@@ -1107,6 +1109,7 @@ function openForm(id){
   const r=id?reports.find(x=>x.id===id):null;
   $('formTitle').textContent=r?'Edit Laporan':'Tambah Laporan';
   $('f_id').value=r?r.id:'';
+  if($('f_jobtype')){ $('f_jobtype').value=(r&&r.job_type)||'Service'; onJobTypeChange(); }
   if($('f_devtype')) $('f_devtype').value=(r&&r.device_type)||'Laptop';
   buildBrandOptions(); buildDeviceSpecFields((r&&r.device_type)||'Laptop', r?r.device_specs:null); buildCompChecks((r&&r.device_type)||'Laptop');
   { const _dl=$('f_deviceLabel'); if(_dl) _dl.textContent=deviceLabelFor((r&&r.device_type)||'Laptop'); }
@@ -1146,6 +1149,7 @@ async function saveReport(){
     const id=$('f_id').value;
     const payload={
       store_id:STORE_ID,
+      job_type:($('f_jobtype')&&$('f_jobtype').value)||'Service',
       device, device_type:currentDevType(), device_specs:getDeviceSpecs(), brand:$('f_brand').value, customer:$('f_customer').value.trim(),
       customer_phone:$('f_phone').value.trim(),
       fee:Number($('f_fee').value)||0, payment_status:$('f_payment').value,
@@ -1219,12 +1223,15 @@ function mediaHtml(arr,label){
     return m.type==='video'?`<video src="${src}" controls></video>`:`<img src="${src}" onclick="previewDetail('${label}',${i})" />`;
   }).join('')+`</div>`;
 }
+function isWarranty(r){ return (r&&r.job_type||'')==='Garansi'; }
+function jobTypeBadge(r){ return isWarranty(r)?'<span class="badge" style="background:#8b5cf6">🛡️ Garansi</span>':''; }
+function onJobTypeChange(){ const h=$('jobtypeHint'); if(h) h.style.display=(($('f_jobtype')&&$('f_jobtype').value)==='Garansi')?'':'none'; }
 function openDetail(id){
   const r=reports.find(x=>x.id===id); if(!r) return;
   const lv=LEVELS[r.level]||LEVELS[1];
   const money=(isOwner()&&FEATURES.profit)?`<tr><td>Biaya Jasa</td><td>${rp(r.fee)}</td></tr><tr><td>Modal / HPP</td><td>${rp(r.cost)}</td></tr><tr><td>Laba</td><td><b>${rp((r.fee||0)-(r.cost||0))}</b></td></tr><tr><td>Pembayaran</td><td>${esc(r.payment_status||'-')}</td></tr>`:'';
   detailMedia={before:(r.before_media||[]),after:(r.after_media||[])}; if($('detailContent')) $('detailContent').style.maxWidth='';
-  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span></div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${r.device_type?esc(r.device_type)+' • ':''}${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}${r.payment_proof?`<tr><td>Bukti Transfer</td><td><img src="${r.payment_proof}" style="max-width:110px;border-radius:6px;cursor:pointer" onclick="showProof('${r.id}')" /> <span class="muted" style="font-size:11px">${(r.payment_status||'').toLowerCase()==='lunas'?'✅ terverifikasi':'⏳ belum diverifikasi'}</span></td></tr>`:''}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}${deviceSpecsHtml(r)}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifProgress('${r.id}')">🔧 WA: Dikerjakan</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifDone('${r.id}')">✅ WA: Selesai & Bayar</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifRemind('${r.id}')">📦 WA: Follow-up Ambil</button>`:''}<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Servis</button>${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${(isOwner()&&r.payment_proof&&(r.payment_status||'').toLowerCase()!=='lunas')?`<button class="btn small" style="background:#16a34a" onclick="verifyPayment('${r.id}')">✅ Verifikasi Bayar</button>`:''}${FEATURES.qris?`<button class="btn secondary small" onclick="doInvoice('${r.id}')">📄 Invoice/Bukti Bayar</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
+  $('detailContent').innerHTML=`<div class="row"><h2>${esc(r.device)}</h2><span class="badge" style="background:${lv.color}">L${r.level} ${lv.name}</span>${jobTypeBadge(r)}</div><p class="muted">Tiket: ${esc(r.ticket_no||'-')} • ${r.device_type?esc(r.device_type)+' • ':''}${esc(r.brand||'-')} • ${techBadge(r.assigned_to)}</p>${assignStageHtml(r)}<table class="ftbl" style="margin-top:12px"><tr><td>Jenis Servis</td><td>${isWarranty(r)?'🛡️ Garansi (klaim garansi)':'🔧 Service'}</td></tr><tr><td>Customer</td><td>${esc(r.customer||'-')}</td></tr>${FEATURES.whatsapp?`<tr><td>WhatsApp</td><td>${esc(r.customer_phone||'-')}</td></tr>`:''}<tr><td>Status</td><td>${esc(r.status||'-')}</td></tr><tr><td>Tgl Masuk</td><td>${fmtDate(r.date_in)}</td></tr><tr><td>Tgl Diambil</td><td>${fmtDate(r.date_out)}</td></tr><tr><td>Garansi</td><td>${r.warranty_days?r.warranty_days+' hari':'Tanpa garansi'}</td></tr>${money}${r.payment_proof?`<tr><td>Bukti Transfer</td><td><img src="${r.payment_proof}" style="max-width:110px;border-radius:6px;cursor:pointer" onclick="showProof('${r.id}')" /> <span class="muted" style="font-size:11px">${(r.payment_status||'').toLowerCase()==='lunas'?'✅ terverifikasi':'⏳ belum diverifikasi'}</span></td></tr>`:''}</table>${(r.components||[]).length?`<div style="margin-top:10px">${r.components.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:''}${r.tasks?`<p style="margin-top:10px"><b>Pekerjaan:</b> ${esc(r.tasks)}</p>`:''}${deviceSpecsHtml(r)}<div class="ba"><div class="box"><h4>🔧 Before</h4><p class="muted">${esc(r.before_notes||'-')}</p>${mediaHtml(r.before_media,'before')}</div><div class="box"><h4>✅ After</h4><p class="muted">${esc(r.after_notes||'-')}</p>${mediaHtml(r.after_media,'after')}</div></div><div class="actions" style="margin-top:16px;justify-content:flex-end">${(FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waChat('${r.id}')">💬 Chat WA</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifProgress('${r.id}')">🔧 WA: Dikerjakan</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifDone('${r.id}')">✅ WA: Selesai & Bayar</button>`:''}${(FEATURES.waNotif&&FEATURES.whatsapp&&r.customer_phone)?`<button class="btn secondary small" onclick="waNotifRemind('${r.id}')">📦 WA: Follow-up Ambil</button>`:''}<button class="btn secondary small" onclick="copyLink('${r.id}',this)">🔗 Link Servis</button>${FEATURES.print?`<button class="btn secondary small" onclick="doReceipt('${r.id}')">🧾 Tanda Terima</button>`:''}${(isOwner()&&r.payment_proof&&(r.payment_status||'').toLowerCase()!=='lunas')?`<button class="btn small" style="background:#16a34a" onclick="verifyPayment('${r.id}')">✅ Verifikasi Bayar</button>`:''}${FEATURES.qris?`<button class="btn secondary small" onclick="doInvoice('${r.id}')">📄 Invoice/Bukti Bayar</button>`:''}${FEATURES.print?`<button class="btn secondary small" onclick="doPrint('${r.id}')">🖨️ Cetak</button>`:''}<button class="btn small" onclick="openForm('${r.id}')">✏️ Edit</button><button class="btn secondary small" onclick="closeDetail()">Tutup</button></div>`;
   openModal('detailModal');
   afterOpenDetail(r.id);
 }
@@ -1277,9 +1284,8 @@ function card(r){
   const stClass=st.includes('selesai')?'selesai':((st.includes('batal')||st.includes('gagal'))?'batal':'proses');
   const firstImg=(r.after_media||[]).concat(r.before_media||[]).find(m=>m.type==='image');
   const thumb=firstImg?`<img src="${firstImg.url||firstImg.data}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" />`:'';
-  return `<div class="card">${thumb}<div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div><div class="muted">${esc(r.brand||'-')} • ${esc(r.customer||'-')}</div><div class="row"><span class="pill ${stClass}">${esc(r.status||'Proses')}</span>${(isOwner()&&FEATURES.profit)?`<span>${rp(r.fee)}</span>`:''}</div><div class="row">${techBadge(r.assigned_to)}${ageBadge(r)}</div><div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no||'-')} • ${fmtDate(r.date_in)}</div><div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div></div>`;
+  return `<div class="card">${thumb}<div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div><div class="muted">${esc(r.brand||'-')} • ${esc(r.customer||'-')}${isWarranty(r)?' • <b style="color:#8b5cf6">🛡️ Garansi</b>':''}</div><div class="row"><span class="pill ${stClass}">${esc(r.status||'Proses')}</span>${(isOwner()&&FEATURES.profit)?`<span>${rp(r.fee)}</span>`:''}</div><div class="row">${techBadge(r.assigned_to)}${ageBadge(r)}</div><div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no||'-')} • ${fmtDate(r.date_in)}</div><div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div></div>`;
 }
-
 let charts={};
 let recentDays=3; try{ const _rd=parseInt(localStorage.getItem('rl_recent_days'),10); if(_rd&&_rd>0) recentDays=_rd; }catch(e){}
 function recentReports(){ const now=Date.now(); const lim=recentDays*86400000; return reports.filter(r=>{ const d=r.date_in||r.created_at; if(!d) return false; return (now-new Date(d).getTime())<=lim; }); }
@@ -1293,6 +1299,7 @@ function render(){
   const fs=$('filterStatus')?.value||'';
   const fb=$('filterBrand')?.value||'';
   const fd=$('filterDevType')?.value||'';
+  const fj=$('filterJobType')?.value||'';
   ensureDevFilter('filterDevType');
   const list=reports.filter(r=>{
     const hay=`${r.device} ${r.customer} ${r.ticket_no} ${r.brand}`.toLowerCase();
@@ -1300,6 +1307,7 @@ function render(){
     if(fl&&String(r.level)!==fl) return false;
     if(fb&&(r.brand||'')!==fb) return false;
     if(fd&&(r.device_type||'Laptop')!==fd) return false;
+    if(fj&&(r.job_type||'Service')!==fj) return false;
     if(fs){ const s=(r.status||'').toLowerCase(); if(fs==='Batal'){ if(!(s.includes('batal')||s.includes('gagal'))) return false; } else if(!s.includes(fs.toLowerCase())) return false; }
     return true;
   });
@@ -1355,12 +1363,12 @@ function renderCharts(){
 function renderFinance(){
   const box=$('financeBox'); if(!box) return;
   if(!(isOwner()&&FEATURES.profit)){ box.innerHTML=`<div class="empty">Fitur keuangan tidak aktif atau Anda bukan Owner.</div>`; return; }
-  const M={}; reports.forEach(r=>{ const d=(r.date_in||r.created_at||'').slice(0,7); if(!d) return; if(!M[d]) M[d]={rev:0,cost:0,n:0}; M[d].rev+=Number(r.fee)||0; M[d].cost+=Number(r.cost)||0; M[d].n++; });
-  const keys=Object.keys(M).sort().reverse();
-  if(!keys.length){ box.innerHTML=`<div class="empty">Belum ada data keuangan.</div>`; return; }
-  const tr=keys.reduce((a,k)=>a+M[k].rev,0), tc=keys.reduce((a,k)=>a+M[k].cost,0);
-  const rows=keys.map(k=>{ const m=M[k]; const lbl=new Date(k+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'}); return `<tr><td>${lbl}</td><td>${m.n}</td><td>${rp(m.rev)}</td><td>${rp(m.cost)}</td><td><b>${rp(m.rev-m.cost)}</b></td></tr>`; }).join('');
-  box.innerHTML=`<div class="stat-grid"><div class="stat"><div class="num">${rp(tr)}</div><div class="lbl">Total Pendapatan</div></div><div class="stat"><div class="num">${rp(tc)}</div><div class="lbl">Total Modal</div></div><div class="stat"><div class="num">${rp(tr-tc)}</div><div class="lbl">Total Laba</div></div></div><table class="ftbl"><tr><th>Bulan</th><th>Jml</th><th>Pendapatan</th><th>Modal</th><th>Laba</th></tr>${rows}</table>`;
+  if(!reports.length){ box.innerHTML=`<div class="empty">Belum ada data keuangan.</div>`; return; }
+  const recap=list=>{ const M={}; list.forEach(r=>{ const d=(r.date_in||r.created_at||'').slice(0,7); if(!d) return; if(!M[d]) M[d]={rev:0,cost:0,n:0}; M[d].rev+=Number(r.fee)||0; M[d].cost+=Number(r.cost)||0; M[d].n++; }); return M; };
+  const section=(M,title,accent,note)=>{ const keys=Object.keys(M).sort().reverse(); const tr=keys.reduce((a,k)=>a+M[k].rev,0), tc=keys.reduce((a,k)=>a+M[k].cost,0); const rows=keys.length?keys.map(k=>{ const m=M[k]; const lbl=new Date(k+'-01').toLocaleDateString('id-ID',{month:'long',year:'numeric'}); return `<tr><td>${lbl}</td><td>${m.n}</td><td>${rp(m.rev)}</td><td>${rp(m.cost)}</td><td><b>${rp(m.rev-m.cost)}</b></td></tr>`; }).join(''):`<tr><td colspan="5" class="muted">Belum ada data.</td></tr>`; return `<div style="margin-bottom:26px"><h3 style="margin:0 0 4px;color:${accent}">${title}</h3>${note?`<p class="muted" style="margin-bottom:10px">${note}</p>`:''}<div class="stat-grid"><div class="stat"><div class="num">${rp(tr)}</div><div class="lbl">Total Pendapatan</div></div><div class="stat"><div class="num">${rp(tc)}</div><div class="lbl">Total Modal</div></div><div class="stat"><div class="num">${rp(tr-tc)}</div><div class="lbl">Total Laba</div></div></div><table class="ftbl" style="margin-top:12px"><tr><th>Bulan</th><th>Jml</th><th>Pendapatan</th><th>Modal</th><th>Laba</th></tr>${rows}</table></div>`; };
+  const service=reports.filter(r=>(r.job_type||'Service')!=='Garansi');
+  const garansi=reports.filter(r=>(r.job_type||'')==='Garansi');
+  box.innerHTML=section(recap(service),'🔧 Service (Berbayar)','var(--accent)','Pendapatan dari servis reguler berbayar.')+section(recap(garansi),'🛡️ Garansi (Klaim)','#8b5cf6','Klaim garansi — umumnya tanpa pendapatan; modal/part yang terpakai dihitung sebagai biaya garansi, terpisah dari Service.');
 }
 
 function renderTechPerf(){ const box=$('techPerf'); if(!box) return; const assigned=reports.filter(r=>r.assigned_to); const techIds=[...new Set(assigned.map(r=>r.assigned_to))]; if(techIds.length<2){ box.innerHTML=''; return; } const agg={}; assigned.forEach(r=>{ const k=r.assigned_to; if(!agg[k]) agg[k]={total:0,done:0,lv:{1:0,2:0,3:0,4:0}}; agg[k].total++; if((r.status||'').toLowerCase().includes('selesai')) agg[k].done++; agg[k].lv[r.level]=(agg[k].lv[r.level]||0)+1; }); const rowsArr=Object.entries(agg).sort((a,b)=>b[1].total-a[1].total); const top=rowsArr[0]; const rows=rowsArr.map(([uid,d])=>`<tr><td>${techBadge(uid)}</td><td style="text-align:center"><b>${d.total}</b></td><td style="text-align:center">${d.done}</td><td style="text-align:center">${d.lv[1]||0}</td><td style="text-align:center">${d.lv[2]||0}</td><td style="text-align:center">${d.lv[3]||0}</td><td style="text-align:center">${d.lv[4]||0}</td></tr>`).join(''); box.innerHTML=`<div class="insight" style="margin-bottom:24px"><div style="font-weight:700;margin-bottom:8px">👷 Kinerja Teknisi</div><div class="muted" style="margin-bottom:10px">${LANG==='en'?'🏆 Most jobs handled by: ':'🏆 Paling banyak mengerjakan: '}<b>${esc(techName(top[0]))}</b> (${top[1].total}${LANG==='en'?' services':' servis'})</div><div style="overflow-x:auto"><table class="ftbl"><tr><th>Teknisi</th><th>Total</th><th>Selesai</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th></tr>${rows}</table></div></div>`; }
@@ -1403,7 +1411,7 @@ function addBoardCard(stage){ openForm(); _newStage=stage||null; }
 function serviceAge(r){ const start=r.date_in||r.created_at; if(!start) return 0; return Math.floor((Date.now()-new Date(start))/86400000); }
 function ageBadge(r){ const s=(r.status||'').toLowerCase(); if(s.includes('selesai')||r.stage==='Selesai'||r.stage==='Diambil') return ''; const d=serviceAge(r); let cls='age-ok'; if(d>7) cls='age-danger'; else if(d>3) cls='age-warn'; return `<span class="age-badge ${cls}">${d}h</span>`; }
 function renderBoard(){ const wrap=$('boardWrap'); if(!wrap) return; const first=boardStages()[0]; const cols=boardStages().map(s=>{ const items=reports.filter(r=>(r.stage||first)===s); const cards=items.map(boardCard).join('')||`<div class="muted" style="font-size:12px;padding:6px">—</div>`; const del=isOwner()?`<button class="bcol-del" title="Hapus kolom" onclick="delStage('${esc(s)}')">×</button>`:''; return `<div class="bcol" ondragover="boardDragOver(event)" ondrop="boardDrop(event,'${esc(s)}')"><div class="bcol-head" style="border-color:${stageColor(s)}"><span>${esc(s)}</span><span style="display:flex;align-items:center;gap:6px"><span class="bcount">${items.length}</span>${del}</span></div><div class="bcol-body">${cards}</div><button class="bcol-add" onclick="addBoardCard('${esc(s)}')">+ Tambah kartu</button></div>`; }).join(''); const addCol=isOwner()?`<div class="bcol bcol-addcol" onclick="addStage()">+ Tambah kolom</div>`:''; wrap.innerHTML=cols+addCol; try{applyLang();}catch(e){} }
-function boardCard(r){ const un=unreadMap[r.id]?`<span class="notif-dot" style="position:static;display:inline-flex">${unreadMap[r.id]>9?'9+':unreadMap[r.id]}</span>`:''; return `<div class="bcard" draggable="true" ondragstart="boardDragStart(event,'${r.id}')" onclick="openDetail('${r.id}')"><div class="row"><b style="font-size:13px">${esc(r.device)}</b>${ageBadge(r)}</div><div class="muted" style="font-size:11px">${esc(r.customer||'-')} • L${r.level}</div><div class="row" style="margin-top:6px">${techBadge(r.assigned_to)}${un}</div></div>`; }
+function boardCard(r){ const un=unreadMap[r.id]?`<span class="notif-dot" style="position:static;display:inline-flex">${unreadMap[r.id]>9?'9+':unreadMap[r.id]}</span>`:''; return `<div class="bcard" draggable="true" ondragstart="boardDragStart(event,'${r.id}')" onclick="openDetail('${r.id}')"><div class="row"><b style="font-size:13px">${esc(r.device)}</b>${ageBadge(r)}</div><div class="muted" style="font-size:11px">${esc(r.customer||'-')} • L${r.level}${isWarranty(r)?' • <b style="color:#8b5cf6">🛡️ Garansi</b>':''}</div><div class="row" style="margin-top:6px">${techBadge(r.assigned_to)}${un}</div></div>`; }
 function boardDragStart(e,id){ _dragId=id; try{e.dataTransfer.setData('text/plain',id);}catch(_){} }
 function boardDragOver(e){ e.preventDefault(); }
 function boardDrop(e,stage){ e.preventDefault(); const id=_dragId||((e.dataTransfer&&e.dataTransfer.getData('text/plain'))); if(id) setStage(id,stage); _dragId=null; }
@@ -1715,9 +1723,9 @@ function waNotifRemind(id){ const r=reports.find(x=>x.id===id); if(!r) return; c
 function csvCell(v){ v=(v==null?'':String(v)); return '"'+v.replace(/"/g,'""')+'"'; }
 function exportCsv(){
   if(!isOwner()){ toast('Hanya Owner.','error'); return; }
-  const head=['Tiket','Masuk','Diambil','Device','Merek','Customer','WhatsApp','Level','Status','Biaya','Modal','Laba','Pembayaran','Garansi(hari)','Pekerjaan'];
+  const head=['Tiket','Masuk','Diambil','Jenis Servis','Device','Merek','Customer','WhatsApp','Level','Status','Biaya','Modal','Laba','Pembayaran','Garansi(hari)','Pekerjaan'];
   const lines=[head.map(csvCell).join(',')];
-  reports.forEach(r=>{ const laba=(Number(r.fee)||0)-(Number(r.cost)||0); lines.push([r.ticket_no,(r.date_in||'').slice(0,10),(r.date_out||'').slice(0,10),r.device,r.brand,r.customer,r.customer_phone,'L'+r.level,r.status,Number(r.fee)||0,Number(r.cost)||0,laba,r.payment_status,r.warranty_days||0,(r.tasks||'').replace(/\n/g,' ')].map(csvCell).join(',')); });
+  reports.forEach(r=>{ const laba=(Number(r.fee)||0)-(Number(r.cost)||0); lines.push([r.ticket_no,(r.date_in||'').slice(0,10),(r.date_out||'').slice(0,10),(r.job_type||'Service'),r.device,r.brand,r.customer,r.customer_phone,'L'+r.level,r.status,Number(r.fee)||0,Number(r.cost)||0,laba,r.payment_status,r.warranty_days||0,(r.tasks||'').replace(/\n/g,' ')].map(csvCell).join(',')); });
   const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='laporan-servis-'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); URL.revokeObjectURL(a.href);
 }
