@@ -463,15 +463,8 @@
       <div><label>Merek</label><select id="f_brand"></select></div>
       <div><label>Customer</label><input id="f_customer" list="custDatalist" placeholder="Nama pemilik" onchange="onCustomerPick()" /><datalist id="custDatalist"></datalist></div>
     </div>
-    <div class="frow" id="deviceSpecFields"></div>
-    <div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div>
-    <div id="kelengkapanWrap"><label>Kelengkapan yang Dititipkan</label><div class="muted" style="font-size:12px;margin-bottom:6px">Centang barang yang ditinggalkan customer di toko (unit, charger, tas, dll). Tampil di tanda terima.</div><div class="checks" id="kelengkapanChecks"></div><div id="klOtherWrap" style="display:none;margin-top:8px"><input id="klOther" placeholder="Sebutkan barang lainnya yang dititipkan..." /></div></div>
-    <div class="fs-h">💰 Biaya & Pembayaran</div>
-    <div class="frow">
-      <div><label>Ongkos Jasa / Biaya Lain (Rp)</label><input id="f_fee" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this);recomputeCost()" /><div class="muted" style="font-size:12px;margin-top:4px">Biaya jasa/tenaga di luar harga komponen. Harga tiap komponen diisi di tabel di bawah.</div></div>
-      <div><label>Status Pembayaran</label>
-        <select id="f_payment" onchange="toggleDp()"><option value="Belum">Belum</option><option value="DP">DP</option><option value="Lunas">Lunas</option></select></div><div id="f_dpWrap" style="display:none"><label>Nominal DP (Rp)</label><input id="f_dp" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div><div><label>Metode Pembayaran</label><select id="f_paymethod" onchange="togglePaySplit()"><option value="Cash">Cash</option><option value="Transfer">Transfer</option><option value="Split Bill">Split Bill</option></select></div><div id="f_splitWrap" style="display:none"><div class="frow"><div><label>Jumlah Cash (Rp)</label><input id="f_splitcash" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div><div><label>Jumlah Transfer (Rp)</label><input id="f_splittransfer" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div></div></div>
-    </div>
+    <div class="frow"><div id="deviceSpecFields"></div><div id="phoneWrap"><label>No. WhatsApp Customer</label><input id="f_phone" placeholder="cth: 0812xxxx" /></div></div>
+    <div id="kelengkapanWrap"><label>Kelengkapan yang Dititipkan</label><div class="checks" id="kelengkapanChecks"></div><div id="klOtherWrap" style="display:none;margin-top:8px"><input id="klOther" placeholder="Sebutkan barang lainnya yang dititipkan..." /></div></div>
     <div class="fs-h">🎚️ Level Pekerjaan</div>
     <div>
       <label>Level Pekerjaan</label>
@@ -496,10 +489,16 @@
       <button type="button" class="btn small secondary" onclick="addCostItem()" style="margin-top:6px">+ Tambah komponen</button>
       <select id="stockPick" onchange="addCostItemFromStock(this.value)" style="margin-top:6px;max-width:280px;display:none"></select>
       <div class="row" style="margin-top:12px"><span>Subtotal Komponen (harga jual)</span><span id="priceTotal">Rp0</span></div>
-      <div class="row"><span>Ongkos Jasa / Biaya Lain</span><span id="feeBaseView">Rp0</span></div>
       <div class="row" style="font-weight:700"><span>Total Biaya (masuk invoice)</span><span id="feeTotal">Rp0</span></div>
       <div class="row"><span>Total Modal / HPP</span><span id="costTotal">Rp0</span></div>
       <div class="row" style="font-weight:700;color:var(--accent)"><span>Perkiraan Laba (Biaya − Modal)</span><span id="labaPreview">Rp0</span></div>
+    </div>
+    <div class="fs-h">💰 Biaya & Pembayaran</div>
+    <div class="frow">
+      <div><label>Status Pembayaran</label><select id="f_payment" onchange="toggleDp()"><option value="Belum">Belum</option><option value="DP">DP</option><option value="Lunas">Lunas</option></select></div>
+      <div id="f_dpWrap" style="display:none"><label>Nominal DP (Rp)</label><input id="f_dp" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div>
+      <div><label>Metode Pembayaran</label><select id="f_paymethod" onchange="togglePaySplit()"><option value="Cash">Cash</option><option value="Transfer">Transfer</option><option value="Split Bill">Split Bill</option></select></div>
+      <div id="f_splitWrap" style="display:none"><div class="frow"><div><label>Jumlah Cash (Rp)</label><input id="f_splitcash" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div><div><label>Jumlah Transfer (Rp)</label><input id="f_splittransfer" type="text" inputmode="numeric" placeholder="0" oninput="fmtRupiahInput(this)" /></div></div></div>
     </div>
     <label>Pekerjaan yang dilakukan</label>
     <textarea id="f_tasks" placeholder="cth: bongkar, bersihkan kipas, ganti thermal paste..."></textarea>
@@ -794,7 +793,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.8.7';
+const APP_VERSION='v2.8.8';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const ROMAN_MONTH=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
@@ -1030,6 +1029,7 @@ async function genTicket(){
 function fmtThousand(n){ n=String(n==null?'':n).replace(/[^0-9]/g,''); if(!n) return ''; return n.replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
 function parseRupiah(v){ return Number(String(v==null?'':v).replace(/[^0-9]/g,''))||0; }
 function fmtRupiahInput(el){ if(el) el.value=fmtThousand(el.value); }
+function nextTicketPrefix(jobType){ const jt=(jobType||'Service'); let mx=0; (reports||[]).forEach(r=>{ if((r.job_type||'Service')!==jt) return; const m=String(r.ticket_no||'').match(/^\s*(\d+)/); if(m){ const n=parseInt(m[1],10); if(n>mx) mx=n; } }); return String(mx+1).padStart(3,'0'); }
 
 // ====== DATA ======
 async function loadAll(){
@@ -1170,14 +1170,14 @@ function openForm(id){
   const r=id?reports.find(x=>x.id===id):null;
   $('formTitle').textContent=r?'Edit Laporan':'Tambah Laporan';
   $('f_id').value=r?r.id:'';
-  if($('f_ticket')){ $('f_ticket').value=r?(r.ticket_no||''):''; $('f_ticket').readOnly=!!r; $('f_ticket').style.opacity=r?'.7':''; $('f_ticket').style.maxWidth=r?'100%':'170px'; } { const _tfh=$('ticketFormHint'); if(_tfh) _tfh.textContent=r?'No. Tiket dikunci — tidak bisa diubah setelah laporan dibuat.':'Ketik bagian depannya saja — sisanya otomatis (mis. RL/STTS/bulan/tahun) mengikuti Jenis Servis.'; const _tfp=$('ticketFormPrev'); if(_tfp&&r) _tfp.textContent=''; }
+  if($('f_ticket')){ $('f_ticket').value=r?(r.ticket_no||''):nextTicketPrefix((r&&r.job_type)||'Service'); $('f_ticket').readOnly=!!r; $('f_ticket').style.opacity=r?'.7':''; $('f_ticket').style.maxWidth=r?'100%':'170px'; } { const _tfh=$('ticketFormHint'); if(_tfh) _tfh.textContent=r?'No. Tiket dikunci — tidak bisa diubah setelah laporan dibuat.':'Nomor urut otomatis (lanjut dari terakhir) & tidak boleh sama — masih bisa diubah.'; const _tfp=$('ticketFormPrev'); if(_tfp&&r) _tfp.textContent=''; }
   if($('f_jobtype')){ $('f_jobtype').value=(r&&r.job_type)||'Service'; $('f_jobtype').disabled=!!r; onJobTypeChange(); }
   if($('f_devtype')) $('f_devtype').value=(r&&r.device_type)||'Laptop';
   buildBrandOptions(); buildDeviceSpecFields((r&&r.device_type)||'Laptop', r?r.device_specs:null); buildCompChecks((r&&r.device_type)||'Laptop'); buildKelengkapan((r&&r.device_specs&&r.device_specs.kelengkapan)||[], (((r&&r.job_type)||'Service')==='Garansi'));
   { const _dl=$('f_deviceLabel'); if(_dl) _dl.textContent=deviceLabelFor((r&&r.device_type)||'Laptop'); }
   $('f_customer').value=r?r.customer||'':'';
   $('f_phone').value=r?r.customer_phone||'':'';
-  $('f_fee').value=r?fmtThousand(r.fee||0):'';
+  if($('f_fee')) $('f_fee').value=r?fmtThousand(r.fee||0):'';
   $('f_payment').value=r?r.payment_status||'Belum':'Belum';
   $('f_dp').value=r?fmtThousand(r.dp_amount||0):''; if(typeof toggleDp==='function') toggleDp();
   { const _pm=(r&&r.device_specs&&r.device_specs.payment)||{}; if($('f_paymethod')) $('f_paymethod').value=_pm.method||'Cash'; if($('f_splitcash')) $('f_splitcash').value=_pm.cash?fmtThousand(_pm.cash):''; if($('f_splittransfer')) $('f_splittransfer').value=_pm.transfer?fmtThousand(_pm.transfer):''; if(typeof togglePaySplit==='function') togglePaySplit(); }
@@ -1228,7 +1228,7 @@ async function saveReport(){
       let _r=await db.from('reports').update(payload).eq('id',id); if(_r.error&&/dp_amount/.test(_r.error.message||'')){ delete payload.dp_amount; _r=await db.from('reports').update(payload).eq('id',id); toast('Kolom DP belum ada di DB — jalankan SQL v2.7. DP tidak tersimpan.','error'); } if(_r.error) throw _r.error;
     }else{
       payload.date_in=new Date().toISOString().slice(0,10); payload.status='Proses';
-      { const _pfx=($('f_ticket')&&$('f_ticket').value.trim())||''; payload.ticket_no=(_pfx?_pfx+'/':'')+buildTicketTail(payload.job_type); }
+      { const _pfx=($('f_ticket')&&$('f_ticket').value.trim())||''; payload.ticket_no=(_pfx?_pfx+'/':'')+buildTicketTail(payload.job_type); if((reports||[]).some(x=>String(x.ticket_no||'')===payload.ticket_no)){ toast('No. Tiket "'+payload.ticket_no+'" sudah ada — ganti nomornya.','error'); return; } }
       payload.stage=_newStage||boardStages()[0]||'Antri';
       newTicket=payload.ticket_no;
       let _ri=await db.from('reports').insert(payload); if(_ri.error&&/dp_amount/.test(_ri.error.message||'')){ delete payload.dp_amount; _ri=await db.from('reports').insert(payload); toast('Kolom DP belum ada di DB — jalankan SQL v2.7. DP tidak tersimpan.','error'); } if(_ri.error) throw _ri.error;
@@ -1294,7 +1294,7 @@ function isWarranty(r){ return (r&&r.job_type||'')==='Garansi'; }
 function cancelBoxHtml(r){ const _isCancel=/batal|cancel|gagal/i.test(r.status||'')||/batal|cancel|gagal/i.test(r.stage||''); if(!_isCancel) return ''; const rea=esc(r.cancel_reason||''); const fee=Number(r.cancel_fee)||0; return `<div class="box" style="border:1px solid #fecaca;background:#fef2f2;border-radius:12px;padding:14px;margin-top:14px"><h4 style="margin:0 0 8px;color:#b91c1c">❌ Alasan Dibatalkan</h4><textarea id="cxReason" rows="3" placeholder="Tulis alasan servis dibatalkan / tidak bisa diservis (akan tampil ke customer)..." style="width:100%;box-sizing:border-box">${rea}</textarea><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label style="margin:0">Biaya cek (Rp)</label><input id="cxFee" inputmode="numeric" value="${fee>0?fmtThousand(fee):''}" placeholder="0" style="max-width:140px" oninput="this.value=fmtThousand(this.value)" /><button class="btn small" style="background:#ef4444" onclick="saveCancelReason('${r.id}')">💾 Simpan Alasan</button></div></div>`; }
 async function saveCancelReason(id,sendWa){ if(!db){ toast('Supabase belum dikonfigurasi.','error'); return; } const reason=($('cxReason')?$('cxReason').value:'').trim(); if(!reason){ toast('Alasan wajib diisi.','error'); return; } const fee=Number(String($('cxFee')?$('cxFee').value:'').replace(/[^0-9]/g,''))||0; const upd={cancel_reason:reason,cancel_fee:fee,status:'Batal',updated_at:new Date().toISOString()}; if(fee>0){ upd.fee=fee; upd.payment_status='Belum'; } const {error}=await db.from('reports').update(upd).eq('id',id); if(error){ toast('Gagal: '+(error.message||error),'error'); return; } await loadAll(); toast('Alasan pembatalan tersimpan.','success'); if(sendWa && FEATURES.whatsapp){ try{ waNotifCancel(id); }catch(e){} } if($('detailModal').classList.contains('open')) openDetail(id); }
 function jobTypeBadge(r){ return isWarranty(r)?'<span class="badge" style="background:#8b5cf6">🛡️ Garansi</span>':''; }
-function onJobTypeChange(){ const h=$('jobtypeHint'); if(h) h.style.display=(($('f_jobtype')&&$('f_jobtype').value)==='Garansi')?'':'none'; if(typeof ticketFormPreview==='function') ticketFormPreview(); try{ if(typeof buildKelengkapan==='function') buildKelengkapan(getKelengkapan(), (($('f_jobtype')&&$('f_jobtype').value)==='Garansi')); }catch(e){} }
+function onJobTypeChange(){ const h=$('jobtypeHint'); if(h) h.style.display=(($('f_jobtype')&&$('f_jobtype').value)==='Garansi')?'':'none'; try{ if(!($('f_id')&&$('f_id').value)&&$('f_ticket')&&typeof nextTicketPrefix==='function'){ $('f_ticket').value=nextTicketPrefix(($('f_jobtype')&&$('f_jobtype').value)||'Service'); } }catch(e){} if(typeof ticketFormPreview==='function') ticketFormPreview(); try{ if(typeof buildKelengkapan==='function') buildKelengkapan(getKelengkapan(), (($('f_jobtype')&&$('f_jobtype').value)==='Garansi')); }catch(e){} }
 function openDetail(id){
   const r=reports.find(x=>x.id===id); if(!r) return;
   const lv=LEVELS[r.level]||LEVELS[1];
