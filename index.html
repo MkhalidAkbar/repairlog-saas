@@ -14,6 +14,10 @@
 <meta name="apple-mobile-web-app-title" content="RepairLog" />
 <style>
   :root{--bg:#f5f6f8;--card:#ffffff;--card2:#f1f4f8;--text:#1f2937;--muted:#6b7280;--accent:#4f46e5;--border:#e5e7eb;}
+  html[data-theme="dark"]{--bg:#0f141c;--card:#1a2230;--card2:#242f42;--text:#e6eaf2;--muted:#9aa6bd;--accent:#818cf8;--border:#313c52;color-scheme:dark;}
+  html[data-theme="dark"] .warn{background:#3a1d1d;color:#fca5a5;border-color:#7f1d1d;}
+  html[data-theme="dark"] #verBadge{background:#312e81 !important;color:#c7d2fe !important;}
+  html[data-theme="dark"] .bio-circle:hover{background:#312e81;}
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
   body{background:var(--bg);color:var(--text);min-height:100vh;}
   header{background:var(--card);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.04);}
@@ -25,7 +29,9 @@
   nav button.active{background:var(--accent);color:#fff;}
   .navtabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   .navactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-  .menu-toggle{display:none;}
+  .navmenu{display:flex;gap:8px;flex-wrap:wrap;align-items:center;order:2;}
+  #notifBtn{order:3;}
+  .menu-toggle{display:none;order:4;}
   .container{max-width:1100px;margin:0 auto;padding:24px;}
   .btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
   .btn:disabled{opacity:.6;cursor:not-allowed;}
@@ -286,16 +292,20 @@
   }
   @media(max-width:600px){
     .container{padding:14px;}
-    header{flex-direction:column;align-items:stretch;gap:10px;padding:12px 14px;}
-    header h1{font-size:18px;justify-content:center;}
-    header small{flex-basis:auto;}
-    nav{position:relative;width:100%;flex-wrap:wrap;gap:8px;justify-content:center;}
-    .menu-toggle{display:inline-flex !important;width:100%;justify-content:center;}
-    .navtabs{display:none;width:100%;flex-direction:column;gap:4px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:6px;}
-    .navtabs.open{display:flex;}
+    header{flex-direction:row;align-items:center;gap:8px;padding:12px 14px;flex-wrap:nowrap;}
+    header h1{font-size:16px;justify-content:flex-start;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    header h1 small{display:none;}
+    header small{display:none;}
+    nav{position:static;width:auto;flex:0 0 auto;flex-wrap:nowrap;gap:6px;justify-content:flex-end;align-items:center;}
+    .rolebadge{display:none;}
+    #notifBtn{order:0;}
+    .menu-toggle{display:inline-flex !important;order:1;padding:8px 12px;}
+    .navmenu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:10px;background:var(--card);border-bottom:1px solid var(--border);box-shadow:0 10px 26px rgba(0,0,0,.14);padding:12px 14px;z-index:60;}
+    .navmenu.open{display:flex;}
+    .navtabs{width:100%;flex-direction:column;gap:4px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:6px;}
     .navtabs button{width:100%;text-align:left;padding:11px 14px;}
-    .navactions{width:100%;justify-content:center;flex-wrap:wrap;gap:6px;}
-    .navactions .btn{flex:1 1 auto;}
+    .navactions{width:100%;flex-direction:column;gap:6px;}
+    .navactions .btn{width:100%;flex:none;}
     .ba,.charts,.frow,.frow3,.detail-grid{grid-template-columns:1fr;}
     .stat-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
     .stat{padding:14px;}
@@ -350,22 +360,24 @@
   <nav>
     <span class="rolebadge" id="roleBadge"></span>
     <span class="rolebadge" id="verBadge" style="background:#eef2ff;color:#4f46e5"></span>
-    <button class="btn small secondary menu-toggle" id="menuToggle" onclick="toggleNavMenu()" title="Menu">☰ Menu</button>
-    <div class="navtabs" id="navTabs">
-      <button id="navDash" class="active" onclick="showTab('dash')">Dashboard</button>
-      <button id="navList" onclick="showTab('list')">Laporan</button>
-      <button id="navBoard" onclick="showTab('board')">Papan</button>
-      <button id="navCust" onclick="showTab('cust')" style="display:none">Pelanggan</button>
-      <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
-      <button id="navAttend" onclick="showTab('attend')" style="display:none">Absensi</button>
-      <button id="navStock" onclick="showTab('stock')" style="display:none">Stok</button>
-    </div>
-    <div class="navactions">
-      <button class="btn small" onclick="openForm()">+ Tambah</button>
-      <button class="btn small secondary notifwrap" id="notifBtn" onclick="showTab('board')" title="Notifikasi komentar">🔔<span class="notif-dot" id="notifDot" style="display:none">0</span></button>
-      <button class="btn small secondary" id="settingsBtn" onclick="openSettings()" title="Pengaturan">⚙️</button>
-      <button class="btn small secondary" id="ownerBtn" onclick="openOwner()" title="Pengaturan Owner" style="display:none">🔒</button>
-      <button class="btn small secondary" onclick="startTour()" title="Panduan">❔</button>
+    <button class="btn small secondary notifwrap" id="notifBtn" onclick="showTab('board')" title="Notifikasi komentar">🔔<span class="notif-dot" id="notifDot" style="display:none">0</span></button>
+    <button class="btn small secondary menu-toggle" id="menuToggle" onclick="toggleNavMenu()" title="Menu">☰</button>
+    <div class="navmenu" id="navMenu">
+      <div class="navtabs" id="navTabs">
+        <button id="navDash" class="active" onclick="showTab('dash')">Dashboard</button>
+        <button id="navList" onclick="showTab('list')">Laporan</button>
+        <button id="navBoard" onclick="showTab('board')">Papan</button>
+        <button id="navCust" onclick="showTab('cust')" style="display:none">Pelanggan</button>
+        <button id="navFinance" onclick="showTab('finance')" style="display:none">Keuangan</button>
+        <button id="navAttend" onclick="showTab('attend')" style="display:none">Absensi</button>
+        <button id="navStock" onclick="showTab('stock')" style="display:none">Stok</button>
+      </div>
+      <div class="navactions">
+        <button class="btn small" onclick="openForm()">+ Tambah</button>
+        <button class="btn small secondary" id="settingsBtn" onclick="openSettings()" title="Pengaturan">⚙️</button>
+        <button class="btn small secondary" id="ownerBtn" onclick="openOwner()" title="Pengaturan Owner" style="display:none">🔒</button>
+        <button class="btn small secondary" onclick="startTour()" title="Panduan">❔</button>
+      </div>
     </div>
   </nav>
 </header>
@@ -609,6 +621,17 @@
     </div>
     <div class="set-row">
       <div>
+        <div style="font-weight:600">🎨 Tema Tampilan</div>
+        <div class="muted">Pilih tema terang, gelap, atau ikuti perangkat.</div>
+      </div>
+      <select id="themeSelect" onchange="setTheme(this.value)" style="width:auto;min-width:150px">
+        <option value="auto">Otomatis (Perangkat)</option>
+        <option value="light">Terang</option>
+        <option value="dark">Gelap</option>
+      </select>
+    </div>
+    <div class="set-row">
+      <div>
         <div style="font-weight:600">🌐 Bahasa / Language</div>
         <div class="muted">Pilih bahasa tampilan aplikasi.</div>
       </div>
@@ -784,8 +807,8 @@ let LICENSE_STORAGE_MB = null;
 let db=null;
 try{
   if(SUPABASE_URL && !SUPABASE_URL.startsWith('MASUKKAN') && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('MASUKKAN')){
-    // storageKey unik per toko → sesi login tiap toko TERPISAH di browser (tidak saling menimpa walau 1 project & 1 origin)
-    db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'rl-auth-'+(STORE_ID||'default'), persistSession:true, autoRefreshToken:true } });
+    // storage=sessionStorage → tiap TAB punya sesi login sendiri; bisa buka >1 akun di 1 browser tanpa saling menimpa/ketuker. storageKey tetap unik per toko. Catatan: sesi tidak bertahan setelah tab/browser ditutup — pakai biometrik utk masuk cepat.
+    db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storage: (typeof window!=='undefined' && window.sessionStorage) ? window.sessionStorage : undefined, storageKey: 'rl-auth-'+(STORE_ID||'default'), persistSession:true, autoRefreshToken:true } });
   }
 }catch(e){}
 if(!db){ document.getElementById('configWarn').style.display='block'; }
@@ -793,7 +816,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.8.8';
+const APP_VERSION='v2.9.0';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const ROMAN_MONTH=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
@@ -838,6 +861,12 @@ const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','
 const fmtDate=d=>d?new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'-';
 // ====== I18N (multi-bahasa: Indonesia & English US) ======
 let LANG='id'; try{ LANG=localStorage.getItem('rl_lang')||'id'; }catch(e){}
+// ====== TEMA (terang / gelap / otomatis) ======
+let THEME='auto'; try{ THEME=localStorage.getItem('rl_theme')||'auto'; }catch(e){}
+function applyTheme(){ let m=THEME; if(m==='auto'){ m=(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'; } try{ document.documentElement.setAttribute('data-theme',m); }catch(e){} const ts=$('themeSelect'); if(ts) ts.value=THEME; }
+function setTheme(t){ THEME=t; try{ localStorage.setItem('rl_theme',t); }catch(e){} applyTheme(); }
+try{ if(window.matchMedia){ window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{ if(THEME==='auto') applyTheme(); }); } }catch(e){}
+applyTheme();
 const I18N_EN={
   'Dashboard':'Dashboard','Laporan':'Reports','Papan':'Board','Keuangan':'Finance','Stok':'Stock','📦 Stok Sparepart':'📦 Spare Parts Stock','+ Tambah Sparepart':'+ Add Spare Part','+ Tambah':'+ Add','+ Tambah Laporan':'+ Add Report',
   'Simpan':'Save','Batal':'Cancel','Tutup':'Close','Buka':'Open','Hapus':'Delete','Logout':'Logout','Detail':'Details','Edit':'Edit','Menyimpan...':'Saving...',
@@ -1066,8 +1095,9 @@ function showTab(t){
 }
 
 // ====== NAV MENU (dropdown mobile) ======
-function toggleNavMenu(){ const n=$('navTabs'); if(n) n.classList.toggle('open'); }
-function closeNavMenu(){ const n=$('navTabs'); if(n) n.classList.remove('open'); }
+function toggleNavMenu(){ const n=$('navMenu'); if(n) n.classList.toggle('open'); }
+function closeNavMenu(){ const n=$('navMenu'); if(n) n.classList.remove('open'); }
+document.addEventListener('click',function(e){ const nm=$('navMenu'); if(!nm||!nm.classList.contains('open')) return; const t=e.target; if(t.closest&&t.closest('#menuToggle')) return; if(nm.contains(t)){ if(t.closest&&t.closest('button')) closeNavMenu(); } else { closeNavMenu(); } });
 
 // ====== MEDIA ======
 function pickFiles(input,side){ handleFiles([...input.files],side); input.value=''; }
@@ -1170,7 +1200,7 @@ function openForm(id){
   const r=id?reports.find(x=>x.id===id):null;
   $('formTitle').textContent=r?'Edit Laporan':'Tambah Laporan';
   $('f_id').value=r?r.id:'';
-  if($('f_ticket')){ $('f_ticket').value=r?(r.ticket_no||''):nextTicketPrefix((r&&r.job_type)||'Service'); $('f_ticket').readOnly=!!r; $('f_ticket').style.opacity=r?'.7':''; $('f_ticket').style.maxWidth=r?'100%':'170px'; } { const _tfh=$('ticketFormHint'); if(_tfh) _tfh.textContent=r?'No. Tiket dikunci — tidak bisa diubah setelah laporan dibuat.':'Nomor urut otomatis (lanjut dari terakhir) & tidak boleh sama — masih bisa diubah.'; const _tfp=$('ticketFormPrev'); if(_tfp&&r) _tfp.textContent=''; }
+  if($('f_ticket')){ $('f_ticket').value=r?(r.ticket_no||''):nextTicketPrefix((r&&r.job_type)||'Service'); $('f_ticket').readOnly=!!r; $('f_ticket').style.opacity=r?'.7':''; $('f_ticket').style.maxWidth=r?'100%':'170px'; } { const _tfh=$('ticketFormHint'); if(_tfh) _tfh.textContent=r?'No. Tiket dikunci — tidak bisa diubah setelah laporan dibuat.':'Nomor urut otomatis (lanjut dari terakhir) — bisa diubah; jika sudah dipakai, otomatis digeser ke nomor berikutnya.'; const _tfp=$('ticketFormPrev'); if(_tfp&&r) _tfp.textContent=''; }
   if($('f_jobtype')){ $('f_jobtype').value=(r&&r.job_type)||'Service'; $('f_jobtype').disabled=!!r; onJobTypeChange(); }
   if($('f_devtype')) $('f_devtype').value=(r&&r.device_type)||'Laptop';
   buildBrandOptions(); buildDeviceSpecFields((r&&r.device_type)||'Laptop', r?r.device_specs:null); buildCompChecks((r&&r.device_type)||'Laptop'); buildKelengkapan((r&&r.device_specs&&r.device_specs.kelengkapan)||[], (((r&&r.job_type)||'Service')==='Garansi'));
@@ -1228,10 +1258,22 @@ async function saveReport(){
       let _r=await db.from('reports').update(payload).eq('id',id); if(_r.error&&/dp_amount/.test(_r.error.message||'')){ delete payload.dp_amount; _r=await db.from('reports').update(payload).eq('id',id); toast('Kolom DP belum ada di DB — jalankan SQL v2.7. DP tidak tersimpan.','error'); } if(_r.error) throw _r.error;
     }else{
       payload.date_in=new Date().toISOString().slice(0,10); payload.status='Proses';
-      { const _pfx=($('f_ticket')&&$('f_ticket').value.trim())||''; payload.ticket_no=(_pfx?_pfx+'/':'')+buildTicketTail(payload.job_type); if((reports||[]).some(x=>String(x.ticket_no||'')===payload.ticket_no)){ toast('No. Tiket "'+payload.ticket_no+'" sudah ada — ganti nomornya.','error'); return; } }
       payload.stage=_newStage||boardStages()[0]||'Antri';
+      // === Nomor tiket anti-bentrok (auto-geser) ===
+      // Mulai dari input manual (jika ada) atau lanjutan lokal, lalu SINKRON ke server supaya tidak bentrok dgn pengguna lain; jika masih bentrok saat insert, geser otomatis ke nomor berikutnya.
+      let _pfxNum; { const _man=($('f_ticket')&&$('f_ticket').value.trim())||''; const _mm=_man.match(/^\s*(\d+)/); _pfxNum=_mm?parseInt(_mm[1],10):parseInt(nextTicketPrefix(payload.job_type)||'1',10); } if(!(_pfxNum>0)) _pfxNum=1;
+      const _tail=buildTicketTail(payload.job_type);
+      try{ const {data:_srv}=await db.from('reports').select('ticket_no').eq('store_id',STORE_ID).eq('job_type',payload.job_type); if(_srv&&_srv.length){ let _mx=0; _srv.forEach(x=>{ const m=String(x.ticket_no||'').match(/^\s*(\d+)/); if(m){ const n=parseInt(m[1],10); if(n>_mx)_mx=n; } }); if(_mx>=_pfxNum) _pfxNum=_mx+1; } }catch(e){}
+      let _ri=null, _tries=0;
+      while(_tries<40){ _tries++;
+        payload.ticket_no=String(_pfxNum).padStart(3,'0')+'/'+_tail;
+        _ri=await db.from('reports').insert(payload);
+        if(_ri.error&&/dp_amount/.test(_ri.error.message||'')){ delete payload.dp_amount; _ri=await db.from('reports').insert(payload); toast('Kolom DP belum ada di DB — jalankan SQL v2.7. DP tidak tersimpan.','error'); }
+        if(_ri.error){ const _em=String((_ri.error.message||'')+' '+(_ri.error.details||'')+' '+(_ri.error.constraint||'')); const _dup=(_ri.error.code==='23505')||/duplicate|unique|already exists/i.test(_em); if(_dup){ _pfxNum++; continue; } throw _ri.error; }
+        break;
+      }
+      if(_ri&&_ri.error) throw _ri.error;
       newTicket=payload.ticket_no;
-      let _ri=await db.from('reports').insert(payload); if(_ri.error&&/dp_amount/.test(_ri.error.message||'')){ delete payload.dp_amount; _ri=await db.from('reports').insert(payload); toast('Kolom DP belum ada di DB — jalankan SQL v2.7. DP tidak tersimpan.','error'); } if(_ri.error) throw _ri.error;
     }
     closeForm(); await loadAll();
     checkStorageWarn();

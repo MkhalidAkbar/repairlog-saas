@@ -1,4 +1,4 @@
-const CACHE='repairlog-v2.8.8';
+const CACHE='repairlog-v2.9.0';
 const ASSETS=['./','./index.html','./config.js','./icon.png',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
   'https://cdn.jsdelivr.net/npm/chart.js@4',
