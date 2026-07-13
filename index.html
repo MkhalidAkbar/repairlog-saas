@@ -1705,9 +1705,9 @@ async function showOwnerPanel(){
   $('ownerLock').style.display='none'; $('ownerPanel').style.display='block'; (function(){var _op=$('ownerPanel'); _op.classList.remove('op-reveal'); void _op.offsetWidth; _op.classList.add('op-reveal');})();
   $('brName').value=BRAND.name||''; $('brTagline').value=BRAND.tagline||''; $('brLogo').value=BRAND.logo||''; $('brColor').value=BRAND.color||'#6366f1'; if($('brTicketSvc')) $('brTicketSvc').value=BRAND.ticketFmtSvc||'RL/STTS/{BULAN}/{TAHUN}'; if($('brTicketWr')) $('brTicketWr').value=BRAND.ticketFmtWr||'STTS/{BULAN}/{TAHUN}'; if(typeof ticketPreview==='function') ticketPreview();
   const _lp=$('brLogoPreview'); if(_lp) _lp.innerHTML=BRAND.logoUrl?`<img src="${esc(BRAND.logoUrl)}" style="width:100%;height:100%;object-fit:contain" />`:esc(BRAND.logo||'🛠️');
-  const _ls=$('brLogoStatus'); if(_ls) _ls.textContent=BRAND.logoUrl?'Logo PNG aktif.':'Jika diisi, logo PNG dipakai menggantikan emoji.';
+  const _ls=$('brLogoStatus'); if(_ls) _ls.textContent=BRAND.logoUrl?'Logo PNG aktif ✓':'';
   const _qp=$('brQrisPreview'); if(_qp) _qp.innerHTML=BRAND.qrisUrl?('<img src="'+esc(BRAND.qrisUrl)+'" style="width:100%;height:100%;object-fit:contain" />'):'💳';
-  const _qs=$('brQrisStatus'); if(_qs) _qs.textContent=BRAND.qrisUrl?'QRIS aktif ✓':'Dipakai di invoice & halaman tagihan agar customer bisa bayar via QRIS.';
+  const _qs=$('brQrisStatus'); if(_qs) _qs.textContent=BRAND.qrisUrl?'QRIS aktif ✓':'';
   if($('brBankName')) $('brBankName').value=BRAND.bankName||''; if($('brBankNo')) $('brBankNo').value=BRAND.bankNo||''; if($('brBankHolder')) $('brBankHolder').value=BRAND.bankHolder||'';
   const _bs=$('brandingSection'); if(_bs) _bs.style.display=FEATURES.whitelabel?'':'none';
   buildFeatChecks(); loadUsers();
@@ -1739,7 +1739,7 @@ async function loadUsers(){
   const {data}=await db.from('profiles').select('*').eq('store_id',STORE_ID).order('created_at',{ascending:true});
   if(!data||!data.length){ box.innerHTML='<span class="muted">Belum ada pengguna terdaftar.</span>'; return; }
   _ownerCount=data.filter(u=>u.role==='owner').length;
-  const hint=`<div class="muted" style="font-size:12px;margin-bottom:10px;line-height:1.5">👥 Bisa ada <b>lebih dari satu Owner</b> — atur bebas siapa Owner (akses penuh: keuangan, stok, pengaturan) & siapa Teknisi (hanya kelola servis). Klik tombol di tiap orang untuk mengubah perannya.</div>`;
+  const hint='';
   box.innerHTML=hint+data.map(u=>{ const isOwn=u.role==='owner'; const lastOwner=isOwn&&_ownerCount<=1; const btn=isOwn?`<button class="btn small secondary" ${lastOwner?'disabled title="Minimal harus ada 1 Owner"':''} onclick="setUserRole('${u.user_id}','teknisi')">Jadikan Teknisi</button>`:`<button class="btn small" onclick="setUserRole('${u.user_id}','owner')">Jadikan Owner</button>`; return `<div class="set-row"><div><div style="font-weight:600">${esc(u.name||u.email||'-')}</div><div class="muted">${esc(u.email||'')} • ${isOwn?'👑 Owner':'🔧 Teknisi'}</div></div>${btn}</div>`; }).join('');
 }
 async function setUserRole(uid,role){
