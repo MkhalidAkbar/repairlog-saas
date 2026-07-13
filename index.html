@@ -128,6 +128,7 @@
   .bio-circle svg{width:64px;height:64px;}
   .linklike{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;margin-top:14px;width:100%;padding:6px;}
   .set-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+  #settingsModal .set-row>button,#settingsModal .set-row>select{min-width:140px !important;flex:none;text-align:center;}
   .bootspin{width:44px;height:44px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--accent);animation:bootspin 1s linear infinite;}
   @keyframes bootspin{to{transform:rotate(360deg);}}
   .tour-mask{position:fixed;inset:0;z-index:600;display:none;}
@@ -166,6 +167,9 @@
   .board{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding-bottom:12px;scrollbar-width:none;-ms-overflow-style:none;align-items:flex-start;}
   .board::-webkit-scrollbar{display:none;}
   #tab-board{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:0 24px 8px;}
+  .board-zoom{display:none;align-items:center;gap:8px;}
+  .board-zoom button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;line-height:1;padding:0;}
+  .board-zoom span{font-size:13px;font-weight:600;min-width:46px;text-align:center;color:var(--muted);}
   .bcol{flex:0 0 260px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px;min-height:120px;}
   .bcol-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px;padding-bottom:8px;margin-bottom:8px;border-bottom:2px solid var(--border);}
   .bcount{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:1px 8px;font-size:11px;}
@@ -313,10 +317,13 @@
     .modal{padding:16px;max-width:100%;}
     .board{gap:8px;}
     .bcol{flex-basis:82vw;}
-    .toolbar{gap:8px;}
-    .toolbar input,.toolbar select{max-width:none !important;flex:1 1 100%;}
+    .board-zoom{display:inline-flex;}
+    #boardWrap{transform-origin:top left;}
+    .toolbar{gap:6px;}
+    .toolbar input{max-width:none !important;flex:1 1 100%;}
+    .toolbar select{max-width:none !important;flex:1 1 calc(50% - 3px);min-width:0;font-size:13px;padding:8px 10px;}
     .toolbar .btn{flex:1 1 100%;}
-    .toolbar label{flex-basis:100%;}
+    .toolbar label{flex-basis:100%;font-size:12px;margin:2px 0;}
     #stockBox,#financeBox,#custBox,#attendBox{overflow-x:auto;-webkit-overflow-scrolling:touch;}
     #stockBox table,#financeBox table,#custBox table,#attendBox table{min-width:640px;}
     .ftbl td,.ftbl th{padding:7px 8px;font-size:13px;}
@@ -427,34 +434,30 @@
   </div>
 
   <div id="tab-board" style="display:none">
-    <div class="row" style="margin-bottom:12px"><h2 style="margin:0">🗂️ Papan Pengerjaan</h2><span class="muted">Seret kartu untuk pindah tahap • Owner bisa tambah/hapus kolom</span></div>
+    <div class="row" style="margin-bottom:12px"><h2 style="margin:0">🗂️ Papan Pengerjaan</h2><div class="board-zoom" id="boardZoom"><button type="button" onclick="boardZoomBtn(-1)" title="Perkecil">−</button><span id="boardZoomLbl">100%</span><button type="button" onclick="boardZoomBtn(1)" title="Perbesar">+</button></div></div>
     <div class="board" id="boardWrap"></div>
   </div>
 
   <div id="tab-cust" style="display:none">
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">👥 Pelanggan</h2></div>
-    <p class="muted" style="margin-bottom:14px">Direktori pelanggan otomatis dari riwayat servis. Klik <b>Riwayat</b> untuk melihat semua servis pelanggan.</p>
     <div class="toolbar" style="margin-bottom:12px"><input id="custSearch" placeholder="Cari nama / no. WhatsApp..." oninput="custSearchInput()" style="max-width:280px" /></div>
     <div id="custBox"></div>
   </div>
 
   <div id="tab-finance" style="display:none">
     <div class="row" style="margin-bottom:6px;flex-wrap:wrap;gap:8px"><h2 style="margin:0">📊 Laporan Keuangan</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small secondary" onclick="exportCsv()">⬇️ Export CSV</button></div></div>
-    <p class="muted" style="margin-bottom:10px">Rincian transaksi per bulan. Hanya Owner yang bisa melihat halaman ini.</p>
     <div class="toolbar" style="margin-bottom:10px;gap:8px;flex-wrap:wrap"><div style="display:flex;gap:6px"><button class="btn small" id="finTabService" onclick="finSub('Service')">🔧 Service</button><button class="btn small secondary" id="finTabGaransi" onclick="finSub('Garansi')">🛡️ Garansi</button></div><input id="finSearch" placeholder="Cari nama / no. tiket..." oninput="finSearchInput()" style="max-width:240px" /></div>
     <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div id="finMonthNav" style="min-width:96px;display:flex;flex-direction:column;gap:6px"></div><div id="financeBox" style="flex:1;min-width:260px"></div></div>
   </div>
 
   <div id="tab-attend" style="display:none">
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">🕐 Absensi Teknisi</h2></div>
-    <p class="muted" style="margin-bottom:14px">Catat jam masuk & pulang. Owner melihat semua teknisi; teknisi melihat riwayatnya sendiri.</p>
     <div id="attendSelf" style="margin-bottom:18px"></div>
     <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div id="attMonthNav" style="min-width:96px;display:flex;flex-direction:column;gap:6px"></div><div id="attendBox" style="flex:1;min-width:260px"></div></div>
   </div>
 
   <div id="tab-stock" style="display:none">
     <div class="row" style="margin-bottom:6px"><h2 style="margin:0">📦 Stok Sparepart</h2><button class="btn small" onclick="openPartForm()">+ Tambah Sparepart</button></div>
-    <p class="muted" style="margin-bottom:14px">Kelola stok sparepart. Stok otomatis berkurang saat dipakai di laporan (ambil dari stok). Hanya Owner yang bisa melihat halaman ini.</p>
     <div class="toolbar" style="margin-bottom:12px"><label style="align-self:center;font-weight:600">🔧 Jenis Perangkat:</label><select id="stockDevFilter" onchange="renderStock()" style="max-width:200px"><option value="">Semua Perangkat</option></select></div>
     <div id="stockBox"></div>
   </div>
@@ -486,9 +489,7 @@
         <option value="3">Level 3 - Berat (engsel, port/konektor, jack charging, flexible)</option>
         <option value="4">Level 4 - Sangat Berat (microsoldering: ganti IC, jumper, BGA)</option>
       </select>
-      <div class="muted" style="font-size:12px;margin-top:6px">🛡️ Garansi sekarang diatur <b>per komponen</b> di bagian "Rincian Komponen" di bawah — isi kolom Garansi pada tiap komponen.</div>
     </div>
-    <div class="muted" style="font-size:12px;margin-top:10px">📌 Status servis (Proses, Menunggu Part, Selesai, Diambil, Batal) & tanggal masuk/diambil diatur otomatis lewat <b>Papan</b> — cukup geser kartu untuk mengubahnya.</div>
     <div class="fs-h">👷 Pengerjaan & Komponen</div>
     <label>Teknisi yang mengerjakan</label>
     <select id="f_assigned"></select>
@@ -496,7 +497,6 @@
     <div class="checks" id="compChecks"></div>
     <div class="ownerOnly profitOnly">
       <label>Rincian Komponen — Harga Jual, Modal & Garansi</label>
-      <div class="muted" style="font-size:12px;margin-bottom:6px">Isi harga jual & modal tiap komponen satu per satu. Garansi bisa beda tiap komponen (mis. LCD 30 hari, keyboard 14 hari). Semua baris tampil rinci di nota/invoice.</div>
       <div id="costItems"></div>
       <button type="button" class="btn small secondary" onclick="addCostItem()" style="margin-top:6px">+ Tambah komponen</button>
       <select id="stockPick" onchange="addCostItemFromStock(this.value)" style="margin-top:6px;max-width:280px;display:none"></select>
@@ -603,8 +603,15 @@
 <div class="modal-bg" id="settingsModal">
   <div class="modal" style="max-width:460px">
     <h2>⚙️ Pengaturan</h2>
-    <div style="padding:14px 0;border-bottom:1px solid var(--border)"><div style="font-weight:600;margin-bottom:6px">👤 Nama tampilan</div><div class="row" style="gap:8px"><input id="setName" placeholder="Nama kamu" style="flex:1" /><button class="btn small" onclick="saveMyName()">Simpan</button></div><div class="muted" style="font-size:12px;margin-top:6px">Nama ini muncul di komentar, aktivitas, &amp; papan — bukan dari email.</div></div>
-    <div style="padding:14px 0;border-bottom:1px solid var(--border)"><div style="font-weight:600;margin-bottom:8px">🖼️ Foto Profil</div><div class="row" style="gap:12px;align-items:center"><div id="setAvatarPrev" style="width:56px;height:56px;border-radius:50%;background:var(--card2);border:1px solid var(--border);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:22px;color:#9ca3af">👤</div><input type="file" id="setAvatarInput" accept="image/*" style="display:none" onchange="pickAvatar(this)" /><button class="btn small secondary" onclick="document.getElementById('setAvatarInput').click()">Pilih Foto</button><button class="btn small secondary" id="setAvatarDel" style="display:none" onclick="removeAvatar()">Hapus</button></div><div class="muted" style="font-size:12px;margin-top:6px">Foto ini muncul pada badge pengguna aktif saat kolaborasi.</div></div>
+    <div style="padding:16px 0 18px;border-bottom:1px solid var(--border);text-align:center">
+      <div id="setAvatarPrev" style="width:76px;height:76px;border-radius:50%;background:var(--card2);border:1px solid var(--border);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:30px;color:#9ca3af;margin:0 auto 12px">👤</div>
+      <input type="file" id="setAvatarInput" accept="image/*" style="display:none" onchange="pickAvatar(this)" />
+      <div class="row" style="gap:8px;justify-content:center;margin-bottom:14px">
+        <button class="btn small secondary" onclick="document.getElementById('setAvatarInput').click()">Pilih Foto</button>
+        <button class="btn small secondary" id="setAvatarDel" style="display:none" onclick="removeAvatar()">Hapus</button>
+      </div>
+      <div class="row" style="gap:8px"><input id="setName" placeholder="Nama tampilan" style="flex:1" /><button class="btn small" onclick="saveMyName()">Simpan</button></div>
+    </div>
     <div class="set-row" id="bioSetRow">
       <div>
         <div style="font-weight:600">Login sidik jari</div>
@@ -615,14 +622,12 @@
     <div class="set-row ownerOnly" id="ownerSetRow">
       <div>
         <div style="font-weight:600">🔒 Pengaturan Owner</div>
-        <div class="muted">Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.</div>
       </div>
       <button class="btn small" onclick="openOwner()">Buka</button>
     </div>
     <div class="set-row">
       <div>
         <div style="font-weight:600">🎨 Tema Tampilan</div>
-        <div class="muted">Pilih tema terang, gelap, atau ikuti perangkat.</div>
       </div>
       <select id="themeSelect" onchange="setTheme(this.value)" style="width:auto;min-width:150px">
         <option value="auto">Otomatis (Perangkat)</option>
@@ -633,7 +638,6 @@
     <div class="set-row">
       <div>
         <div style="font-weight:600">🌐 Bahasa / Language</div>
-        <div class="muted">Pilih bahasa tampilan aplikasi.</div>
       </div>
       <select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:150px">
         <option value="id">Indonesia</option>
@@ -643,14 +647,12 @@
     <div class="set-row" id="installRow" style="display:none">
       <div>
         <div style="font-weight:600">📲 Pasang Aplikasi</div>
-        <div class="muted">Pasang ke layar utama (PWA) agar bisa dibuka seperti aplikasi.</div>
       </div>
       <button class="btn small" id="installBtn" onclick="installApp()">Pasang</button>
     </div>
     <div class="set-row">
       <div>
         <div style="font-weight:600">Logout</div>
-        <div class="muted">Keluar dari akun di perangkat ini.</div>
       </div>
       <button class="btn danger small" onclick="doLogout()">Logout</button>
     </div>
@@ -701,7 +703,6 @@
       <label>Rekening Bank (alternatif pembayaran)</label>
       <input id="brBankName" placeholder="Nama Bank (mis. BCA, Mandiri)" />
       <div class="row" style="gap:8px;margin-top:6px"><input id="brBankNo" placeholder="Nomor Rekening" style="flex:1" /><input id="brBankHolder" placeholder="Atas Nama" style="flex:1" /></div>
-      <div class="muted" style="font-size:11px;margin-top:4px">Ditampilkan di halaman pembayaran customer & invoice sebagai alternatif QRIS.</div>
       <div><label>Format No. Tiket — Service</label><input id="brTicketSvc" placeholder="RL/STTS/{BULAN}/{TAHUN}" oninput="ticketPreview()" /></div>
       <div><label>Format No. Tiket — Garansi</label><input id="brTicketWr" placeholder="STTS/{BULAN}/{TAHUN}" oninput="ticketPreview()" /><div class="muted" id="ticketPreviewHint" style="font-size:11px;margin-top:4px"></div></div>
       <button class="btn small" onclick="saveBrandFromForm()" style="margin-top:12px">💾 Simpan Branding</button>
@@ -712,7 +713,6 @@
       <button class="btn small" onclick="saveFeatures()" style="margin-top:12px">💾 Simpan Fitur</button>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
       <div style="font-weight:600;margin-bottom:4px">👥 Kelola Pengguna</div>
-      <div class="muted" style="font-size:12px">Untuk menambah atau mengurangi pengguna, hubungi admin.<span id="supportContact"></span></div>
       <div id="userList" style="margin-top:10px">Memuat...</div>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
       <div style="font-weight:600;margin-bottom:4px">🔑 Ubah PIN Owner</div>
@@ -816,7 +816,7 @@ if(db){ db.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY') set
 
 // ====== KONSTANTA ======
 const BRANDS=['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'];
-const APP_VERSION='v2.9.0';
+const APP_VERSION='v2.9.2';
 const DEVICE_TYPES=['Laptop','PC/Komputer','Printer','HP/Smartphone','CCTV'];
 const ROMAN_MONTH=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const DEVICE_BRANDS={'Laptop':['Asus','Acer','Lenovo','HP','Dell','MSI','Apple/MacBook','Axioo','Toshiba','Samsung','Lainnya'],'PC/Komputer':['Rakitan','HP','Dell','Lenovo','Asus','Acer','Apple/iMac','Lainnya'],'Printer':['Epson','Canon','HP','Brother','Fuji Xerox','Samsung','Lainnya'],'HP/Smartphone':['Samsung','Xiaomi','Oppo','Vivo','Realme','Apple/iPhone','Infinix','Advan','Lainnya'],'CCTV':['Hikvision','Dahua','EZVIZ','Hilook','Xiaomi','Lainnya']};
@@ -1098,6 +1098,13 @@ function showTab(t){
 function toggleNavMenu(){ const n=$('navMenu'); if(n) n.classList.toggle('open'); }
 function closeNavMenu(){ const n=$('navMenu'); if(n) n.classList.remove('open'); }
 document.addEventListener('click',function(e){ const nm=$('navMenu'); if(!nm||!nm.classList.contains('open')) return; const t=e.target; if(t.closest&&t.closest('#menuToggle')) return; if(nm.contains(t)){ if(t.closest&&t.closest('button')) closeNavMenu(); } else { closeNavMenu(); } });
+
+// ====== ZOOM PAPAN (mobile: tombol + cubit/pinch) ======
+let _boardZoom=1;
+function applyBoardZoom(){ const w=$('boardWrap'); if(w){ try{ w.style.zoom=_boardZoom; }catch(e){} } const l=$('boardZoomLbl'); if(l) l.textContent=Math.round(_boardZoom*100)+'%'; }
+function setBoardZoom(z){ _boardZoom=Math.min(1.8,Math.max(0.5,z)); applyBoardZoom(); }
+function boardZoomBtn(d){ setBoardZoom(Math.round((_boardZoom+d*0.1)*10)/10); }
+(function(){ const bd=document.getElementById('tab-board'); if(!bd) return; let ps=null,pb=1; const dist=tt=>Math.hypot(tt[0].clientX-tt[1].clientX,tt[0].clientY-tt[1].clientY); bd.addEventListener('touchstart',e=>{ if(e.touches.length===2){ ps=dist(e.touches); pb=_boardZoom; } },{passive:true}); bd.addEventListener('touchmove',e=>{ if(e.touches.length===2&&ps){ const d=dist(e.touches); setBoardZoom(pb*d/ps); if(e.cancelable) e.preventDefault(); } },{passive:false}); bd.addEventListener('touchend',e=>{ if(e.touches.length<2) ps=null; }); })();
 
 // ====== MEDIA ======
 function pickFiles(input,side){ handleFiles([...input.files],side); input.value=''; }
