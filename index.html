@@ -735,6 +735,17 @@
       <button class="btn small" onclick="saveFeatures()" style="margin-top:12px">💾 Simpan Fitur</button>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
       <div style="font-weight:600;margin-bottom:4px">👥 Kelola Pengguna</div>
+      <div id="userQuota" class="muted" style="font-size:12px;margin:2px 0 10px"></div>
+      <div id="addUserWrap" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-weight:600;margin-bottom:8px;font-size:13px">➕ Tambah Teknisi Baru</div>
+        <div class="frow">
+          <div><label>Nama</label><input id="nuName" placeholder="Nama teknisi" /></div>
+          <div><label>Email</label><input id="nuEmail" type="email" placeholder="email@toko.com" /></div>
+        </div>
+        <label>Password</label><input id="nuPass" type="password" placeholder="min 6 karakter" />
+        <button class="btn small" id="addUserBtn" onclick="addUser()" style="margin-top:10px">➕ Tambah Pengguna</button>
+        <div class="muted" id="addUserStatus" style="font-size:12px;margin-top:8px"></div>
+      </div>
       <div id="userList" style="margin-top:10px">Memuat...</div>
       <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
       <div style="font-weight:600;margin-bottom:4px">🔑 Ubah PIN Owner</div>
@@ -1781,15 +1792,72 @@ async function saveFeatures(){
 }
 
 // ====== KELOLA PENGGUNA (owner) ======
-let _ownerCount=0;
+let _ownerCount=0, _techCount=0;
+function isProPlan(){ return featAllowed('whitelabel'); }
+function planMaxTech(){ return isProPlan()?5:1; }
+function planLabel(){ return isProPlan()?'Pro':'Basic'; }
+function updateUserQuota(){
+  const max=planMaxTech(); const q=$('userQuota');
+  if(q){ q.innerHTML='Paket <b>'+planLabel()+'</b> \u2014 teknisi: <b>'+_techCount+' / '+max+'</b>.'+(isProPlan()?'':' <span style="color:#b45309">Upgrade ke Pro untuk maks 5 teknisi.</span>'); }
+  const full=_techCount>=max; const btn=$('addUserBtn'); const st=$('addUserStatus');
+  if(btn){ btn.disabled=full; btn.style.opacity=full?'.5':''; }
+  if(full){ if(st) st.textContent=isProPlan()?('Kuota teknisi penuh (maks '+max+'). Hubungi admin untuk menambah kapasitas.'):('Kuota paket Basic penuh (maks 1 teknisi). Upgrade ke paket Pro untuk menambah hingga 5 teknisi.'); }
+  else if(st && !st.dataset.keep){ st.textContent=''; }
+}
 async function loadUsers(){
   const box=$('userList'); if(!box) return;
   if(!db){ box.textContent='-'; return; }
   const {data}=await db.from('profiles').select('*').eq('store_id',STORE_ID).order('created_at',{ascending:true});
-  if(!data||!data.length){ box.innerHTML='<span class="muted">Belum ada pengguna terdaftar.</span>'; return; }
-  _ownerCount=data.filter(u=>u.role==='owner').length;
+  const _list=data||[];
+  _ownerCount=_list.filter(u=>u.role==='owner').length;
+  _techCount=_list.filter(u=>u.role!=='owner').length;
+  updateUserQuota();
+  if(!_list.length){ box.innerHTML='<span class="muted">Belum ada pengguna terdaftar.</span>'; return; }
   const hint='';
   box.innerHTML=hint+data.map(u=>{ const isOwn=u.role==='owner'; const lastOwner=isOwn&&_ownerCount<=1; const btn=isOwn?`<button class="btn small secondary" ${lastOwner?'disabled title="Minimal harus ada 1 Owner"':''} onclick="setUserRole('${u.user_id}','teknisi')">Jadikan Teknisi</button>`:`<button class="btn small" onclick="setUserRole('${u.user_id}','owner')">Jadikan Owner</button>`; return `<div class="set-row"><div><div style="font-weight:600">${esc(u.name||u.email||'-')}</div><div class="muted">${esc(u.email||'')} • ${isOwn?'👑 Owner':'🔧 Teknisi'}</div></div>${btn}</div>`; }).join('');
+}
+async function addUser(){
+  const name=($('nuName')&&$('nuName').value||'').trim();
+  const email=($('nuEmail')&&$('nuEmail').value||'').trim().toLowerCase();
+  const pass=($('nuPass')&&$('nuPass').value||'');
+  const st=$('addUserStatus'); const setSt=(m)=>{ if(st){ st.dataset.keep='1'; st.textContent=m; } };
+  if(!db){ toast('Supabase belum dikonfigurasi.','error'); return; }
+  if(!name){ toast('Nama teknisi wajib diisi.','error'); return; }
+  if(!email||email.indexOf('@')<1){ toast('Email tidak valid.','error'); return; }
+  if(pass.length<6){ toast('Password minimal 6 karakter.','error'); return; }
+  const max=planMaxTech();
+  if(_techCount>=max){ toast('Kuota teknisi penuh ('+max+') untuk paket '+planLabel()+'.'+(isProPlan()?'':' Upgrade ke Pro.'),'error'); updateUserQuota(); return; }
+  const btn=$('addUserBtn'); if(btn){ btn.disabled=true; btn.textContent='Memproses...'; }
+  setSt('Membuat akun teknisi...');
+  try{
+    const tmp=supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:false, autoRefreshToken:false, storageKey:'rl-invite-tmp' } });
+    const {data:su,error:se}=await tmp.auth.signUp({email:email,password:pass});
+    if(se) throw se;
+    const {data:sess}=await tmp.auth.getSession();
+    if(sess&&sess.session){
+      const {error:pe}=await tmp.rpc('ensure_profile',{p_store_id:STORE_ID, p_owner_email:OWNER_EMAIL});
+      if(pe) throw pe;
+      try{ if(su&&su.user) await tmp.from('profiles').update({name:name}).eq('user_id',su.user.id); }catch(e){}
+      try{ await tmp.auth.signOut(); }catch(e){}
+      setSt('\u2705 Teknisi "'+name+'" berhasil ditambahkan. Beri tahu email & password ke teknisi agar bisa login.');
+      toast('Teknisi baru ditambahkan.','success');
+    } else {
+      try{ await tmp.auth.signOut(); }catch(e){}
+      setSt('\u2705 Akun dibuat. Teknisi perlu konfirmasi email lalu login; profil otomatis terhubung ke toko saat login pertama.');
+      toast('Akun teknisi dibuat (perlu konfirmasi email).','success');
+    }
+    if($('nuName'))$('nuName').value=''; if($('nuEmail'))$('nuEmail').value=''; if($('nuPass'))$('nuPass').value='';
+    await loadUsers(); try{ await loadTeam(); }catch(e){}
+  }catch(e){
+    const m=String((e&&e.message)||e);
+    if(/already|registered|exists/i.test(m)) setSt('Email ini sudah terdaftar. Gunakan email lain.');
+    else if(/store|WRONG_STORE/i.test(m)) setSt('Gagal menghubungkan akun ke toko: '+m);
+    else setSt('Gagal menambah pengguna: '+m);
+    toast('Gagal menambah pengguna.','error');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='\u2795 Tambah Pengguna'; }
+    updateUserQuota();
+  }
 }
 async function setUserRole(uid,role){
   if(role==='teknisi'&&_ownerCount<=1){ toast('Minimal harus ada 1 Owner. Tetapkan Owner lain dulu.','error'); return; }
