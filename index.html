@@ -338,7 +338,8 @@
     #stockBox,#financeBox,#custBox,#attendBox{overflow-x:auto;-webkit-overflow-scrolling:touch;}
     #stockBox table,#financeBox table,#custBox table,#attendBox table{min-width:100%;width:max-content;font-size:13px;}
     #financeBox .ftbl td,#custBox .ftbl td,#attendBox .ftbl td,#stockBox .ftbl td,#financeBox .ftbl th,#custBox .ftbl th,#attendBox .ftbl th,#stockBox .ftbl th{padding:7px 9px;white-space:nowrap;}
-    .secrow{flex-direction:column !important;gap:10px !important;}
+    .secrow{flex-direction:column !important;gap:10px !important;align-items:stretch !important;}
+    #financeBox,#attendBox{width:100% !important;align-self:stretch !important;}
     .monthnav{display:flex !important;flex-direction:row !important;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100% !important;min-width:0 !important;flex:none !important;gap:6px;align-items:center;padding-bottom:4px;}
     .monthnav>button{display:inline-block !important;width:auto !important;flex:0 0 auto !important;margin:0 !important;white-space:nowrap;}
     .monthnav>div{flex:0 0 auto !important;margin-bottom:0 !important;}
@@ -1133,7 +1134,7 @@ let _listZoom=1;
 function applyListZoom(){ const w=$('listGrid'); if(w){ try{ w.style.zoom=''; w.style.width=''; const _min=Math.max(120,Math.round(260*_listZoom)); w.style.gridTemplateColumns='repeat(auto-fill,minmax('+_min+'px,1fr))'; }catch(e){} } const l=$('listZoomLbl'); if(l) l.textContent=Math.round(_listZoom*100)+'%'; }
 function setListZoom(z){ _listZoom=Math.min(1.6,Math.max(0.6,z)); applyListZoom(); }
 function listZoomBtn(d){ setListZoom(Math.round((_listZoom+d*0.1)*10)/10); }
-function fitTable(boxId){ try{ const box=$(boxId); if(!box) return; const t=box.querySelector('table'); if(!t) return; t.style.zoom=''; const avail=box.clientWidth; if(!avail) return; const natural=t.scrollWidth; if(natural>avail+1){ t.style.zoom=(avail/natural); } }catch(e){} }
+function fitTable(boxId){ try{ const box=$(boxId); if(!box) return; const t=box.querySelector('table'); if(!t) return; t.style.zoom=''; let avail=box.clientWidth; const par=box.parentElement; if(par){ let used=0; Array.prototype.forEach.call(par.children,function(c){ if(c!==box) used+=c.getBoundingClientRect().width; }); const pa=par.clientWidth-used-20; if(pa>60 && pa<avail) avail=pa; } if(!avail) return; const natural=t.scrollWidth; if(natural>avail+1){ t.style.zoom=(avail/natural); } }catch(e){} }
 function fitVisibleTables(){ ['financeBox','custBox','stockBox','attendBox'].forEach(fitTable); }
 window.addEventListener('resize',()=>{ try{ fitVisibleTables(); applyListZoom(); }catch(e){} });
 // ====== ZOOM TABEL (mobile: tombol +/- & cubit/pinch) untuk Pelanggan, Keuangan, Absensi ======
