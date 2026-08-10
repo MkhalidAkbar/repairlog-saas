@@ -1,0 +1,219 @@
+@media (max-width: 860px) {
+  .container {
+    padding: 14px;
+  }
+  header {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    flex-wrap: nowrap;
+  }
+  header h1 {
+    font-size: 16px;
+    justify-content: flex-start;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  header h1 small {
+    display: none;
+  }
+  header small {
+    display: none;
+  }
+  nav {
+    position: static;
+    width: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .rolebadge {
+    display: none;
+  }
+  #notifBtn {
+    order: 0;
+  }
+  .menu-toggle {
+    display: inline-flex !important;
+    order: 1;
+    padding: 8px 12px;
+  }
+  .navmenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
+    padding: 12px 14px;
+    z-index: 60;
+  }
+  .navmenu.open {
+    display: flex;
+  }
+  .navtabs {
+    width: 100%;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+  }
+  .navtabs button {
+    width: 100%;
+    text-align: left;
+    padding: 11px 14px;
+  }
+  .navactions {
+    width: 100%;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .navactions .btn {
+    width: 100%;
+    flex: none;
+  }
+  .ba,
+  .charts,
+  .frow,
+  .frow3,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat {
+    padding: 14px;
+  }
+  .stat .num {
+    font-size: clamp(18px, 5.4vw, 24px);
+    white-space: nowrap;
+  }
+  .modal {
+    padding: 16px;
+    max-width: 100%;
+  }
+  .board {
+    gap: 8px;
+  }
+  .bcol {
+    flex-basis: 82vw;
+  }
+  .board-zoom {
+    display: inline-flex;
+  }
+  #boardWrap {
+    transform-origin: top left;
+  }
+  .toolbar {
+    gap: 6px;
+  }
+  .toolbar input {
+    max-width: none !important;
+    flex: 1 1 100%;
+  }
+  .toolbar select {
+    max-width: none !important;
+    flex: 1 1 calc(50% - 3px);
+    min-width: 0;
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  .toolbar .btn {
+    flex: 1 1 100%;
+  }
+  .toolbar label {
+    flex-basis: 100%;
+    font-size: 12px;
+    margin: 2px 0;
+  }
+  #stockBox,
+  #financeBox,
+  #custBox,
+  #attendBox {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #stockBox table,
+  #financeBox table,
+  #custBox table,
+  #attendBox table {
+    min-width: 100%;
+    width: max-content;
+    font-size: 13px;
+  }
+  #financeBox .ftbl td,
+  #custBox .ftbl td,
+  #attendBox .ftbl td,
+  #stockBox .ftbl td,
+  #financeBox .ftbl th,
+  #custBox .ftbl th,
+  #attendBox .ftbl th,
+  #stockBox .ftbl th {
+    padding: 7px 9px;
+    white-space: nowrap;
+  }
+  .secrow {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+  #financeBox,
+  #attendBox {
+    width: 100% !important;
+    align-self: stretch !important;
+  }
+  .monthnav {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+    gap: 6px;
+    align-items: center;
+    padding-bottom: 4px;
+  }
+  .monthnav > button {
+    display: inline-block !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    white-space: nowrap;
+  }
+  .monthnav > div {
+    flex: 0 0 auto !important;
+    margin-bottom: 0 !important;
+  }
+  .ftbl td,
+  .ftbl th {
+    padding: 7px 8px;
+    font-size: 13px;
+  }
+  #detailContent .actions .btn {
+    flex: 1 1 auto;
+  }
+  .pub-card {
+    padding: 16px;
+  }
+  #publicView {
+    padding: 14px;
+  }
+}
