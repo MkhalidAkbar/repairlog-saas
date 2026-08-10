@@ -121,12 +121,12 @@ const TOUR_STEPS = [
   {
     sel: "#settingsBtn",
     title: "Pengaturan",
-    text: "Login sidik jari, dan (khusus Owner) Pengaturan Owner: branding toko, fitur aktif, kelola pengguna, export data & PIN.",
+    text: "Login sidik jari, dan Pengaturan Toko: branding toko, fitur aktif, kelola pengguna, export data & PIN.",
   },
   {
     sel: "#navFinance",
     title: "Keuangan",
-    text: "Khusus Owner: rekap pendapatan, modal, dan laba per bulan.",
+    text: "Rekap pendapatan, modal, dan laba per bulan.",
   },
 ];
 let tourIdx = 0;
@@ -411,7 +411,7 @@ async function renderAttend() {
     if (_attPage > _tp) _attPage = 1;
     const _pg = _d.slice((_attPage - 1) * _per, (_attPage - 1) * _per + _per);
     box.innerHTML =
-      `<h3 style="margin:6px 0 10px">📋 Rekap Semua Teknisi</h3><table class="ftbl"><tr><th>Tanggal</th><th>Teknisi</th><th>Masuk</th><th>Pulang</th></tr>` +
+      `<h3 style="margin:6px 0 10px">📋 Rekap Semua Pengguna</h3><table class="ftbl"><tr><th>Tanggal</th><th>Pengguna</th><th>Masuk</th><th>Pulang</th></tr>` +
       _pg
         .map(
           (a) =>

@@ -324,7 +324,7 @@ async function toggleBiometric() {
   openSettings();
 }
 
-// ====== OWNER (PIN + panel) ======
+// ====== PENGATURAN TOKO (PIN opsional) ======
 async function sha256(t) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
   return bufToB64(b);
@@ -339,21 +339,20 @@ async function getPinHash() {
     .maybeSingle();
   return data && data.value ? data.value.hash : null;
 }
-function openOwner() {
-  if (!isOwner()) {
-    toast("Hanya Owner.", "error");
-    return;
-  }
+function openStoreSettings() {
   $("ownerPanel").style.display = "none";
   $("ownerLock").style.display = "block";
   $("ownerPin").value = "";
   $("ownerErr").textContent = "";
-  getPinHash().then((h) => {
-    $("ownerLockMsg").textContent = h
-      ? "Masukkan PIN owner."
-      : "Belum ada PIN. Buat PIN baru (min 4 digit) untuk mengunci menu ini.";
+  getPinHash().then((hash) => {
+    $("ownerLockMsg").textContent = hash
+      ? "Masukkan PIN pengaturan."
+      : "Belum ada PIN. Buat PIN baru (min 4 digit) untuk melindungi pengaturan toko.";
   });
   openModal("ownerModal");
+}
+function openOwner() {
+  openStoreSettings();
 }
 function closeOwner() {
   closeModal("ownerModal");
@@ -376,7 +375,7 @@ async function unlockOwner() {
       },
       { onConflict: "store_id,key" },
     );
-    toast("PIN owner dibuat.", "success");
+    toast("PIN pengaturan dibuat.", "success");
     showOwnerPanel();
     return;
   }
@@ -452,10 +451,10 @@ async function changePin() {
   );
   $("newPin").value = "";
   $("newPin2").value = "";
-  toast("PIN owner diperbarui.", "success");
+  toast("PIN pengaturan diperbarui.", "success");
 }
 
-// ====== FEATURE FLAGS (owner) ======
+// ====== FEATURE FLAGS ======
 function buildFeatChecks() {
   const keys = Object.keys(FEAT_LABELS).filter(featAllowed);
   const hidden = Object.keys(FEAT_LABELS).length - keys.length;
@@ -494,51 +493,43 @@ async function saveFeatures() {
   ownerDirty = false;
 }
 
-// ====== KELOLA PENGGUNA (owner) ======
-let _ownerCount = 0,
-  _techCount = 0;
+// ====== KELOLA PENGGUNA ======
+let _userCount = 0;
 function isProPlan() {
   return featAllowed("whitelabel");
 }
-function planMaxTech() {
-  return isProPlan() ? 5 : 1;
+function planMaxUsers() {
+  return isProPlan() ? 6 : 2;
 }
 function planLabel() {
   return isProPlan() ? "Pro" : "Basic";
 }
 function updateUserQuota() {
-  const max = planMaxTech();
-  const q = $("userQuota");
-  if (q) {
-    q.innerHTML =
+  const max = planMaxUsers();
+  const quota = $("userQuota");
+  if (quota) {
+    quota.innerHTML =
       "Paket <b>" +
       planLabel() +
-      "</b> \u2014 teknisi: <b>" +
-      _techCount +
+      "</b> — pengguna: <b>" +
+      _userCount +
       " / " +
       max +
       "</b>." +
       (isProPlan()
         ? ""
-        : ' <span style="color:#b45309">Upgrade ke Pro untuk maks 5 teknisi.</span>');
+        : ' <span style="color:#b45309">Upgrade ke Pro untuk maksimal 6 pengguna.</span>');
   }
-  const full = _techCount >= max;
-  const btn = $("addUserBtn");
-  const st = $("addUserStatus");
-  if (btn) {
-    btn.disabled = full;
-    btn.style.opacity = full ? ".5" : "";
+  const full = _userCount >= max;
+  const button = $("addUserBtn");
+  const status = $("addUserStatus");
+  if (button) {
+    button.disabled = full;
+    button.style.opacity = full ? ".5" : "";
   }
-  if (full) {
-    if (st)
-      st.textContent = isProPlan()
-        ? "Kuota teknisi penuh (maks " +
-          max +
-          "). Hubungi admin untuk menambah kapasitas."
-        : "Kuota paket Basic penuh (maks 1 teknisi). Upgrade ke paket Pro untuk menambah hingga 5 teknisi.";
-  } else if (st && !st.dataset.keep) {
-    st.textContent = "";
-  }
+  if (full && status)
+    status.textContent = `Kuota pengguna penuh (maks ${max}) untuk paket ${planLabel()}.`;
+  else if (status && !status.dataset.keep) status.textContent = "";
 }
 async function loadUsers() {
   const box = $("userList");
@@ -552,27 +543,19 @@ async function loadUsers() {
     .select("*")
     .eq("store_id", STORE_ID)
     .order("created_at", { ascending: true });
-  const _list = data || [];
-  _ownerCount = _list.filter((u) => u.role === "owner").length;
-  _techCount = _list.filter((u) => u.role !== "owner").length;
+  const list = data || [];
+  _userCount = list.length;
   updateUserQuota();
-  if (!_list.length) {
+  if (!list.length) {
     box.innerHTML = '<span class="muted">Belum ada pengguna terdaftar.</span>';
     return;
   }
-  const hint = "";
-  box.innerHTML =
-    hint +
-    data
-      .map((u) => {
-        const isOwn = u.role === "owner";
-        const lastOwner = isOwn && _ownerCount <= 1;
-        const btn = isOwn
-          ? `<button class="btn small secondary" ${lastOwner ? 'disabled title="Minimal harus ada 1 Owner"' : ""} onclick="setUserRole('${u.user_id}','teknisi')">Jadikan Teknisi</button>`
-          : `<button class="btn small" onclick="setUserRole('${u.user_id}','owner')">Jadikan Owner</button>`;
-        return `<div class="set-row"><div><div style="font-weight:600">${esc(u.name || u.email || "-")}</div><div class="muted">${esc(u.email || "")} • ${isOwn ? "👑 Owner" : "🔧 Teknisi"}</div></div>${btn}</div>`;
-      })
-      .join("");
+  box.innerHTML = list
+    .map(
+      (user) =>
+        `<div class="set-row"><div><div style="font-weight:600">${esc(user.name || user.email || "-")}</div><div class="muted">${esc(user.email || "")} • Pengguna</div></div><span class="approval-badge neutral">Akses sama</span></div>`,
+    )
+    .join("");
 }
 async function addUser() {
   const name = (($("nuName") && $("nuName").value) || "").trim();
@@ -592,7 +575,7 @@ async function addUser() {
     return;
   }
   if (!name) {
-    toast("Nama teknisi wajib diisi.", "error");
+    toast("Nama pengguna wajib diisi.", "error");
     return;
   }
   if (!email || email.indexOf("@") < 1) {
@@ -603,10 +586,10 @@ async function addUser() {
     toast("Password minimal 6 karakter.", "error");
     return;
   }
-  const max = planMaxTech();
-  if (_techCount >= max) {
+  const max = planMaxUsers();
+  if (_userCount >= max) {
     toast(
-      "Kuota teknisi penuh (" +
+      "Kuota pengguna penuh (" +
         max +
         ") untuk paket " +
         planLabel() +
@@ -622,7 +605,7 @@ async function addUser() {
     btn.disabled = true;
     btn.textContent = "Memproses...";
   }
-  setSt("Membuat akun teknisi...");
+  setSt("Membuat akun pengguna...");
   try {
     const tmp = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
@@ -654,19 +637,19 @@ async function addUser() {
         await tmp.auth.signOut();
       } catch (e) {}
       setSt(
-        '\u2705 Teknisi "' +
+        '\u2705 Pengguna "' +
           name +
-          '" berhasil ditambahkan. Beri tahu email & password ke teknisi agar bisa login.',
+          '" berhasil ditambahkan. Beri tahu email & password ke pengguna agar bisa login.',
       );
-      toast("Teknisi baru ditambahkan.", "success");
+      toast("Pengguna baru ditambahkan.", "success");
     } else {
       try {
         await tmp.auth.signOut();
       } catch (e) {}
       setSt(
-        "\u2705 Akun dibuat. Teknisi perlu konfirmasi email lalu login; profil otomatis terhubung ke toko saat login pertama.",
+        "\u2705 Akun dibuat. Pengguna perlu konfirmasi email lalu login; profil otomatis terhubung ke toko saat login pertama.",
       );
-      toast("Akun teknisi dibuat (perlu konfirmasi email).", "success");
+      toast("Akun pengguna dibuat (perlu konfirmasi email).", "success");
     }
     if ($("nuName")) $("nuName").value = "";
     if ($("nuEmail")) $("nuEmail").value = "";
@@ -691,29 +674,9 @@ async function addUser() {
     updateUserQuota();
   }
 }
-async function setUserRole(uid, role) {
-  if (role === "teknisi" && _ownerCount <= 1) {
-    toast("Minimal harus ada 1 Owner. Tetapkan Owner lain dulu.", "error");
-    return;
-  }
-  showMini(
-    "Ubah peran pengguna?",
-    "Jadikan pengguna ini sebagai " +
-      (role === "owner"
-        ? "👑 Owner (akses penuh)"
-        : "🔧 Teknisi (hanya servis)") +
-      "?",
-    [
-      { label: "Batal", cls: "secondary", fn: null },
-      {
-        label: "Ya, ubah",
-        fn: async () => {
-          await db.from("profiles").update({ role }).eq("user_id", uid);
-          loadUsers();
-          loadTeam();
-          toast("Peran pengguna diperbarui.", "success");
-        },
-      },
-    ],
+async function setUserRole() {
+  toast(
+    "Mode satu level aktif. Semua pengguna memiliki akses yang sama.",
+    "success",
   );
 }

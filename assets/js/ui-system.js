@@ -162,7 +162,7 @@ function openWaModal(id) {
       };
   let msg = "Pilih pesan WhatsApp untuk " + (r.customer || "customer") + ".";
   if (canceled && r.cancel_reason)
-    msg += " — Alasan cancel dari teknisi: " + r.cancel_reason;
+    msg += " — Alasan pembatalan dari pengguna: " + r.cancel_reason;
   showMini("💬 WhatsApp Customer", msg, [
     {
       label: "💬 Chat kosong (tanpa template)",
@@ -208,7 +208,7 @@ function csvCell(v) {
 }
 function exportCsv() {
   if (!isOwner()) {
-    toast("Hanya Owner.", "error");
+    toast("Aksi tidak tersedia.", "error");
     return;
   }
   const head = [

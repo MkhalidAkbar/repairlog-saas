@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="assets/css/accessibility.css" />
     <link rel="stylesheet" href="assets/css/responsive.css" />
     <link rel="stylesheet" href="assets/css/enhancements.css" />
+    <link rel="stylesheet" href="assets/css/workflow.css" />
     <link rel="stylesheet" href="assets/css/print.css" media="print" />
   </head>
   <body>
@@ -107,10 +108,9 @@
     </div>
     <header id="appHeader" style="display: none">
       <h1 id="brandTitle">
-        🛠️ RepairLog <small>Portofolio Teknisi Laptop</small>
+        🛠️ RepairLog <small>Manajemen Servis & Garansi</small>
       </h1>
       <nav>
-        <span class="rolebadge" id="roleBadge"></span>
         <span
           class="rolebadge"
           id="verBadge"
@@ -183,15 +183,6 @@
             </button>
             <button
               class="btn small secondary"
-              id="ownerBtn"
-              onclick="openOwner()"
-              title="Pengaturan Owner"
-              style="display: none"
-            >
-              🔒
-            </button>
-            <button
-              class="btn small secondary"
               onclick="startTour()"
               aria-label="Buka panduan"
               title="Panduan"
@@ -243,9 +234,14 @@
         </section>
         <div id="statGrid"></div>
         <div class="insight dashboard-insight" id="insight"></div>
+        <section
+          id="actionCenter"
+          class="action-center"
+          aria-labelledby="actionCenterTitle"
+        ></section>
         <div id="warrantyAlert"></div>
         <div class="charts" id="chartsWrap">
-          <div class="chartbox ownerOnly profitOnly" id="revChartBox">
+          <div class="chartbox profitOnly" id="revChartBox">
             <h3>💰 Pendapatan 7 Hari Terakhir</h3>
             <canvas id="chartRevenue"></canvas>
           </div>
@@ -441,7 +437,7 @@
 
       <div id="tab-attend" style="display: none">
         <div class="row" style="margin-bottom: 6px; flex-wrap: wrap; gap: 8px">
-          <h2 style="margin: 0">🕐 Absensi Teknisi</h2>
+          <h2 style="margin: 0">🕐 Absensi Pengguna</h2>
         </div>
         <div id="attendSelf" style="margin-bottom: 18px"></div>
         <div
@@ -628,7 +624,7 @@
         <div class="fs-h">🎚️ Level Pekerjaan</div>
         <div>
           <label>Level Pekerjaan</label>
-          <select id="f_level">
+          <select id="f_level" onchange="refreshSlaSuggestion(true)">
             <option value="1">
               Level 1 - Ringan (software: install ulang OS, driver, aplikasi)
             </option>
@@ -644,12 +640,27 @@
             </option>
           </select>
         </div>
-        <div class="fs-h">👷 Pengerjaan & Komponen</div>
-        <label>Teknisi yang mengerjakan</label>
+        <div class="fs-h">⏱️ Target &amp; SLA</div>
+        <div class="frow">
+          <div>
+            <label>Estimasi selesai</label>
+            <input id="f_sla_due" type="datetime-local" />
+          </div>
+          <div>
+            <label>Alasan penyesuaian atau keterlambatan</label>
+            <input
+              id="f_delay_reason"
+              placeholder="Opsional, mis. menunggu sparepart"
+            />
+          </div>
+        </div>
+        <div id="slaFormHint" class="muted"></div>
+        <div class="fs-h">👷 Pengerjaan &amp; Komponen</div>
+        <label>Penanggung jawab</label>
         <select id="f_assigned"></select>
         <label>Komponen / Bagian yang diperbaiki</label>
         <div class="checks" id="compChecks"></div>
-        <div class="ownerOnly profitOnly">
+        <div class="profitOnly">
           <label>Rincian Komponen — Harga Jual, Modal & Garansi</label>
           <div id="costItems"></div>
           <button
@@ -806,7 +817,7 @@
         </div>
         <div class="actions" style="margin-top: 18px">
           <button
-            class="btn danger ownerOnly"
+            class="btn danger"
             id="delBtn"
             onclick="delFromForm()"
             style="display: none"
@@ -996,9 +1007,9 @@
             Aktifkan
           </button>
         </div>
-        <div class="set-row ownerOnly" id="ownerSetRow">
+        <div class="set-row" id="ownerSetRow">
           <div>
-            <div style="font-weight: 600">🔒 Pengaturan Owner</div>
+            <div style="font-weight: 600">🔒 Pengaturan Toko</div>
           </div>
           <button class="btn small" onclick="openOwner()">Buka</button>
         </div>
@@ -1056,10 +1067,10 @@
 
     <div class="modal-bg" id="ownerModal">
       <div class="modal" style="max-width: 520px">
-        <h2>🔒 Pengaturan Owner</h2>
+        <h2>🔒 Pengaturan Toko</h2>
         <div id="ownerLock">
-          <p class="muted" id="ownerLockMsg">Masukkan PIN owner.</p>
-          <label>PIN Owner</label>
+          <p class="muted" id="ownerLockMsg">Masukkan PIN pengaturan.</p>
+          <label>PIN Pengaturan</label>
           <input
             id="ownerPin"
             type="password"
@@ -1277,12 +1288,12 @@
             "
           >
             <div style="font-weight: 600; margin-bottom: 8px; font-size: 13px">
-              ➕ Tambah Teknisi Baru
+              ➕ Tambah Pengguna Baru
             </div>
             <div class="frow">
               <div>
                 <label>Nama</label
-                ><input id="nuName" placeholder="Nama teknisi" />
+                ><input id="nuName" placeholder="Nama pengguna" />
               </div>
               <div>
                 <label>Email</label
@@ -1318,7 +1329,7 @@
             "
           />
           <div style="font-weight: 600; margin-bottom: 4px">
-            🔑 Ubah PIN Owner
+            🔑 Ubah PIN Pengaturan
           </div>
           <div class="frow">
             <div>
@@ -1363,7 +1374,7 @@
       <div class="modal" style="max-width: 460px">
         <h2>👋 Selamat datang!</h2>
         <p class="muted" style="margin-bottom: 6px">
-          Atur identitas toko dulu (bisa diubah lagi nanti di menu 🔒).
+          Atur identitas toko dulu (bisa diubah lagi nanti di menu Pengaturan).
         </p>
         <label>Nama toko</label>
         <input id="wzName" placeholder="cth: Service Laptop Jaya" />
@@ -1496,6 +1507,7 @@
     <script src="config.js"></script>
 
     <script src="assets/js/core.js"></script>
+    <script src="assets/js/workflow.js"></script>
     <script src="assets/js/operations.js"></script>
     <script src="assets/js/dashboard.js"></script>
     <script src="assets/js/account.js"></script>

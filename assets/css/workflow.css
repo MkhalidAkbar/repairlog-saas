@@ -1,0 +1,549 @@
+/* Priority 1–3: pusat tindakan, SLA, timeline, dan persetujuan pelanggan. */
+.action-center {
+  padding: 22px;
+  margin: 0 0 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.action-head,
+.workflow-detail-head,
+.workflow-summary-row,
+.workflow-timeline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.action-head {
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.action-head h2,
+.workflow-detail-head h3,
+.workflow-timeline-head h4 {
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.025em;
+}
+
+.action-head h2 {
+  font-size: 22px;
+}
+
+.action-summaries {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.action-summary,
+.approval-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 750;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.action-summary.risk,
+.approval-badge.rejected {
+  color: var(--risk);
+  background: var(--risk-soft);
+  border-color: color-mix(in srgb, var(--risk) 35%, var(--border));
+}
+
+.action-summary.attention,
+.approval-badge.pending {
+  color: var(--attention);
+  background: var(--attention-soft);
+  border-color: color-mix(in srgb, var(--attention) 35%, var(--border));
+}
+
+.action-summary.info {
+  color: var(--accent);
+  background: var(--info-soft);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+.action-summary.success,
+.approval-badge.approved {
+  color: var(--success);
+  background: var(--success-soft);
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+}
+
+.approval-badge.neutral {
+  color: var(--muted);
+  background: var(--card2);
+}
+
+.action-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.action-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 68px;
+  padding: 11px 12px;
+  color: var(--text);
+  text-align: left;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.action-item:hover {
+  background: var(--card);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  transform: translateY(-1px);
+}
+
+.action-mark,
+.workflow-event-mark {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 850;
+  border-radius: 50%;
+}
+
+.action-mark {
+  width: 29px;
+  height: 29px;
+  font-size: 14px;
+  background: var(--accent);
+}
+
+.action-item.risk .action-mark {
+  background: var(--risk);
+}
+
+.action-item.attention .action-mark {
+  background: var(--attention);
+}
+
+.action-copy {
+  min-width: 0;
+}
+
+.action-copy strong,
+.action-copy small,
+.action-empty strong,
+.action-empty small,
+.workflow-event strong,
+.workflow-event small {
+  display: block;
+}
+
+.action-copy strong {
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.action-copy small,
+.action-empty small,
+.workflow-event small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.action-arrow {
+  color: var(--muted);
+  font-size: 22px;
+}
+
+.action-empty {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  padding: 14px;
+  background: var(--success-soft);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, var(--border));
+  border-radius: 10px;
+}
+
+.action-empty > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  background: var(--success);
+  border-radius: 50%;
+}
+
+.action-more {
+  margin-top: 11px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+#slaFormHint {
+  padding: 10px 12px;
+  margin-top: 8px;
+  color: var(--muted);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.workflow-detail {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.workflow-detail-head {
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.workflow-detail-head h3 {
+  font-size: 19px;
+}
+
+.workflow-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.workflow-summary-card {
+  min-width: 0;
+  padding: 16px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: 10px;
+}
+
+.workflow-summary-card.sla-overdue,
+.workflow-summary-card.approval-rejected {
+  border-top-color: var(--risk);
+}
+
+.workflow-summary-card.sla-soon,
+.workflow-summary-card.approval-pending {
+  border-top-color: var(--attention);
+}
+
+.workflow-summary-card.sla-ok,
+.workflow-summary-card.approval-approved {
+  border-top-color: var(--success);
+}
+
+.workflow-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+}
+
+.workflow-summary-card > strong {
+  display: block;
+  margin-top: 9px;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.workflow-summary-card p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.workflow-summary-card > small {
+  display: block;
+  margin-top: 8px;
+  color: var(--attention);
+  font-size: 12px;
+}
+
+.workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.workflow-timeline-block {
+  padding: 16px;
+  margin-top: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.workflow-timeline-head {
+  align-items: baseline;
+  padding-bottom: 11px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.workflow-timeline-head h4 {
+  font-size: 15px;
+}
+
+.workflow-timeline-head span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.workflow-timeline {
+  max-height: 330px;
+  overflow: auto;
+}
+
+.workflow-event {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 11px;
+  padding: 13px 0;
+}
+
+.workflow-event:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.workflow-event-mark {
+  width: 27px;
+  height: 27px;
+  font-size: 13px;
+  background: var(--accent);
+}
+
+.workflow-event-mark.approval_approved {
+  background: var(--success);
+}
+
+.workflow-event-mark.approval_rejected {
+  background: var(--risk);
+}
+
+.workflow-event-mark.approval_request,
+.workflow-event-mark.approval_canceled {
+  background: var(--attention);
+}
+
+.workflow-event strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.approval-public-card {
+  max-width: 680px;
+}
+
+.approval-public-brand {
+  padding-bottom: 18px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.approval-public-brand > span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+}
+
+.approval-public-brand h1 {
+  margin: 6px 0 2px;
+  letter-spacing: -0.035em;
+}
+
+.approval-public-brand p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.approval-public-ticket {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.approval-public-ticket > div,
+.approval-public-notes {
+  padding: 12px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
+.approval-public-ticket span,
+.approval-public-notes > span,
+.approval-public-amount > span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.approval-public-ticket strong {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.approval-public-amount {
+  padding: 18px;
+  margin-bottom: 12px;
+  text-align: center;
+  background: var(--info-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 10px;
+}
+
+.approval-public-amount strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--accent);
+  font-size: clamp(28px, 6vw, 38px);
+  letter-spacing: -0.045em;
+}
+
+.approval-public-notes p {
+  margin: 7px 0 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.approval-public-form,
+.approval-public-result {
+  padding: 16px;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.approval-public-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.approval-public-actions .btn {
+  min-height: 46px;
+}
+
+.approval-public-result strong,
+.approval-public-result span {
+  display: block;
+  text-align: center;
+}
+
+.approval-public-result strong {
+  font-size: 20px;
+}
+
+.approval-public-result span {
+  margin-top: 5px;
+  color: var(--muted);
+}
+
+.approval-public-result.approved {
+  background: var(--success-soft);
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+}
+
+.approval-public-result.rejected {
+  background: var(--risk-soft);
+  border-color: color-mix(in srgb, var(--risk) 35%, var(--border));
+}
+
+.approval-public-foot {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .action-center {
+    padding: 18px;
+  }
+
+  .action-head,
+  .workflow-detail-head,
+  .workflow-timeline-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .action-summaries {
+    justify-content: flex-start;
+  }
+
+  .action-list,
+  .workflow-summary-grid,
+  .approval-public-ticket {
+    grid-template-columns: 1fr;
+  }
+
+  .action-item {
+    min-height: 72px;
+  }
+
+  .workflow-detail-head .btn {
+    width: 100%;
+  }
+
+  .workflow-timeline-head span {
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 440px) {
+  .action-copy strong {
+    white-space: normal;
+  }
+
+  .approval-public-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-item {
+    transition: none !important;
+  }
+}

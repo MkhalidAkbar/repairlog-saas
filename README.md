@@ -1,55 +1,102 @@
-# RepairLog SaaS
+# RepairLog SaaS v3.0.0
 
-RepairLog adalah aplikasi web/PWA untuk mengelola laporan servis, pelanggan, garansi, stok, keuangan, papan kerja, dan absensi teknisi.
+RepairLog adalah aplikasi web/PWA untuk mengelola laporan servis, pelanggan, garansi, stok, keuangan, papan kerja, absensi, SLA, timeline, dan persetujuan estimasi pelanggan.
 
-## Menjalankan aplikasi
+## Fitur utama v3.0.0
 
-Tidak ada proses build. Jalankan melalui web server lokal agar Service Worker dan PWA bekerja dengan benar:
+### 1. Satu level akses
+
+- Tidak ada pembagian akses Owner dan Teknisi pada UI.
+- Semua pengguna toko memperoleh menu dan kemampuan yang sama.
+- Badge role dan tombol khusus Owner dihapus.
+- Pengaturan sensitif tetap dapat dilindungi dengan PIN Pengaturan.
+- Kolom role lama di database tidak dihapus agar RLS dan instalasi lama tetap kompatibel.
+- Isolasi antar-toko tetap menggunakan `store_id`.
+
+### 2. Pusat Tindakan dan SLA
+
+Dashboard menampilkan pekerjaan yang perlu ditindaklanjuti:
+
+- Servis melewati SLA.
+- Target selesai kurang dari 24 jam.
+- Tiket belum memiliki penanggung jawab.
+- Servis selesai tetapi belum lunas.
+- Barang siap diambil.
+- Estimasi ditolak pelanggan.
+- Stok sparepart menipis.
+
+Setiap tiket memiliki estimasi selesai, status SLA, durasi tersisa/terlambat, dan alasan penyesuaian.
+
+### 3. Timeline dan persetujuan pelanggan
+
+Detail tiket kini menampilkan:
+
+- Ringkasan SLA.
+- Status persetujuan estimasi.
+- Tombol kirim link persetujuan.
+- Timeline aktivitas tiket.
+- Hasil persetujuan atau penolakan pelanggan.
+
+Pelanggan dapat membuka link publik, memeriksa estimasi, lalu memilih **Setujui** atau **Tolak**.
+
+## Instalasi penting
+
+Sebelum menggunakan SLA dan persetujuan pelanggan, jalankan migrasi berikut di Supabase SQL Editor:
+
+```text
+supabase/migrations/20260810_priority_1_2_3.sql
+```
+
+Aplikasi tetap dapat menyimpan laporan lama jika migrasi belum dijalankan, tetapi SLA dan persetujuan belum akan tersimpan.
+
+Lihat `DEPLOY.md` untuk langkah deployment lengkap.
+
+## Menjalankan aplikasi secara lokal
+
+Tidak ada proses build:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Lalu buka `http://localhost:8080`.
+Buka `http://localhost:8080`.
 
 ## Konfigurasi toko
 
-Edit hanya `config.js` untuk mengatur Supabase, ID toko, email owner, kontak dukungan, dan master control panel.
+Edit `config.js` untuk mengatur Supabase, ID toko, email awal, kontak dukungan, dan master control panel. Konfigurasi lama tetap kompatibel.
 
 ## Struktur proyek
 
 ```text
 repairlog-saas-main/
-├── index.html                    # Markup/struktur antarmuka
-├── config.js                     # Konfigurasi per toko
-├── manifest.json                 # Metadata PWA
-├── sw.js                         # Cache dan mode offline
+├── index.html
+├── config.js
+├── manifest.json
+├── sw.js
+├── DEPLOY.md
 ├── icon.png
+├── supabase/
+│   └── migrations/
+│       └── 20260810_priority_1_2_3.sql
 └── assets/
     ├── css/
-    │   ├── base.css              # Token, layout, komponen umum
-    │   ├── collaboration.css     # Kolaborasi, komentar, presence
-    │   ├── polish.css            # Animasi dan detail interaksi
-    │   ├── accessibility.css     # Reduced motion
-    │   ├── responsive.css        # Tampilan tablet/mobile
-    │   ├── enhancements.css      # Penyempurnaan visual terbaru
-    │   └── print.css             # Nota dan cetak
+    │   ├── base.css
+    │   ├── collaboration.css
+    │   ├── polish.css
+    │   ├── accessibility.css
+    │   ├── responsive.css
+    │   ├── enhancements.css
+    │   ├── workflow.css
+    │   └── print.css
     └── js/
-        ├── core.js               # Config, helper, tema, data, navigasi
-        ├── operations.js         # Media, form, stok, detail, garansi
-        ├── dashboard.js          # Dashboard, chart, kolaborasi, papan
-        ├── account.js            # Auth, biometrik, owner, pengguna
-        ├── customer-portal.js    # Tracking, portal pelanggan, invoice
-        ├── ui-system.js          # WhatsApp, export, modal, toast
-        └── boot.js               # Guard, tutorial, lisensi, absensi, boot
+        ├── core.js
+        ├── workflow.js
+        ├── operations.js
+        ├── dashboard.js
+        ├── account.js
+        ├── customer-portal.js
+        ├── ui-system.js
+        └── boot.js
 ```
 
-Urutan file CSS dan JavaScript pada `index.html` penting karena aplikasi masih memakai classic scripts agar kompatibel dengan event handler yang sudah ada.
-
-## Perubahan versi ini
-
-- Memperbaiki karakter rusak pada notifikasi garansi dan teks Pengaturan Owner.
-- Mengganti separator rusak dengan bullet yang valid dan copy `hari lagi` yang lebih jelas.
-- Memperbarui dashboard: hierarchy, filter, kartu statistik, alert garansi, chart card, dark mode, fokus keyboard, dan mobile layout.
-- Memecah CSS/JavaScript monolitik menjadi file berdasarkan tanggung jawab.
-- Memperbarui daftar aset PWA agar semua file baru tersimpan untuk penggunaan offline.
+Urutan file JavaScript di `index.html` penting karena aplikasi menggunakan classic scripts agar event handler lama tetap kompatibel.

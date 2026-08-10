@@ -282,6 +282,7 @@ function renderDash() {
           : `💡 Total <b>${total}</b> pekerjaan, <b>${selesai}</b> selesai. Paling banyak <b>Level ${top}</b> (${LEVELS[top].name}).`;
     }
   }
+  if (typeof renderActionCenter === "function") renderActionCenter(src);
   const wal = $("warrantyAlert");
   if (wal) {
     const soon = reports
@@ -637,7 +638,7 @@ function renderFinance() {
       );
   }
   if (!(isOwner() && FEATURES.profit)) {
-    box.innerHTML = `<div class="empty">Fitur keuangan tidak aktif atau Anda bukan Owner.</div>`;
+    box.innerHTML = `<div class="empty">Fitur keuangan tidak aktif.</div>`;
     return;
   }
   const list = finRows();
@@ -737,7 +738,7 @@ function renderTechPerf() {
         `<tr><td>${techBadge(uid)}</td><td style="text-align:center"><b>${d.total}</b></td><td style="text-align:center">${d.done}</td><td style="text-align:center">${d.lv[1] || 0}</td><td style="text-align:center">${d.lv[2] || 0}</td><td style="text-align:center">${d.lv[3] || 0}</td><td style="text-align:center">${d.lv[4] || 0}</td></tr>`,
     )
     .join("");
-  box.innerHTML = `<div class="insight" style="margin-bottom:24px"><div style="font-weight:700;margin-bottom:8px">👷 Kinerja Teknisi</div><div class="muted" style="margin-bottom:10px">${LANG === "en" ? "🏆 Most jobs handled by: " : "🏆 Paling banyak mengerjakan: "}<b>${esc(techName(top[0]))}</b> (${top[1].total}${LANG === "en" ? " services" : " servis"})</div><div style="overflow-x:auto"><table class="ftbl"><tr><th>Teknisi</th><th>Total</th><th>Selesai</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th></tr>${rows}</table></div></div>`;
+  box.innerHTML = `<div class="insight" style="margin-bottom:24px"><div style="font-weight:700;margin-bottom:8px">👷 Kinerja Pengguna</div><div class="muted" style="margin-bottom:10px">${LANG === "en" ? "🏆 Most jobs handled by: " : "🏆 Paling banyak menangani: "}<b>${esc(techName(top[0]))}</b> (${top[1].total}${LANG === "en" ? " services" : " servis"})</div><div style="overflow-x:auto"><table class="ftbl"><tr><th>Pengguna</th><th>Total</th><th>Selesai</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th></tr>${rows}</table></div></div>`;
 }
 // ====== KOLABORASI: TIM & LABEL TEKNISI ======
 async function loadTeam() {
@@ -860,13 +861,20 @@ function actIcon(a) {
       stage: "📍",
       level: "🎚️",
       assign: "👤",
+      approval_request: "📨",
+      approval_approved: "✅",
+      approval_rejected: "⛔",
+      approval_canceled: "↩",
+      sla: "⏱",
       media: "📷",
       checklist: "✅",
       comment: "💬",
     }[a] || "✏️"
   );
 }
-function afterOpenDetail(rid) {}
+function afterOpenDetail(rid) {
+  if (typeof renderWorkflowDetail === "function") renderWorkflowDetail(rid);
+}
 // ====== LIVE PRESENCE (Canva-style lock + active user badges) ======
 let repChannel = null,
   _presenceReportId = null,
@@ -1152,6 +1160,8 @@ async function setStage(id, stage) {
   if (stage === "Diambil" && !(r && r.date_out))
     upd.date_out = new Date().toISOString().slice(0, 10);
   await db.from("reports").update(upd).eq("id", id);
+  if (typeof logWorkflowActivity === "function")
+    await logWorkflowActivity(id, "stage", `Tahap dipindahkan ke ${stage}.`);
   if (r) {
     r.stage = stage;
     r.status = status;
@@ -1174,6 +1184,10 @@ async function setAssign(id, uid) {
     .eq("id", id);
   const r = reports.find((x) => x.id === id);
   if (r) r.assigned_to = uid || null;
+  if (typeof logWorkflowActivity === "function") {
+    const assignee = uid ? techName(uid) : "Belum ditentukan";
+    await logWorkflowActivity(id, "assign", `Penanggung jawab: ${assignee}.`);
+  }
   renderBoard();
   render();
   if ($("detailModal").classList.contains("open") && _openReportId === id)
@@ -1217,7 +1231,7 @@ function addStage() {
 }
 async function delStage(s) {
   if (!isOwner()) {
-    toast("Hanya Owner.", "error");
+    toast("Aksi tidak tersedia.", "error");
     return;
   }
   const arr = boardStages().slice();

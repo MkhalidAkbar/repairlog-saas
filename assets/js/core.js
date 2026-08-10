@@ -56,7 +56,7 @@ const BRANDS = [
   "Samsung",
   "Lainnya",
 ];
-const APP_VERSION = "v2.9.3";
+const APP_VERSION = "v3.0.0";
 const DEVICE_TYPES = [
   "Laptop",
   "PC/Komputer",
@@ -226,7 +226,7 @@ const IMG_MAX_DIM = 1600,
 
 const BRAND_DEFAULT = {
   name: "RepairLog",
-  tagline: "Portofolio Teknisi Laptop",
+  tagline: "Manajemen Servis & Garansi",
   logo: "🛠️",
   logoUrl: "",
   color: "#6366f1",
@@ -282,14 +282,14 @@ const FEAT_LABELS = {
   waNotif: "Notifikasi WhatsApp (selesai & reminder)",
   qrReceipt: "QR code di struk",
   publicTracking: "Status tracking publik",
-  attendance: "Absensi teknisi",
+  attendance: "Absensi pengguna",
   stock: "Manajemen stok sparepart",
   qris: "Pembayaran QRIS & Invoice PDF",
   multiDevice: "Multi jenis perangkat (Printer/HP/CCTV, dll)",
 };
 
 let ME = {
-  role: "teknisi",
+  role: "member",
   name: "",
   email: "",
   user_id: null,
@@ -297,7 +297,9 @@ let ME = {
   avatar: "",
   color: "",
 };
-const isOwner = () => ME.role === "owner";
+const hasFullAccess = () => true;
+// Alias kompatibilitas: seluruh pengguna kini memiliki satu tingkat akses.
+const isOwner = () => hasFullAccess();
 
 let reports = [];
 let formMedia = { before: [], after: [] };
@@ -453,17 +455,17 @@ const I18N_EN = {
   "Sidik jari aktif di perangkat ini.": "Fingerprint active on this device.",
   Aktifkan: "Enable",
   Nonaktifkan: "Disable",
-  "🔒 Pengaturan Owner": "🔒 Owner Settings",
-  "Branding toko, fitur aktif, kelola pengguna, export data & PIN owner.":
-    "Store branding, active features, user management, data export & owner PIN.",
+  "⚙️ Pengaturan Toko": "🔒 Store Settings",
+  "Branding toko, fitur aktif, kelola pengguna, export data & PIN pengaturan.":
+    "Store branding, active features, user management, data export & settings PIN.",
   "Keluar dari akun di perangkat ini.":
     "Sign out of your account on this device.",
   "🌐 Bahasa / Language": "🌐 Language",
   "Pilih bahasa tampilan aplikasi.": "Choose the app display language.",
-  "Masukkan PIN owner.": "Enter owner PIN.",
+  "Masukkan PIN pengaturan.": "Enter settings PIN.",
   "Belum ada PIN. Buat PIN baru (min 4 digit) untuk mengunci menu ini.":
     "No PIN yet. Create a new PIN (min 4 digits) to lock this menu.",
-  "PIN Owner": "Owner PIN",
+  "PIN Pengaturan": "Settings PIN",
   "🏷️ Branding Toko": "🏷️ Store Branding",
   "Nama toko": "Store name",
   Tagline: "Tagline",
@@ -480,7 +482,7 @@ const I18N_EN = {
   "👥 Kelola Pengguna": "👥 Manage Users",
   "Untuk menambah atau mengurangi pengguna, hubungi admin.":
     "To add or remove users, contact the admin.",
-  "🔑 Ubah PIN Owner": "🔑 Change Owner PIN",
+  "🔑 Ubah PIN Pengaturan": "🔑 Change Settings PIN",
   "PIN baru": "New PIN",
   "Ulangi PIN": "Repeat PIN",
   "Simpan PIN": "Save PIN",
@@ -510,7 +512,7 @@ const I18N_EN = {
   "Lama Garansi": "Warranty Period",
   "No. Tiket dibuat otomatis saat disimpan.":
     "Ticket No. is generated automatically on save.",
-  "Teknisi yang mengerjakan": "Assigned technician",
+  "Penanggung jawab": "Person in charge",
   "Komponen / Bagian yang diperbaiki": "Components / Parts repaired",
   "Pekerjaan yang dilakukan": "Work performed",
   "🔧 BEFORE (sebelum perbaikan)": "🔧 BEFORE (pre-repair)",
@@ -545,7 +547,7 @@ const I18N_EN = {
   Pelanggan: "Customers",
   "\ud83d\udc65 Pelanggan": "\ud83d\udc65 Customers",
   "\ud83d\uddc2\ufe0f Papan Pengerjaan": "\ud83d\uddc2\ufe0f Work Board",
-  "\ud83d\udd50 Absensi Teknisi": "\ud83d\udd50 Technician Attendance",
+  "\ud83d\udd50 Absensi Pengguna": "\ud83d\udd50 User Attendance",
   "\ud83d\udcca Laporan Keuangan": "\ud83d\udcca Financial Report",
   "\ud83d\udcca Pengerjaan 14 Hari Terakhir":
     "\ud83d\udcca Jobs in the Last 14 Days",
@@ -582,8 +584,8 @@ const I18N_EN = {
     "Level 3 - Heavy (hinges, ports/connectors, charging jack, flex cable)",
   "Level 4 - Sangat Berat (microsoldering: ganti IC, jumper, BGA)":
     "Level 4 - Very Heavy (microsoldering: IC replace, jumper, BGA)",
-  "Kelola stok sparepart. Stok otomatis berkurang saat dipakai di laporan (ambil dari stok). Hanya Owner yang bisa melihat halaman ini.":
-    "Manage spare parts stock. Stock decreases automatically when used in a report (take from stock). Only the Owner can see this page.",
+  "Kelola stok sparepart. Stok otomatis berkurang saat dipakai di laporan (ambil dari stok). Tersedia untuk seluruh pengguna toko.":
+    "Manage spare parts stock. Stock decreases automatically when used in a report (take from stock). Available to every store user.",
   "Jenis Sparepart": "Part Types",
   "Stok Menipis": "Low Stock",
   "Nilai Stok (modal)": "Stock Value (cost)",
@@ -593,8 +595,7 @@ const I18N_EN = {
   "Harga Beli": "Buy Price",
   "Harga Jual": "Sell Price",
   Aksi: "Action",
-  "Fitur stok tidak aktif atau Anda bukan Owner.":
-    "Stock feature is off or you are not the Owner.",
+  "Fitur stok tidak aktif.": "Stock feature is off.",
   "Nama Sparepart *": "Part Name *",
   "Stok Saat Ini": "Current Stock",
   "Stok Minimum": "Minimum Stock",
@@ -604,8 +605,8 @@ const I18N_EN = {
   "Umum (semua perangkat)": "General (all devices)",
   "\u2795 Masuk": "\u2795 In",
   "\ud83d\udce6 Ambil dari stok\u2026": "\ud83d\udce6 Take from stock\u2026",
-  "Rekap berdasarkan bulan tanggal masuk. Hanya Owner yang bisa melihat halaman ini.":
-    "Recap by month of date-in. Only the Owner can see this page.",
+  "Rekap berdasarkan bulan tanggal masuk. Tersedia untuk seluruh pengguna toko.":
+    "Recap by month of date-in. Available to every store user.",
   "Total Pendapatan": "Total Revenue",
   "Total Modal": "Total Cost",
   "Total Laba": "Total Profit",
@@ -613,8 +614,7 @@ const I18N_EN = {
   Jml: "Qty",
   Modal: "Cost",
   "Belum ada data keuangan.": "No financial data yet.",
-  "Fitur keuangan tidak aktif atau Anda bukan Owner.":
-    "Finance feature is off or you are not the Owner.",
+  "Fitur keuangan tidak aktif.": "Finance feature is off.",
   "Cari nama / no. WhatsApp...": "Search name / WhatsApp no...",
   "Total Pelanggan": "Total Customers",
   "Total Servis": "Total Services",
@@ -632,12 +632,12 @@ const I18N_EN = {
     "Customer directory auto-built from service history. Click",
   "untuk melihat semua servis pelanggan.":
     "to view all services for that customer.",
-  "Seret kartu untuk pindah tahap \u2022 Owner bisa tambah/hapus kolom":
-    "Drag cards to move stages \u2022 Owner can add/remove columns",
+  "Seret kartu untuk pindah tahap \u2022 Semua pengguna bisa tambah/hapus kolom":
+    "Drag cards to move stages \u2022 All users can add/remove columns",
   "+ Tambah kartu": "+ Add card",
   "+ Tambah kolom": "+ Add column",
-  "Catat jam masuk & pulang. Owner melihat semua teknisi; teknisi melihat riwayatnya sendiri.":
-    "Record clock-in & clock-out. Owner sees all technicians; technicians see their own history.",
+  "Catat jam masuk dan pulang seluruh pengguna toko.":
+    "Record clock-in and clock-out for store users.",
   "Tgl Masuk": "Date In",
   "Tgl Diambil": "Picked Up",
   Garansi: "Warranty",
@@ -651,8 +651,8 @@ const I18N_EN = {
   "\ud83e\uddfe Tanda Terima": "\ud83e\uddfe Receipt",
   "\ud83d\udda8\ufe0f Cetak": "\ud83d\udda8\ufe0f Print",
   "\u270f\ufe0f Edit": "\u270f\ufe0f Edit",
-  "\ud83d\udc77 Kinerja Teknisi": "\ud83d\udc77 Technician Performance",
-  Teknisi: "Technician",
+  "\ud83d\udc77 Kinerja Pengguna": "\ud83d\udc77 User Performance",
+  Pengguna: "Technician",
   "Lanjut \u2192": "Next \u2192",
   Lewati: "Skip",
 };
@@ -928,13 +928,15 @@ function applyFeatures() {
 
 // ====== ROLE ======
 function applyRole() {
-  const owner = isOwner();
-  document.body.classList.toggle("is-teknisi", !owner);
-  $("ownerBtn").style.display = "none";
-  $("navFinance").style.display = owner && FEATURES.profit ? "" : "none";
-  const _nst = $("navStock");
-  if (_nst) _nst.style.display = owner && FEATURES.stock ? "" : "none";
-  $("roleBadge").textContent = owner ? "👑 Owner" : "🔧 Teknisi";
+  document.body.classList.remove("is-teknisi");
+  const finance = $("navFinance");
+  if (finance) finance.style.display = FEATURES.profit ? "" : "none";
+  const stock = $("navStock");
+  if (stock) stock.style.display = FEATURES.stock ? "" : "none";
+  const roleBadge = $("roleBadge");
+  if (roleBadge) roleBadge.style.display = "none";
+  const legacyOwnerButton = $("ownerBtn");
+  if (legacyOwnerButton) legacyOwnerButton.style.display = "none";
 }
 async function fetchMe() {
   if (!db) return;
@@ -950,16 +952,16 @@ async function fetchMe() {
   });
   const prof = Array.isArray(data) ? data[0] : data;
   if (!error && prof) {
-    ME.role = prof.role || "teknisi";
+    ME.role = "member";
     ME.name = prof.name || "";
     ME.store_id = prof.store_id || null;
   } else if (error && String(error.message || "").indexOf("WRONG_STORE") >= 0) {
-    ME.role = "teknisi";
+    ME.role = "member";
     ME.name = "";
     ME.store_id = "__WRONG_STORE__";
   } // akun milik toko lain → dipaksa mismatch supaya guardStore menolak
   else {
-    ME.role = "teknisi";
+    ME.role = "member";
     ME.name = (user.email || "").split("@")[0];
     ME.store_id = null;
   }
@@ -987,7 +989,7 @@ async function guardStore() {
       await db.auth.signOut();
     } catch (e) {}
     ME = {
-      role: "teknisi",
+      role: "member",
       name: "",
       email: "",
       user_id: null,
@@ -1298,6 +1300,24 @@ async function loadAll() {
   if (!error && data) {
     reports = data;
   }
+  // reports_view lama mungkin belum mengekspos kolom workflow baru.
+  // Gabungkan kolom SLA/persetujuan langsung dari reports bila migrasi sudah aktif.
+  try {
+    const workflowResult = await db
+      .from("reports")
+      .select(
+        "id,sla_due_at,delay_reason,estimate_amount,estimate_notes,approval_status,approval_token,approval_requested_at,approval_responded_at,approval_customer_name,approval_note",
+      );
+    if (!workflowResult.error && workflowResult.data) {
+      const workflowById = new Map(
+        workflowResult.data.map((row) => [row.id, row]),
+      );
+      reports = reports.map((row) => ({
+        ...row,
+        ...(workflowById.get(row.id) || {}),
+      }));
+    }
+  } catch (workflowError) {}
   await loadParts();
   render();
 }

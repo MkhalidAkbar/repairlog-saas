@@ -306,6 +306,7 @@ function openForm(id) {
     if (typeof togglePaySplit === "function") togglePaySplit();
   }
   $("f_level").value = r ? r.level || 1 : 1;
+  if (typeof populateWorkflowForm === "function") populateWorkflowForm(r);
   if ($("f_warranty")) $("f_warranty").value = r ? r.warranty_days || 30 : 30;
   $("f_brand").value = r ? r.brand || "Asus" : "Asus";
   $("f_tasks").value = r ? r.tasks || "" : "";
@@ -404,6 +405,7 @@ async function saveReport() {
       before_media: before,
       after_media: after,
       warranty_days: _computeWarranty(),
+      ...(typeof workflowPayload === "function" ? workflowPayload() : {}),
       updated_at: new Date().toISOString(),
     };
     // checklist & part dihapus sesuai permintaan
@@ -437,6 +439,18 @@ async function saveReport() {
     let newTicket = null;
     if (id) {
       let _r = await db.from("reports").update(payload).eq("id", id);
+      if (
+        _r.error &&
+        typeof workflowColumnsMissing === "function" &&
+        workflowColumnsMissing(_r.error)
+      ) {
+        stripWorkflowColumns(payload);
+        _r = await db.from("reports").update(payload).eq("id", id);
+        toast(
+          "Migrasi Priority 1-2-3 belum dijalankan — data utama tersimpan tanpa SLA.",
+          "error",
+        );
+      }
       if (_r.error && /dp_amount/.test(_r.error.message || "")) {
         delete payload.dp_amount;
         _r = await db.from("reports").update(payload).eq("id", id);
@@ -486,6 +500,18 @@ async function saveReport() {
         _tries++;
         payload.ticket_no = String(_pfxNum).padStart(3, "0") + "/" + _tail;
         _ri = await db.from("reports").insert(payload);
+        if (
+          _ri.error &&
+          typeof workflowColumnsMissing === "function" &&
+          workflowColumnsMissing(_ri.error)
+        ) {
+          stripWorkflowColumns(payload);
+          _ri = await db.from("reports").insert(payload);
+          toast(
+            "Migrasi Priority 1-2-3 belum dijalankan — data utama tersimpan tanpa SLA.",
+            "error",
+          );
+        }
         if (_ri.error && /dp_amount/.test(_ri.error.message || "")) {
           delete payload.dp_amount;
           _ri = await db.from("reports").insert(payload);
@@ -524,6 +550,13 @@ async function saveReport() {
       : newTicket
         ? reports.find((x) => x.ticket_no === newTicket)
         : null;
+    if (_tgt && typeof logWorkflowActivity === "function") {
+      await logWorkflowActivity(
+        _tgt.id,
+        id ? "update" : "create",
+        id ? "Data tiket servis diperbarui." : "Tiket servis dibuat.",
+      );
+    }
     const _canWa =
       _tgt &&
       FEATURES.waNotif &&
@@ -554,7 +587,7 @@ async function saveReport() {
 }
 async function delFromForm() {
   if (!isOwner()) {
-    toast("Hanya Owner yang bisa menghapus.", "error");
+    toast("Penghapusan tidak tersedia.", "error");
     return;
   }
   const id = $("f_id").value;
@@ -710,8 +743,7 @@ function renderStock() {
   const box = $("stockBox");
   if (!box) return;
   if (!(isOwner() && FEATURES.stock)) {
-    box.innerHTML =
-      '<div class="empty">Fitur stok tidak aktif atau Anda bukan Owner.</div>';
+    box.innerHTML = '<div class="empty">Fitur stok tidak aktif.</div>';
     return;
   }
   ensureDevFilter("stockDevFilter");
@@ -1085,6 +1117,12 @@ async function setStatus(id, status) {
   }
   await loadAll();
   const r = reports.find((x) => x.id === id);
+  if (typeof logWorkflowActivity === "function")
+    await logWorkflowActivity(
+      id,
+      "status",
+      `Status diperbarui menjadi ${status}.`,
+    );
   toast("Status diperbarui: " + status, "success");
   if (
     status === "Selesai" &&
