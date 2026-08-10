@@ -61,6 +61,8 @@ function requestCloseModal(id) {
           cls: "danger",
           fn: () => {
             formDirty = false;
+            if (typeof clearActiveReportDraft === "function")
+              clearActiveReportDraft();
             closeModal("formModal");
           },
         },

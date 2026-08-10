@@ -352,6 +352,7 @@ function openForm(id) {
   }
   formDirty = false;
   openModal("formModal");
+  if (typeof prepareReportWizard === "function") prepareReportWizard(id);
   try {
     if ($("formPresence")) $("formPresence").innerHTML = "";
     if ($("formLock")) $("formLock").style.display = "none";
@@ -542,6 +543,7 @@ async function saveReport() {
       if (_ri && _ri.error) throw _ri.error;
       newTicket = payload.ticket_no;
     }
+    if (typeof clearActiveReportDraft === "function") clearActiveReportDraft();
     closeForm();
     await loadAll();
     checkStorageWarn();
@@ -622,6 +624,8 @@ async function delFromForm() {
         cls: "danger",
         fn: async () => {
           await db.from("reports").delete().eq("id", id);
+          if (typeof clearActiveReportDraft === "function")
+            clearActiveReportDraft();
           closeForm();
           await loadAll();
           toast("Laporan dihapus.", "success");

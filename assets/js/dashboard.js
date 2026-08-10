@@ -879,6 +879,8 @@ function afterOpenDetail(rid) {
   if (typeof renderWorkflowDetail === "function") renderWorkflowDetail(rid);
   if (typeof renderPriority456Detail === "function")
     renderPriority456Detail(rid);
+  if (typeof renderMobileTicketActions === "function")
+    renderMobileTicketActions(rid);
 }
 // ====== LIVE PRESENCE (Canva-style lock + active user badges) ======
 let repChannel = null,

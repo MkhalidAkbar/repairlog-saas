@@ -1,57 +1,52 @@
-# RepairLog SaaS v3.0.0
+# RepairLog SaaS v3.2.0
 
-RepairLog adalah aplikasi web/PWA untuk mengelola laporan servis, pelanggan, garansi, stok, keuangan, papan kerja, absensi, SLA, timeline, dan persetujuan estimasi pelanggan.
+RepairLog adalah aplikasi web/PWA untuk operasional servis: tiket, pelanggan, SLA, persetujuan estimasi, timeline, WhatsApp, QR tiket, Quality Control, stok, keuangan, dan garansi.
 
-## Fitur utama v3.0.0
+## Fitur utama
 
-### 1. Satu level akses
+### Prioritas 1–3
 
-- Tidak ada pembagian akses Owner dan Teknisi pada UI.
-- Semua pengguna toko memperoleh menu dan kemampuan yang sama.
-- Badge role dan tombol khusus Owner dihapus.
-- Pengaturan sensitif tetap dapat dilindungi dengan PIN Pengaturan.
-- Kolom role lama di database tidak dihapus agar RLS dan instalasi lama tetap kompatibel.
-- Isolasi antar-toko tetap menggunakan `store_id`.
+1. **Satu level akses** — pembagian UI Owner/Teknisi dihilangkan. Level Pekerjaan 1–4 tetap digunakan.
+2. **Pusat Tindakan dan SLA** — menampilkan tiket terlambat, target dekat, belum ditugaskan, pembayaran, pengambilan, persetujuan, dan stok.
+3. **Timeline dan persetujuan pelanggan** — link publik untuk menyetujui atau menolak estimasi beserta rekam aktivitas tiket.
 
-### 2. Pusat Tindakan dan SLA
+### Prioritas 4–6
 
-Dashboard menampilkan pekerjaan yang perlu ditindaklanjuti:
+4. **Otomasi WhatsApp klik-kirim** — template kontekstual, rekomendasi pesan, pengingat terjadwal, dan riwayat pesan.
+5. **QR tiket** — membuka status pelanggan, dapat disalin, dicetak, dan dimasukkan ke tanda terima.
+6. **Quality Control** — tujuh pemeriksaan, draft QC, serta penguncian status Selesai/Diambil sebelum QC lulus.
 
-- Servis melewati SLA.
-- Target selesai kurang dari 24 jam.
-- Tiket belum memiliki penanggung jawab.
-- Servis selesai tetapi belum lunas.
-- Barang siap diambil.
-- Estimasi ditolak pelanggan.
-- Stok sparepart menipis.
+### Prioritas 7–9
 
-Setiap tiket memiliki estimasi selesai, status SLA, durasi tersisa/terlambat, dan alasan penyesuaian.
+7. **Global Search & Quick Action**
+   - Buka dengan `Ctrl/Cmd + K`.
+   - Mencari nomor tiket, pelanggan, WhatsApp, perangkat, merek, status, tahap, komponen, dan catatan.
+   - Navigasi hasil dengan tombol panah dan `Enter`.
+   - Quick action untuk menambah tiket, membuka papan, Pusat Tindakan, pelanggan, keuangan, atau tiket dari nomor/link QR.
 
-### 3. Timeline dan persetujuan pelanggan
+8. **Form bertahap dengan autosave**
+   - Tujuh langkah: tiket, pelanggan/perangkat, diagnosis, pengerjaan, biaya, dokumentasi, dan review.
+   - Draft tersimpan otomatis di browser dan dapat dipulihkan.
+   - Draft mencakup isian, komponen, kelengkapan, rincian biaya, dan media yang sudah memiliki URL.
+   - File foto/video lokal yang belum diunggah tidak disimpan ke draft.
 
-Detail tiket kini menampilkan:
+9. **Mobile workflow**
+   - Navigasi bawah: Beranda, Papan, Tambah, Pelanggan, dan Lainnya.
+   - Tombol cepat tiket untuk WhatsApp, QC, foto, catatan, dan penyelesaian.
+   - Navigasi otomatis disembunyikan saat modal atau halaman publik dibuka.
 
-- Ringkasan SLA.
-- Status persetujuan estimasi.
-- Tombol kirim link persetujuan.
-- Timeline aktivitas tiket.
-- Hasil persetujuan atau penolakan pelanggan.
+## Migrasi database
 
-Pelanggan dapat membuka link publik, memeriksa estimasi, lalu memilih **Setujui** atau **Tolak**.
-
-## Instalasi penting
-
-Sebelum menggunakan SLA dan persetujuan pelanggan, jalankan migrasi berikut di Supabase SQL Editor:
+Untuk instalasi baru, jalankan berurutan:
 
 ```text
 supabase/migrations/20260810_priority_1_2_3.sql
+supabase/migrations/20260810_priority_4_5_6.sql
 ```
 
-Aplikasi tetap dapat menyimpan laporan lama jika migrasi belum dijalankan, tetapi SLA dan persetujuan belum akan tersimpan.
+Prioritas 7–9 tidak menambah skema database. Autosave memakai penyimpanan lokal browser.
 
-Lihat `DEPLOY.md` untuk langkah deployment lengkap.
-
-## Menjalankan aplikasi secara lokal
+## Menjalankan secara lokal
 
 Tidak ada proses build:
 
@@ -61,9 +56,9 @@ python3 -m http.server 8080
 
 Buka `http://localhost:8080`.
 
-## Konfigurasi toko
+## Konfigurasi
 
-Edit `config.js` untuk mengatur Supabase, ID toko, email awal, kontak dukungan, dan master control panel. Konfigurasi lama tetap kompatibel.
+Edit `config.js` untuk Supabase, ID toko, email awal, kontak dukungan, dan master control panel. Saat memperbarui deployment produksi, pertahankan `config.js` produksi jika nilainya berbeda dari paket.
 
 ## Struktur proyek
 
@@ -73,11 +68,13 @@ repairlog-saas-main/
 ├── config.js
 ├── manifest.json
 ├── sw.js
+├── README.md
 ├── DEPLOY.md
 ├── icon.png
 ├── supabase/
 │   └── migrations/
-│       └── 20260810_priority_1_2_3.sql
+│       ├── 20260810_priority_1_2_3.sql
+│       └── 20260810_priority_4_5_6.sql
 └── assets/
     ├── css/
     │   ├── base.css
@@ -87,6 +84,8 @@ repairlog-saas-main/
     │   ├── responsive.css
     │   ├── enhancements.css
     │   ├── workflow.css
+    │   ├── service-tools.css
+    │   ├── productivity.css
     │   └── print.css
     └── js/
         ├── core.js
@@ -96,7 +95,9 @@ repairlog-saas-main/
         ├── account.js
         ├── customer-portal.js
         ├── ui-system.js
+        ├── service-tools.js
+        ├── productivity.js
         └── boot.js
 ```
 
-Urutan file JavaScript di `index.html` penting karena aplikasi menggunakan classic scripts agar event handler lama tetap kompatibel.
+Urutan classic scripts di `index.html` penting untuk kompatibilitas event handler aplikasi.

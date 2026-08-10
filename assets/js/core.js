@@ -56,7 +56,7 @@ const BRANDS = [
   "Samsung",
   "Lainnya",
 ];
-const APP_VERSION = "v3.1.0";
+const APP_VERSION = "v3.2.0";
 const DEVICE_TYPES = [
   "Laptop",
   "PC/Komputer",
@@ -1353,6 +1353,7 @@ function showTab(t) {
   if (_nsa) _nsa.classList.toggle("active", t === "stock");
   const _nca = $("navCust");
   if (_nca) _nca.classList.toggle("active", t === "cust");
+  if (typeof syncMobileNav === "function") syncMobileNav(t);
   if (t === "dash") renderDash();
   if (t === "board") renderBoard();
   if (t === "finance") renderFinance();
