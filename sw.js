@@ -1,4 +1,4 @@
-const CACHE = "repairlog-v3.0.0-priority123";
+const CACHE = "repairlog-v3.1.0-priority456";
 
 const LOCAL_ASSETS = [
   "./",
@@ -13,6 +13,7 @@ const LOCAL_ASSETS = [
   "./assets/css/responsive.css",
   "./assets/css/enhancements.css",
   "./assets/css/workflow.css",
+  "./assets/css/service-tools.css",
   "./assets/css/print.css",
   "./assets/js/core.js",
   "./assets/js/workflow.js",
@@ -21,6 +22,7 @@ const LOCAL_ASSETS = [
   "./assets/js/account.js",
   "./assets/js/customer-portal.js",
   "./assets/js/ui-system.js",
+  "./assets/js/service-tools.js",
   "./assets/js/boot.js",
 ];
 

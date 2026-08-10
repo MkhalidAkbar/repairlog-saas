@@ -1,7 +1,7 @@
 {
   "name": "RepairLog",
   "short_name": "RepairLog",
-  "description": "Manajemen servis, SLA, persetujuan pelanggan, garansi, stok, dan keuangan.",
+  "description": "Manajemen servis, SLA, WhatsApp, QR tiket, Quality Control, garansi, stok, dan keuangan.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

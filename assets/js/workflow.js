@@ -240,6 +240,12 @@ function actionCenterItems(source) {
       });
     });
   }
+  if (typeof whatsappActionItems === "function") {
+    items.push(...whatsappActionItems(rows));
+  }
+  if (typeof qualityControlActionItems === "function") {
+    items.push(...qualityControlActionItems(rows));
+  }
   return items.sort(
     (a, b) => actionSeverityRank(a.severity) - actionSeverityRank(b.severity),
   );
@@ -251,6 +257,12 @@ function openActionItem(type, id) {
     return;
   }
   openDetail(id);
+  if (["whatsapp", "quality", "qr"].includes(type)) {
+    setTimeout(() => {
+      if (typeof focusServiceToolCard === "function")
+        focusServiceToolCard(type);
+    }, 160);
+  }
 }
 
 function renderActionCenter(source) {

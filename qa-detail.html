@@ -1516,5 +1516,37 @@
     <script src="assets/js/ui-system.js"></script>
     <script src="assets/js/service-tools.js"></script>
     <script src="assets/js/boot.js"></script>
-  </body>
+  
+<script>
+(function(){
+  const mode='detail';
+  window.addEventListener('load',()=>setTimeout(()=>{
+    db=null;
+    const now=Date.now(), iso=(n)=>new Date(now+n).toISOString();
+    FEATURES={...FEATURES,dashboard:true,charts:false,stock:false,profit:true,collab:true,whatsapp:true,waNotif:true,qrReceipt:true,print:true};
+    TEAM=[{user_id:'u1',name:'Raka',email:'raka@example.test'}]; PARTS=[];
+    reports=[
+      {id:'r1',ticket_no:'010/RL/VIII/2026',device:'Asus Vivobook 14',device_type:'Laptop',brand:'Asus',customer:'Budi Santoso',customer_phone:'081234567890',status:'Proses',stage:'QC / Testing',date_in:'2026-08-09',level:2,fee:850000,cost:420000,payment_status:'Belum',assigned_to:'u1',tasks:'Ganti LCD dan tes fleksibel.',before_notes:'Layar bergaris.',before_media:[],after_media:[{type:'image',url:'data:image/gif;base64,R0lGODlhAQABAAAAACw='}],components:['LCD'],warranty_days:30,sla_due_at:iso(8*3600000),approval_status:'pending',approval_token:'11111111-1111-4111-8111-111111111111',wa_automation_state:{received:{sent_at:iso(-86400000)}},wa_next_reminder_at:iso(-3600000),wa_last_event:'received',wa_last_sent_at:iso(-86400000),qc_status:'in_progress',qc_items:{power:true,primary_function:true,complaint_resolved:true},qc_notes:'Tes suhu stabil. Lanjutkan pemeriksaan fisik.',qc_completed_at:null,qc_completed_by:null,created_at:iso(-86400000),updated_at:iso(-3600000)},
+      {id:'r2',ticket_no:'011/RL/VIII/2026',device:'Lenovo Ideapad',device_type:'Laptop',brand:'Lenovo',customer:'Dina',customer_phone:'081298765432',status:'Selesai',stage:'Selesai',date_in:'2026-08-08',date_out:null,level:1,fee:250000,payment_status:'Belum',assigned_to:'u1',tasks:'Cleaning dan repasta.',before_media:[],after_media:[{type:'image',url:'data:image/gif;base64,R0lGODlhAQABAAAAACw='}],components:[],warranty_days:30,sla_due_at:iso(-86400000),approval_status:'approved',wa_automation_state:{received:{sent_at:iso(-172800000)},completed:{sent_at:iso(-3600000)}},wa_next_reminder_at:null,wa_last_event:'completed',wa_last_sent_at:iso(-3600000),qc_status:'passed',qc_items:{power:true,primary_function:true,complaint_resolved:true,physical:true,accessories:true,after_photo:true,customer_data:true},qc_notes:'Semua fungsi normal.',qc_completed_at:iso(-7200000),qc_completed_by:'u1',created_at:iso(-172800000),updated_at:iso(-3600000)}
+    ];
+    $('authScreen').style.display='none'; $('appHeader').style.display='flex'; $('appMain').style.display='block'; $('publicView').style.display='none';
+    if($('configWarn')) $('configWarn').style.display='none';
+    applyFeatures(); renderDash();
+    if(mode!=='dashboard'){
+      openDetail('r1');
+      setTimeout(()=>{
+        const overlay=$('detailModal');
+        if(mode==='detail') $('serviceToolsPanel')?.scrollIntoView({block:'start'});
+        if(mode==='qc' && overlay) overlay.scrollTop=overlay.scrollHeight;
+        const img=document.querySelector('#ticketQrCard img');
+        if(img){
+          const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="white"/><g fill="#111827"><path d="M8 8h32v32H8zM14 14v20h20V14zM80 8h32v32H80zM86 14v20h20V14zM8 80h32v32H8zM14 86v20h20V86z" fill-rule="evenodd"/><path d="M50 8h8v8h-8zm16 0h8v8h-8zM48 24h10v8H48zm14 12h10v10H62zM48 50h8v8h-8zm14 0h8v8h-8zm14 0h12v8H76zm18 0h8v8h-8zM46 64h12v8H46zm18 0h8v8h-8zm14 0h8v8h-8zm16 0h16v8H94zM48 80h8v8h-8zm16 0h16v8H64zm24 0h8v8h-8zm14 0h8v16h-8zM48 96h16v8H48zm24 0h8v16h-8zm16 0h8v8h-8zm14 8h10v8h-10z"/></g></svg>`;
+          img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); img.style.display='block'; if(img.nextElementSibling) img.nextElementSibling.style.display='none';
+        }
+      },180);
+    }
+  },700));
+})();
+</script>
+</body>
 </html>

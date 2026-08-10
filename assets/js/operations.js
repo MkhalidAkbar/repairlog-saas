@@ -557,24 +557,44 @@ async function saveReport() {
         id ? "Data tiket servis diperbarui." : "Tiket servis dibuat.",
       );
     }
-    const _canWa =
+    const _canWaDone =
       _tgt &&
       FEATURES.waNotif &&
       FEATURES.whatsapp &&
       _tgt.customer_phone &&
       payload.status === "Selesai";
+    const _canWaReceived =
+      newTicket &&
+      _tgt &&
+      FEATURES.waNotif &&
+      FEATURES.whatsapp &&
+      _tgt.customer_phone;
     const _canPrint = newTicket && _tgt && FEATURES.print;
-    if (_canWa || _canPrint) {
+    if (_canWaDone || _canWaReceived || _canPrint) {
       const _b = [{ label: "Nanti", cls: "secondary", fn: null }];
       if (_canPrint)
         _b.push({ label: "🧾 Cetak", fn: () => doReceipt(_tgt.id) });
-      if (_canWa)
-        _b.push({ label: "📲 Info WA", fn: () => waNotifDone(_tgt.id) });
+      if (_canWaReceived)
+        _b.push({
+          label: "📲 Kirim penerimaan",
+          fn: () =>
+            typeof editAndSendWhatsApp === "function"
+              ? editAndSendWhatsApp(_tgt.id, "received")
+              : openWaModal(_tgt.id),
+        });
+      if (_canWaDone)
+        _b.push({
+          label: "📲 Info selesai",
+          fn: () =>
+            typeof editAndSendWhatsApp === "function"
+              ? editAndSendWhatsApp(_tgt.id, "completed")
+              : waNotifDone(_tgt.id),
+        });
       showMini(
-        _canWa ? "Servis selesai ✅" : "Laporan tersimpan ✅",
-        _canWa
-          ? 'Kirim info "sudah selesai" ke WhatsApp customer?'
-          : "Cetak Tanda Terima Servis untuk customer sekarang?",
+        _canWaDone ? "Servis selesai ✅" : "Laporan tersimpan ✅",
+        _canWaDone
+          ? 'Kirim info "sudah selesai" ke WhatsApp pelanggan?'
+          : "Kirim konfirmasi penerimaan atau cetak tanda terima sekarang?",
         _b,
       );
     }
@@ -1108,6 +1128,12 @@ async function setStatus(id, status) {
     toast("Supabase belum dikonfigurasi.", "error");
     return;
   }
+  if (
+    typeof ensureQualityControlBeforeFinish === "function" &&
+    !ensureQualityControlBeforeFinish(id, status)
+  ) {
+    return;
+  }
   const upd = { status, updated_at: new Date().toISOString() };
   if (status === "Selesai") upd.stage = "Selesai";
   const { error } = await db.from("reports").update(upd).eq("id", id);
@@ -1136,7 +1162,13 @@ async function setStatus(id, status) {
       'Kirim info "sudah selesai + link pembayaran" ke WhatsApp customer?',
       [
         { label: "Nanti", cls: "secondary", fn: null },
-        { label: "📲 Info WA", fn: () => waNotifDone(id) },
+        {
+          label: "📲 Info WA",
+          fn: () =>
+            typeof editAndSendWhatsApp === "function"
+              ? editAndSendWhatsApp(id, "completed")
+              : waNotifDone(id),
+        },
       ],
     );
   }

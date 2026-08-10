@@ -1,0 +1,426 @@
+/* RepairLog v3.1 — WhatsApp automation, QR ticket, and Quality Control */
+.service-tools-panel {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.service-tools-head,
+.service-tool-head,
+.service-tool-actions,
+.qc-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.service-tools-head {
+  margin-bottom: 16px;
+}
+
+.service-tools-head h3,
+.service-tool-head h4 {
+  margin: 4px 0 0;
+}
+
+.service-tools-version {
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 999px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.service-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.service-tool-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card2);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.service-tool-card h4 {
+  font-size: 17px;
+}
+
+.service-tool-card > label,
+.service-tool-schedule > label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.service-tool-card select,
+.service-tool-card input,
+.service-tool-card textarea {
+  background: var(--card);
+}
+
+.service-tool-card textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.service-tool-card small {
+  display: block;
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.service-tool-icon {
+  display: grid;
+  place-items: center;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.whatsapp-card {
+  border-top: 3px solid #25a65a;
+}
+
+.whatsapp-card .service-tool-icon {
+  color: #15803d;
+  background: color-mix(in srgb, #25a65a 10%, var(--card));
+}
+
+.qr-card {
+  border-top: 3px solid var(--accent);
+}
+
+.qc-card {
+  grid-column: 1 / -1;
+  border-top: 3px solid #d5803b;
+}
+
+.qc-card.qc-passed {
+  border-top-color: #46a171;
+}
+
+.service-tool-hint {
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.service-tool-primary {
+  width: 100%;
+  min-height: 44px;
+  background: #1f9d55;
+}
+
+.service-tool-primary:hover {
+  background: #178447;
+}
+
+.service-tool-schedule {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.service-tool-schedule > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.service-tool-schedule .btn,
+.service-tool-actions .btn {
+  min-height: 42px;
+}
+
+.service-tool-empty {
+  display: grid;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.service-tool-empty span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ticket-qr-preview {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: #1f2937;
+}
+
+.ticket-qr-preview img,
+.ticket-qr-fallback {
+  width: 116px;
+  height: 116px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.ticket-qr-fallback {
+  place-items: center;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ticket-qr-preview > div:last-child {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ticket-qr-preview strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.ticket-qr-preview span,
+.ticket-qr-preview small {
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.ticket-qr-preview small {
+  margin: 0;
+  font-size: 12px;
+}
+
+.service-tool-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.qc-status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.qc-status.pending {
+  color: #9a4f11;
+  border: 1px solid color-mix(in srgb, #d5803b 38%, var(--border));
+  background: color-mix(in srgb, #d5803b 10%, var(--card));
+}
+
+.qc-status.passed {
+  color: #28754d;
+  border: 1px solid color-mix(in srgb, #46a171 38%, var(--border));
+  background: color-mix(in srgb, #46a171 10%, var(--card));
+}
+
+.qc-progress {
+  margin: 16px 0 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.qc-progress strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.qc-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.qc-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-height: 58px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card);
+  cursor: pointer;
+}
+
+.qc-item:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.qc-item input {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.qc-check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  color: white;
+  background: var(--card2);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.qc-item.is-checked .qc-check,
+.qc-item:has(input:checked) .qc-check {
+  border-color: #46a171;
+  background: #46a171;
+}
+
+.qc-item strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.qc-item small {
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.qc-auto {
+  cursor: default;
+  background: color-mix(in srgb, var(--accent) 4%, var(--card));
+}
+
+.service-tool-focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-tool-card {
+    transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .service-tools-panel {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+
+  .service-tools-head {
+    align-items: flex-start;
+  }
+
+  .service-tools-head h3 {
+    font-size: 19px;
+  }
+
+  .service-tools-grid,
+  .qc-list {
+    grid-template-columns: 1fr;
+  }
+
+  .qc-card {
+    grid-column: auto;
+  }
+
+  .service-tool-card {
+    padding: 16px;
+  }
+
+  .ticket-qr-preview {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .ticket-qr-preview img,
+  .ticket-qr-fallback {
+    width: 92px;
+    height: 92px;
+  }
+
+  .service-tool-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .service-tool-actions .btn,
+  .service-tool-primary,
+  .service-tool-schedule .btn,
+  .service-tool-card select,
+  .service-tool-card input {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 430px) {
+  .service-tools-head {
+    display: block;
+  }
+
+  .service-tools-version {
+    display: inline-block;
+    margin-top: 10px;
+  }
+
+  .service-tool-schedule > div,
+  .service-tool-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-qr-preview {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .ticket-qr-preview img,
+  .ticket-qr-fallback {
+    width: 132px;
+    height: 132px;
+    margin: 0 auto;
+  }
+}

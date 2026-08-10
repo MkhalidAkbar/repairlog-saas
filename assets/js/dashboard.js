@@ -865,6 +865,9 @@ function actIcon(a) {
       approval_approved: "✅",
       approval_rejected: "⛔",
       approval_canceled: "↩",
+      whatsapp: "💬",
+      whatsapp_reminder: "⏰",
+      quality_control: "✅",
       sla: "⏱",
       media: "📷",
       checklist: "✅",
@@ -874,6 +877,8 @@ function actIcon(a) {
 }
 function afterOpenDetail(rid) {
   if (typeof renderWorkflowDetail === "function") renderWorkflowDetail(rid);
+  if (typeof renderPriority456Detail === "function")
+    renderPriority456Detail(rid);
 }
 // ====== LIVE PRESENCE (Canva-style lock + active user badges) ======
 let repChannel = null,
@@ -1155,6 +1160,12 @@ function statusFromStage(stage) {
 async function setStage(id, stage) {
   if (!db) return;
   const r = reports.find((x) => x.id === id);
+  if (
+    typeof ensureQualityControlBeforeFinish === "function" &&
+    !ensureQualityControlBeforeFinish(id, stage)
+  ) {
+    return;
+  }
   const status = statusFromStage(stage);
   const upd = { stage, status, updated_at: new Date().toISOString() };
   if (stage === "Diambil" && !(r && r.date_out))

@@ -56,7 +56,7 @@ const BRANDS = [
   "Samsung",
   "Lainnya",
 ];
-const APP_VERSION = "v3.0.0";
+const APP_VERSION = "v3.1.0";
 const DEVICE_TYPES = [
   "Laptop",
   "PC/Komputer",
@@ -308,11 +308,19 @@ let lbList = [],
   lbIndex = 0;
 
 // ====== KOLABORASI (state) ======
-const STAGES = ["Antri", "Dikerjakan", "Menunggu Part", "Selesai", "Diambil"];
+const STAGES = [
+  "Antri",
+  "Dikerjakan",
+  "Menunggu Part",
+  "QC / Testing",
+  "Selesai",
+  "Diambil",
+];
 const STAGE_COLOR = {
   Antri: "#6b7280",
   Dikerjakan: "#3b82f6",
   "Menunggu Part": "#f59e0b",
+  "QC / Testing": "#8b5cf6",
   Selesai: "#22c55e",
   Diambil: "#8b5cf6",
 };
@@ -1301,12 +1309,12 @@ async function loadAll() {
     reports = data;
   }
   // reports_view lama mungkin belum mengekspos kolom workflow baru.
-  // Gabungkan kolom SLA/persetujuan langsung dari reports bila migrasi sudah aktif.
+  // Gabungkan kolom SLA, persetujuan, WhatsApp, dan QC langsung dari reports bila migrasi sudah aktif.
   try {
     const workflowResult = await db
       .from("reports")
       .select(
-        "id,sla_due_at,delay_reason,estimate_amount,estimate_notes,approval_status,approval_token,approval_requested_at,approval_responded_at,approval_customer_name,approval_note",
+        "id,sla_due_at,delay_reason,estimate_amount,estimate_notes,approval_status,approval_token,approval_requested_at,approval_responded_at,approval_customer_name,approval_note,wa_automation_state,wa_next_reminder_at,wa_last_sent_at,wa_last_event,qc_status,qc_items,qc_notes,qc_completed_at,qc_completed_by",
       );
     if (!workflowResult.error && workflowResult.data) {
       const workflowById = new Map(
