@@ -879,6 +879,7 @@ function afterOpenDetail(rid) {
   if (typeof renderWorkflowDetail === "function") renderWorkflowDetail(rid);
   if (typeof renderPriority456Detail === "function")
     renderPriority456Detail(rid);
+  if (typeof renderWarrantyLineage === "function") renderWarrantyLineage(rid);
   if (typeof renderMobileTicketActions === "function")
     renderMobileTicketActions(rid);
 }
@@ -1169,6 +1170,14 @@ async function setStage(id, stage) {
     return;
   }
   const status = statusFromStage(stage);
+  if (
+    status === "Selesai" &&
+    typeof finalizeReservedPartsForReport === "function" &&
+    !(await finalizeReservedPartsForReport(id))
+  )
+    return;
+  if (status === "Batal" && typeof releaseReservedPartsForReport === "function")
+    await releaseReservedPartsForReport(id);
   const upd = { stage, status, updated_at: new Date().toISOString() };
   if (stage === "Diambil" && !(r && r.date_out))
     upd.date_out = new Date().toISOString().slice(0, 10);

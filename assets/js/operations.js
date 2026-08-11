@@ -325,6 +325,8 @@ function openForm(id) {
           partId: x.partId || null,
           qty: x.qty || null,
           consumed: !!x.consumed,
+          reserved: x.reserved !== false && !x.consumed,
+          released: !!x.released,
         }))
       : [];
   syncCostItemsFromComps();
@@ -413,12 +415,32 @@ async function saveReport() {
     if (isOwner()) {
       payload.cost = recomputeCost();
       if (FEATURES.stock) {
+        const _existing = id ? reports.find((item) => item.id === id) : null;
+        const _consumeNow =
+          _existing &&
+          typeof isFinalized === "function" &&
+          isFinalized(_existing);
         for (const _it of costItemsState) {
           if (_it.partId && !_it.consumed && (Number(_it.qty) || 0) > 0) {
-            try {
-              await consumePart(_it.partId, Number(_it.qty) || 0);
-              _it.consumed = true;
-            } catch (e) {}
+            _it.reserved = !_consumeNow;
+            _it.released = false;
+            if (_consumeNow) {
+              try {
+                if (typeof applyStockMovement === "function")
+                  await applyStockMovement({
+                    partId: _it.partId,
+                    delta: -(Number(_it.qty) || 1),
+                    type: "reservation_use",
+                    reportId: id,
+                    unitCost: Number(_it.amount) || null,
+                    referenceNo: _existing.ticket_no || null,
+                    note: "Pemakaian sparepart pada tiket selesai",
+                  });
+                else await consumePart(_it.partId, Number(_it.qty) || 0);
+                _it.consumed = true;
+                _it.reserved = false;
+              } catch (e) {}
+            }
           }
         }
       }
@@ -431,6 +453,8 @@ async function saveReport() {
         partId: it.partId || null,
         qty: it.qty || null,
         consumed: !!it.consumed,
+        reserved: !!it.reserved,
+        released: !!it.released,
       }));
     }
     {
@@ -758,6 +782,8 @@ function addCostItemFromStock(id) {
     partId: p.id,
     qty: 1,
     consumed: false,
+    reserved: true,
+    released: false,
   });
   renderCostItems();
   const el = $("stockPick");
@@ -766,6 +792,10 @@ function addCostItemFromStock(id) {
 function renderStock() {
   const box = $("stockBox");
   if (!box) return;
+  if (typeof renderAdvancedStock === "function") {
+    renderAdvancedStock();
+    return;
+  }
   if (!(isOwner() && FEATURES.stock)) {
     box.innerHTML = '<div class="empty">Fitur stok tidak aktif.</div>';
     return;
@@ -812,6 +842,8 @@ function openPartForm(id) {
   $("pf_min").value = p ? p.min_stock || 0 : 0;
   $("pf_cost").value = p ? fmtThousand(p.cost_price || 0) : "";
   $("pf_sell").value = p ? fmtThousand(p.sell_price || 0) : "";
+  if (typeof populatePartBusinessFields === "function")
+    populatePartBusinessFields(p);
   $("partFormTitle").textContent = p ? "Edit Sparepart" : "Tambah Sparepart";
   openModal("partModal");
 }
@@ -826,6 +858,7 @@ async function savePart() {
     name,
     device_type: ($("pf_devtype") && $("pf_devtype").value) || "Umum",
     category: $("pf_cat").value.trim(),
+    ...(typeof partBusinessPayload === "function" ? partBusinessPayload() : {}),
     stock: Number($("pf_stock").value) || 0,
     min_stock: Number($("pf_min").value) || 0,
     cost_price: parseRupiah($("pf_cost").value),
@@ -859,6 +892,10 @@ async function delPart(id) {
   }
 }
 function addStockQty(id) {
+  if (typeof openStockMovementForm === "function") {
+    openStockMovementForm(id, "incoming");
+    return;
+  }
   showPrompt(
     "Tambah Stok Masuk",
     "Berapa unit masuk?",
@@ -1060,6 +1097,8 @@ async function saveCancelReason(id, sendWa) {
     toast("Gagal: " + (error.message || error), "error");
     return;
   }
+  if (typeof releaseReservedPartsForReport === "function")
+    await releaseReservedPartsForReport(id);
   await loadAll();
   toast("Alasan pembatalan tersimpan.", "success");
   if (sendWa && FEATURES.whatsapp) {
@@ -1138,6 +1177,17 @@ async function setStatus(id, status) {
   ) {
     return;
   }
+  if (
+    status === "Selesai" &&
+    typeof finalizeReservedPartsForReport === "function" &&
+    !(await finalizeReservedPartsForReport(id))
+  )
+    return;
+  if (
+    /batal|gagal/i.test(status) &&
+    typeof releaseReservedPartsForReport === "function"
+  )
+    await releaseReservedPartsForReport(id);
   const upd = { status, updated_at: new Date().toISOString() };
   if (status === "Selesai") upd.stage = "Selesai";
   const { error } = await db.from("reports").update(upd).eq("id", id);
@@ -1235,6 +1285,8 @@ async function finishCancel(id, reason, fee) {
     toast("Gagal: " + (error.message || error), "error");
     return;
   }
+  if (typeof releaseReservedPartsForReport === "function")
+    await releaseReservedPartsForReport(id);
   await loadAll();
   toast("Laporan dibatalkan.", "success");
   const r = reports.find((x) => x.id === id);

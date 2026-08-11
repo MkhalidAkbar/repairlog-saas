@@ -1,88 +1,84 @@
-# Deployment RepairLog v3.2.0
+# Deployment RepairLog v3.3.1
 
-## 1. Buat backup
+## 1. Backup
 
-Simpan salinan website dan backup database Supabase sebelum memperbarui produksi.
+Backup folder website dan database Supabase sebelum deployment.
 
-## 2. Jalankan migrasi database
+## 2. Jalankan migrasi
 
-Untuk instalasi baru, jalankan berurutan melalui Supabase SQL Editor:
+Jika memperbarui dari v3.2.0, jalankan:
 
-1. `supabase/migrations/20260810_priority_1_2_3.sql`
-2. `supabase/migrations/20260810_priority_4_5_6.sql`
+```text
+supabase/migrations/20260811_priority_10_11_12.sql
+```
 
-Jika versi v3.1.0 sudah berjalan dan kedua migrasi tersebut sudah diterapkan, **v3.2.0 tidak membutuhkan migrasi tambahan**.
+Untuk instalasi baru, jalankan berurutan:
 
-Migrasi lama tetap diperlukan untuk:
+1. `20260810_priority_1_2_3.sql`
+2. `20260810_priority_4_5_6.sql`
+3. `20260811_priority_10_11_12.sql`
 
-- SLA dan target selesai.
-- Token serta status persetujuan pelanggan.
-- Pengingat WhatsApp.
-- Status dan checklist Quality Control.
-
-Kolom role lama sengaja tidak dihapus untuk menjaga kompatibilitas database dan RLS instalasi lama.
+Migrasi ketiga bersifat wajib untuk garansi terhubung, supplier, purchase order, reservasi, dan riwayat stok. Versi v3.3.1 memakai `store_id` bertipe `text` karena RepairLog menggunakan slug seperti `tokodemo`. File yang sama aman dijalankan ulang bila percobaan v3.3.0 berhenti dengan error `operator does not exist: text = uuid`; tabel baru yang sudah terbentuk akan dinormalisasi otomatis. Dashboard analitik tetap dapat menghitung data tiket, tetapi metrik klaim membutuhkan tabel garansi baru.
 
 ## 3. Upload website
 
-Upload seluruh isi folder `repairlog-saas-main`. Jangan hanya mengganti `index.html`, karena v3.2.0 menambahkan:
+Upload seluruh folder `repairlog-saas-main`, termasuk:
 
-- `assets/js/productivity.js`
-- `assets/css/productivity.css`
-- versi aplikasi dan daftar cache baru di `sw.js`
+- `assets/js/business-core.js`
+- `assets/js/warranty-suite.js`
+- `assets/js/inventory-core.js`
+- `assets/js/inventory-suite.js`
+- `assets/js/analytics.js`
+- `assets/css/business-suite.css`
+- migrasi v3.3.1
 
-Pertahankan `config.js` produksi jika nilainya berbeda dari paket.
+Jangan menimpa `config.js` produksi jika nilai Supabase atau ID toko berbeda.
 
 ## 4. Perbarui PWA
 
-Cache Service Worker v3.2.0 adalah:
+Cache Service Worker:
 
 ```text
-repairlog-v3.2.0-priority789
+repairlog-v3.3.1-priority101112
 ```
 
-Setelah deployment:
+Setelah upload:
 
 1. Buka website saat online.
 2. Refresh dua kali.
-3. Tutup dan buka kembali aplikasi PWA jika tampilan lama masih tersimpan.
-4. Jika perlu, hapus cache situs dari pengaturan browser.
+3. Tutup dan buka kembali PWA.
+4. Hapus cache situs jika versi lama masih terlihat.
 
-## 5. Pengujian singkat
+## 5. Smoke test
 
-### Global Search
+### Garansi
 
-- Tekan `Ctrl/Cmd + K`.
-- Cari nomor tiket, pelanggan, WhatsApp, atau perangkat.
-- Gunakan panah atas/bawah dan `Enter` untuk membuka hasil.
-- Coba quick action **Buka tiket / QR** dengan nomor tiket atau link pelanggan.
+- Buka tiket yang sudah Diambil dan masih bergaransi.
+- Klik **Buat tiket klaim**.
+- Isi keluhan, komponen, penyebab, biaya internal, dan rencana penanganan.
+- Pastikan tiket Garansi baru terbentuk dan dapat kembali ke tiket asal.
+- Ubah keputusan klaim.
 
-### Form dan autosave
+### Stok dan supplier
 
-- Buka **Tambah tiket** dan pastikan tujuh langkah muncul.
-- Isi beberapa data, tunggu sampai indikator Draft tersimpan muncul, lalu tutup tanpa menyimpan.
-- Buka lagi dan tekan **Pulihkan**.
-- Pastikan tombol Simpan muncul pada langkah Review.
+- Tambah supplier.
+- Hubungkan supplier pada sparepart.
+- Buat purchase order dan terima barang.
+- Pastikan stok serta ledger bertambah.
+- Tambahkan sparepart ke tiket aktif dan pastikan masuk kolom Reservasi.
+- Selesaikan tiket dan pastikan reservasi berubah menjadi pemakaian stok.
 
-Draft disimpan per toko, pengguna, dan tiket pada browser aktif. Draft tidak otomatis berpindah perangkat. Foto/video lokal yang belum diunggah tidak ikut disimpan.
+### Analitik
 
-### Mobile workflow
+- Buka menu **Analitik**.
+- Ubah rentang 30/90 hari, tahun berjalan, dan seluruh data.
+- Periksa SLA, first-time fix, servis berulang, margin, dan produktivitas.
+- Uji ekspor CSV.
 
-- Buka pada lebar layar ponsel.
-- Pastikan navigasi bawah memiliki Beranda, Papan, Tambah, Pelanggan, dan Lainnya.
-- Buka detail tiket dan pastikan tombol cepat WhatsApp, QC, Foto, Catatan, dan Selesai tersedia.
-- Pastikan navigasi bawah tidak menutupi modal.
+## Catatan kompatibilitas
 
-### Regresi prioritas 1–6
-
-- Periksa Pusat Tindakan dan SLA.
-- Buka link persetujuan pelanggan.
-- Coba pesan WhatsApp klik-kirim.
-- Periksa QR tiket.
-- Pastikan tiket belum dapat diselesaikan sebelum QC lulus.
-
-## Catatan operasional
-
-- WhatsApp tetap menggunakan klik-kirim, bukan pengiriman diam-diam.
-- Gambar QR memakai `api.qrserver.com`, sehingga membutuhkan internet; link tiket tetap dapat disalin jika gambar gagal dimuat.
-- Global Search mencari data laporan yang sudah dimuat pada sesi aplikasi.
-- Audit RLS berdasarkan `store_id` tetap direkomendasikan sebelum multi-cabang atau integrasi eksternal berskala besar.
+- Riwayat klaim lama tetap tersimpan pada `device_specs.claims`.
+- Jika migrasi v3.3.1 belum dijalankan, tampilan stok lama tetap dapat dibaca dan aplikasi menampilkan peringatan migrasi.
+- RPC stok memverifikasi pengguna dan `store_id`, lalu mengubah stok serta menulis ledger dalam satu transaksi.
+- WhatsApp tetap menggunakan klik-kirim.
+- QR tiket masih membutuhkan internet untuk memuat gambar dari `api.qrserver.com`; link teks tetap tersedia.

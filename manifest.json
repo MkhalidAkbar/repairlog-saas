@@ -1,7 +1,7 @@
 {
   "name": "RepairLog",
   "short_name": "RepairLog",
-  "description": "Manajemen servis dengan pencarian global, form autosave, mobile workflow, SLA, WhatsApp, QR tiket, dan Quality Control.",
+  "description": "Manajemen servis dengan garansi terhubung, supplier, purchase order, ledger stok, dan analitik bisnis.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

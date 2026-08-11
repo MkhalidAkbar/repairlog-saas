@@ -56,7 +56,7 @@ const BRANDS = [
   "Samsung",
   "Lainnya",
 ];
-const APP_VERSION = "v3.2.0";
+const APP_VERSION = "v3.3.1";
 const DEVICE_TYPES = [
   "Laptop",
   "PC/Komputer",
@@ -941,6 +941,8 @@ function applyRole() {
   if (finance) finance.style.display = FEATURES.profit ? "" : "none";
   const stock = $("navStock");
   if (stock) stock.style.display = FEATURES.stock ? "" : "none";
+  const analytics = $("navAnalytics");
+  if (analytics) analytics.style.display = FEATURES.dashboard ? "" : "none";
   const roleBadge = $("roleBadge");
   if (roleBadge) roleBadge.style.display = "none";
   const legacyOwnerButton = $("ownerBtn");
@@ -1327,6 +1329,8 @@ async function loadAll() {
     }
   } catch (workflowError) {}
   await loadParts();
+  if (typeof loadBusinessSuiteData === "function")
+    await loadBusinessSuiteData();
   render();
 }
 function refresh() {
@@ -1341,6 +1345,8 @@ function showTab(t) {
   if (_ta) _ta.style.display = t === "attend" ? "" : "none";
   const _ts = $("tab-stock");
   if (_ts) _ts.style.display = t === "stock" ? "" : "none";
+  const _tan = $("tab-analytics");
+  if (_tan) _tan.style.display = t === "analytics" ? "" : "none";
   const _tc = $("tab-cust");
   if (_tc) _tc.style.display = t === "cust" ? "" : "none";
   $("navDash").classList.toggle("active", t === "dash");
@@ -1351,6 +1357,8 @@ function showTab(t) {
   if (_na) _na.classList.toggle("active", t === "attend");
   const _nsa = $("navStock");
   if (_nsa) _nsa.classList.toggle("active", t === "stock");
+  const _nan = $("navAnalytics");
+  if (_nan) _nan.classList.toggle("active", t === "analytics");
   const _nca = $("navCust");
   if (_nca) _nca.classList.toggle("active", t === "cust");
   if (typeof syncMobileNav === "function") syncMobileNav(t);
@@ -1359,6 +1367,8 @@ function showTab(t) {
   if (t === "finance") renderFinance();
   if (t === "attend") renderAttend();
   if (t === "stock") renderStock();
+  if (t === "analytics" && typeof renderAnalytics === "function")
+    renderAnalytics();
   if (t === "cust") renderCustomers();
   try {
     if (t === "finance") setTimeout(() => fitTable("financeBox"), 0);

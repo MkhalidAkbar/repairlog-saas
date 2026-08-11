@@ -6,7 +6,7 @@
     <title>RepairLog — Manajemen Servis</title>
     <meta
       name="description"
-      content="Dashboard operasional untuk mengelola servis, pencarian global, pelanggan, SLA, Quality Control, garansi, stok, dan keuangan toko."
+      content="Dashboard operasional servis dengan garansi terhubung, supplier, purchase order, ledger stok, dan analitik bisnis."
     />
     <!-- Favicon: ganti saja file icon.png di folder yang sama (jangan ubah kode). Disarankan PNG persegi 512x512 / 192x192. -->
     <link rel="icon" type="image/png" href="icon.png" />
@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="assets/css/enhancements.css" />
     <link rel="stylesheet" href="assets/css/workflow.css" />
     <link rel="stylesheet" href="assets/css/service-tools.css" />
+    <link rel="stylesheet" href="assets/css/business-suite.css" />
     <link rel="stylesheet" href="assets/css/productivity.css" />
     <link rel="stylesheet" href="assets/css/print.css" media="print" />
   </head>
@@ -170,6 +171,9 @@
               style="display: none"
             >
               Stok
+            </button>
+            <button id="navAnalytics" onclick="showTab('analytics')">
+              Analitik
             </button>
           </div>
           <div class="navactions">
@@ -484,6 +488,10 @@
           </select>
         </div>
         <div id="stockBox"></div>
+      </div>
+
+      <div id="tab-analytics" style="display: none">
+        <div id="analyticsBox"></div>
       </div>
     </div>
 
@@ -1516,6 +1524,11 @@
     <script src="assets/js/customer-portal.js"></script>
     <script src="assets/js/ui-system.js"></script>
     <script src="assets/js/service-tools.js"></script>
+    <script src="assets/js/business-core.js"></script>
+    <script src="assets/js/warranty-suite.js"></script>
+    <script src="assets/js/inventory-core.js"></script>
+    <script src="assets/js/inventory-suite.js"></script>
+    <script src="assets/js/analytics.js"></script>
     <script src="assets/js/productivity.js"></script>
     <script src="assets/js/boot.js"></script>
   </body>

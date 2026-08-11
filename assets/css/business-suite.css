@@ -1,0 +1,546 @@
+/* RepairLog v3.3 — Warranty, Inventory, Suppliers, PO, and Analytics */
+.suite-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 5px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card2);
+}
+
+.suite-tabs button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.suite-tabs button.active {
+  color: var(--accent);
+  background: var(--card);
+  box-shadow: 0 1px 5px rgba(15, 23, 42, 0.08);
+}
+
+.business-migration-note {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid #fdba74;
+  border-radius: 10px;
+  color: #9a3412;
+  background: #fff7ed;
+}
+
+.business-migration-note span {
+  color: #9a3412;
+  font-size: 12px;
+}
+
+.business-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin: 12px 0;
+}
+
+.business-stat-grid > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.business-stat-grid span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.business-stat-grid strong {
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  font-size: 22px;
+}
+
+.business-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card);
+}
+
+.business-table {
+  min-width: 850px;
+  margin: 0 !important;
+}
+
+.business-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--card2);
+}
+
+.business-table td > strong,
+.business-table td > small {
+  display: block;
+}
+
+.business-table td > small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.stock-low {
+  color: #c2410c;
+  font-weight: 800;
+}
+
+.stock-in {
+  color: #15803d;
+  font-weight: 800;
+}
+
+.stock-out {
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+.business-empty {
+  padding: 18px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+.business-form-modal {
+  max-width: 560px;
+}
+
+.business-form-modal.po-modal {
+  max-width: 760px;
+}
+
+.business-field-hint {
+  margin: 7px 0;
+  font-size: 11px;
+}
+
+.po-items-heading {
+  align-items: center;
+  margin: 16px 0 8px;
+}
+
+.po-items-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.po-item-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) 74px 120px minmax(110px, 1fr) 36px;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card2);
+}
+
+.po-item-row strong {
+  text-align: right;
+  font-size: 12px;
+}
+
+.po-total {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 10px 0 16px;
+  padding: 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+}
+
+.po-total span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.po-total strong {
+  color: var(--accent);
+  font-size: 17px;
+}
+
+.po-status,
+.claim-status,
+.warranty-days {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.po-draft,
+.claim-open {
+  color: #854d0e;
+  background: #fef9c3;
+}
+
+.po-ordered,
+.po-partial,
+.claim-approved {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.po-received,
+.claim-resolved {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.po-cancelled,
+.claim-rejected {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.claim-context {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 14px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, #8b5cf6 30%, var(--border));
+  border-radius: 9px;
+  color: #6d28d9;
+  background: color-mix(in srgb, #8b5cf6 8%, var(--card));
+}
+
+.claim-context span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.warranty-lineage-card {
+  border-color: color-mix(in srgb, #8b5cf6 24%, var(--border));
+}
+
+.warranty-days {
+  color: #6d28d9;
+  background: color-mix(in srgb, #8b5cf6 10%, var(--card));
+}
+
+.warranty-source {
+  display: grid;
+  gap: 3px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card2);
+}
+
+.warranty-source span,
+.warranty-source small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.warranty-history {
+  display: grid;
+  gap: 6px;
+}
+
+.warranty-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  background: var(--card);
+  text-align: left;
+  cursor: pointer;
+}
+
+.warranty-history-row:hover {
+  border-color: color-mix(in srgb, #8b5cf6 35%, var(--border));
+  background: color-mix(in srgb, #8b5cf6 5%, var(--card));
+}
+
+.warranty-history-row > span:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.warranty-history-row small {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.warranty-decision-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* Analytics */
+#tab-analytics {
+  padding-bottom: 30px;
+}
+
+.analytics-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 9%, var(--card)),
+    var(--card)
+  );
+}
+
+.analytics-toolbar h2 {
+  margin: 4px 0 5px;
+}
+
+.analytics-toolbar p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.analytics-toolbar > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analytics-toolbar select {
+  min-width: 150px;
+}
+
+.analytics-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.analytics-metric {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  min-height: 112px;
+  padding: 15px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card);
+}
+
+.analytics-metric::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  content: "";
+  background: var(--accent);
+}
+
+.analytics-metric > span,
+.analytics-metric small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.analytics-metric strong {
+  align-self: center;
+  font-size: 25px;
+}
+
+.analytics-metric.tone-green::before {
+  background: #299866;
+}
+
+.analytics-metric.tone-purple::before {
+  background: #8b5cf6;
+}
+
+.analytics-metric.tone-orange::before {
+  background: #d97706;
+}
+
+.analytics-metric.tone-red::before {
+  background: #dc2626;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.analytics-panel {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card);
+}
+
+.analytics-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.analytics-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.analytics-panel-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.analytics-panel-head span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.analytics-bars {
+  display: grid;
+  gap: 11px;
+}
+
+.analytics-bar-row {
+  display: grid;
+  gap: 5px;
+}
+
+.analytics-bar-row > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.analytics-bar-row strong,
+.analytics-bar-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.analytics-bar-row > div:first-child span {
+  color: var(--muted);
+}
+
+.analytics-bar-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--card2);
+}
+
+.analytics-bar-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+@media (max-width: 800px) {
+  .business-stat-grid,
+  .analytics-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analytics-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .analytics-toolbar > div:last-child {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .business-stat-grid,
+  .analytics-metric-grid,
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-panel-wide {
+    grid-column: auto;
+  }
+
+  .po-item-row {
+    grid-template-columns: minmax(0, 1fr) 64px;
+  }
+
+  .po-item-row select {
+    grid-column: 1 / -1;
+  }
+
+  .po-item-row strong {
+    text-align: left;
+  }
+
+  .po-item-row button {
+    justify-self: end;
+  }
+
+  .warranty-decision-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
