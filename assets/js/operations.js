@@ -375,6 +375,7 @@ function closeForm() {
   closeModal("formModal");
 }
 async function saveReport() {
+  if (typeof validateReportBeforeSave === "function" && !(await validateReportBeforeSave())) return;
   const device = autoDeviceName();
   $("saveBtn").disabled = true;
   $("saveBtn").textContent = "Menyimpan...";
@@ -576,6 +577,7 @@ async function saveReport() {
       : newTicket
         ? reports.find((x) => x.ticket_no === newTicket)
         : null;
+    if (_tgt && typeof ensureCrmCustomerForReport === "function") await ensureCrmCustomerForReport(_tgt);
     if (_tgt && typeof logWorkflowActivity === "function") {
       await logWorkflowActivity(
         _tgt.id,
@@ -640,19 +642,18 @@ async function delFromForm() {
   if (!id) return;
   showMini(
     "Hapus laporan?",
-    "Laporan ini akan dihapus permanen dan tidak bisa dibatalkan.",
+    "Laporan akan dipindahkan ke Sampah dan masih dapat dipulihkan.",
     [
       { label: "Batal", cls: "secondary", fn: null },
       {
-        label: "🗑️ Hapus",
+        label: "🗑️ Pindahkan ke Sampah",
         cls: "danger",
         fn: async () => {
-          await db.from("reports").delete().eq("id", id);
-          if (typeof clearActiveReportDraft === "function")
-            clearActiveReportDraft();
-          closeForm();
-          await loadAll();
-          toast("Laporan dihapus.", "success");
+          const ok = typeof softDeleteReport === "function" ? await softDeleteReport(id) : false;
+          if (!ok) return;
+          if (typeof clearActiveReportDraft === "function") clearActiveReportDraft();
+          closeForm(); await loadAll();
+          toast("Laporan dipindahkan ke Sampah.", "success");
         },
       },
     ],
@@ -694,7 +695,7 @@ async function loadParts() {
   }
   try {
     const { data, error } = await db.from("parts").select("*").order("name");
-    if (!error && data) PARTS = data;
+    if (!error && data) PARTS = data.filter((part) => !part.deleted_at);
   } catch (e) {}
 }
 function lowStockParts() {
@@ -881,15 +882,9 @@ async function savePart() {
   }
 }
 async function delPart(id) {
-  if (!confirm("Hapus sparepart ini?")) return;
-  try {
-    await db.from("parts").delete().eq("id", id);
-    await loadParts();
-    renderStock();
-    toast("Sparepart dihapus.", "success");
-  } catch (e) {
-    toast("Gagal hapus: " + (e.message || e), "error");
-  }
+  const ok = typeof rlConfirm === "function" ? await rlConfirm("Hapus sparepart?", "Sparepart dipindahkan ke Sampah dan dapat dipulihkan.", "Pindahkan", true) : confirm("Hapus sparepart ini?");
+  if (!ok || !(await softDeletePart(id))) return;
+  await loadParts(); renderStock(); toast("Sparepart dipindahkan ke Sampah.", "success");
 }
 function addStockQty(id) {
   if (typeof openStockMovementForm === "function") {
@@ -1177,6 +1172,7 @@ async function setStatus(id, status) {
   ) {
     return;
   }
+  if (typeof confirmFinishReadiness === "function" && !(await confirmFinishReadiness(id, status))) return;
   if (
     status === "Selesai" &&
     typeof finalizeReservedPartsForReport === "function" &&

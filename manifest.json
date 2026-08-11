@@ -1,7 +1,7 @@
 {
   "name": "RepairLog",
   "short_name": "RepairLog",
-  "description": "Manajemen servis dengan garansi terhubung, supplier, purchase order, ledger stok, dan analitik bisnis.",
+  "description": "Manajemen servis dengan kesehatan sistem, keuangan lanjutan, CRM, garansi, stok, dan analitik bisnis.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

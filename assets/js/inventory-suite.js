@@ -249,7 +249,9 @@ function updateStockMovementHint() {
           : "Perubahan akan masuk ke ledger stok.";
 }
 
+let stockMovementSaving = false;
 async function saveStockMovement() {
+  if (stockMovementSaving) return;
   const part = PARTS.find(
     (item) => String(item.id) === String($("sm_part").value),
   );
@@ -266,6 +268,8 @@ async function saveStockMovement() {
     toast("Tidak ada perubahan stok.", "error");
     return;
   }
+  if (typeof confirmStockReduction === "function" && !(await confirmStockReduction(part, delta, type))) return;
+  stockMovementSaving = true;
   try {
     await applyStockMovement({
       partId: part.id,
@@ -283,6 +287,8 @@ async function saveStockMovement() {
     toast("Pergerakan stok tersimpan.", "success");
   } catch (error) {
     toast("Gagal mengubah stok: " + (error.message || error), "error");
+  } finally {
+    stockMovementSaving = false;
   }
 }
 

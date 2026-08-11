@@ -56,7 +56,7 @@ const BRANDS = [
   "Samsung",
   "Lainnya",
 ];
-const APP_VERSION = "v3.3.1";
+const APP_VERSION = "v3.4.0";
 const DEVICE_TYPES = [
   "Laptop",
   "PC/Komputer",
@@ -1331,6 +1331,8 @@ async function loadAll() {
   await loadParts();
   if (typeof loadBusinessSuiteData === "function")
     await loadBusinessSuiteData();
+  if (typeof loadPriorityReportMetadata === "function")
+    await loadPriorityReportMetadata();
   render();
 }
 function refresh() {

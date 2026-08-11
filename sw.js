@@ -1,4 +1,4 @@
-const CACHE = "repairlog-v3.3.1-priority101112-hotfix";
+const CACHE = "repairlog-v3.4.0-priority131415";
 
 const LOCAL_ASSETS = [
   "./",
@@ -16,6 +16,7 @@ const LOCAL_ASSETS = [
   "./assets/css/service-tools.css",
   "./assets/css/business-suite.css",
   "./assets/css/productivity.css",
+  "./assets/css/priority-13-15.css",
   "./assets/css/print.css",
   "./assets/js/core.js",
   "./assets/js/workflow.js",
@@ -31,6 +32,7 @@ const LOCAL_ASSETS = [
   "./assets/js/inventory-suite.js",
   "./assets/js/analytics.js",
   "./assets/js/productivity.js",
+  "./assets/js/priority-13-15.js",
   "./assets/js/boot.js",
 ];
 
