@@ -14,7 +14,7 @@ function businessSchemaMissing(error) {
 }
 
 function businessMigrationNotice() {
-    return `<div class="business-migration-note"><strong>Migrasi v3.3.0 diperlukan</strong><span>Jalankan <code>supabase/migrations/20260811_priority_10_11_12.sql</code> untuk menyimpan garansi terhubung, supplier, purchase order, dan ledger stok.</span></div>`;
+    return `<div class="business-migration-note"><strong>Migrasi v3.3.0 diperlukan</strong><span>Jalankan migrasi operasional terbaru untuk menyimpan garansi terhubung, supplier, purchase order, dan ledger stok.</span></div>`;
 }
 
 function supplierName(id) {

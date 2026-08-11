@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="assets/css/productivity.css" />
     <link rel="stylesheet" href="assets/css/priority-13-15.css" />
     <link rel="stylesheet" href="assets/css/print.css" media="print" />
+    <link rel="stylesheet" href="assets/css/v342-stock-receipt.css" />
   </head>
   <body>
     <div
@@ -365,82 +366,9 @@
         <div class="board" id="boardWrap"></div>
       </div>
 
-      <div id="tab-cust" style="display: none">
-        <div class="row" style="margin-bottom: 6px; flex-wrap: wrap; gap: 8px">
-          <h2 style="margin: 0">👥 Pelanggan</h2>
-        </div>
-        <div class="toolbar" style="margin-bottom: 12px">
-          <input
-            id="custSearch"
-            placeholder="Cari nama / no. WhatsApp..."
-            oninput="custSearchInput()"
-            style="max-width: 280px"
-          />
-        </div>
-        <div id="custBox"></div>
-      </div>
+      <div id="tab-cust" style="display: none"></div>
 
-      <div id="tab-finance" style="display: none">
-        <div class="row" style="margin-bottom: 6px; flex-wrap: wrap; gap: 8px">
-          <h2 style="margin: 0">📊 Laporan Keuangan</h2>
-          <div
-            style="
-              display: flex;
-              gap: 6px;
-              flex-wrap: wrap;
-              align-items: center;
-            "
-          >
-            <button class="btn small secondary" onclick="exportCsv()">
-              ⬇️ Export CSV
-            </button>
-          </div>
-        </div>
-        <div class="svc-tabs">
-          <button
-            class="btn small"
-            id="finTabService"
-            onclick="finSub('Service')"
-          >
-            🔧 Service</button
-          ><button
-            class="btn small secondary"
-            id="finTabGaransi"
-            onclick="finSub('Garansi')"
-          >
-            🛡️ Garansi
-          </button>
-        </div>
-        <div class="toolbar" style="margin-bottom: 10px">
-          <input
-            id="finSearch"
-            placeholder="Cari nama / no. tiket..."
-            oninput="finSearchInput()"
-            style="max-width: 240px"
-          />
-        </div>
-        <div
-          class="secrow"
-          style="
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-          "
-        >
-          <div
-            id="finMonthNav"
-            class="monthnav"
-            style="
-              min-width: 96px;
-              display: flex;
-              flex-direction: column;
-              gap: 6px;
-            "
-          ></div>
-          <div id="financeBox" style="flex: 1; min-width: 260px"></div>
-        </div>
-      </div>
+      <div id="tab-finance" style="display: none"></div>
 
       <div id="tab-attend" style="display: none">
         <div class="row" style="margin-bottom: 6px; flex-wrap: wrap; gap: 8px">
@@ -1534,5 +1462,6 @@
     <script src="assets/js/priority-13-15.js"></script>
     <script src="assets/js/boot.js"></script>
     <script src="assets/js/v341-refinements.js"></script>
+    <script src="assets/js/v342-stock-receipt.js"></script>
   </body>
 </html>

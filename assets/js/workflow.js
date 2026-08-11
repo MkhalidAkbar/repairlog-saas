@@ -342,7 +342,7 @@ async function requestEstimateApproval(id) {
     };
     const response = await db.from("reports").update(update).eq("id", id).select("id,estimate_amount,estimate_notes,approval_status,approval_token,approval_requested_at,approval_responded_at,approval_customer_name,approval_note").maybeSingle();
     if (response.error) {
-        const message = workflowColumnsMissing(response.error) ? "Migrasi Priority 1-2-3 belum dijalankan. Buka folder supabase/migrations lalu jalankan SQL terbaru." : `Gagal membuat persetujuan: ${response.error.message || response.error}`;
+        const message = workflowColumnsMissing(response.error) ? "Migrasi workflow dan SLA belum dijalankan. Jalankan migrasi sistem terbaru." : `Gagal membuat persetujuan: ${response.error.message || response.error}`;
         toast(message, "error");
         return;
     }

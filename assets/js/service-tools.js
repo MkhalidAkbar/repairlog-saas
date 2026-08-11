@@ -125,7 +125,7 @@ async function persistPriority456Report(id, patch, silent) {
     const result = await db.from("reports").update(patch).eq("id", id);
     if (result.error) {
         if (!silent) {
-            toast(priority456ColumnsMissing(result.error) ? "Jalankan migrasi Priority 4-5-6 terlebih dahulu." : `Gagal menyimpan: ${result.error.message || result.error}`, "error");
+            toast(priority456ColumnsMissing(result.error) ? "Jalankan migrasi fitur layanan terlebih dahulu." : `Gagal menyimpan: ${result.error.message || result.error}`, "error");
         }
         return false;
     }

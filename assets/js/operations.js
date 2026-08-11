@@ -327,7 +327,9 @@ function openForm(id) {
         qty: x.qty || null,
         consumed: !!x.consumed,
         reserved: x.reserved !== false && !x.consumed,
-        released: !!x.released
+        released: !!x.released,
+        returned: !!x.returned,
+        stock_cycle: Number(x.stock_cycle) || 1
     })) : [];
     syncCostItemsFromComps();
     renderCostItems();
@@ -454,7 +456,9 @@ async function saveReport() {
                 qty: it.qty || null,
                 consumed: !!it.consumed,
                 reserved: !!it.reserved,
-                released: !!it.released
+                released: !!it.released,
+                returned: !!it.returned,
+                stock_cycle: Number(it.stock_cycle) || 1
             }));
         }
         {
@@ -467,7 +471,7 @@ async function saveReport() {
             if (_r.error && typeof workflowColumnsMissing === "function" && workflowColumnsMissing(_r.error)) {
                 stripWorkflowColumns(payload);
                 _r = await db.from("reports").update(payload).eq("id", id);
-                toast("Migrasi Priority 1-2-3 belum dijalankan — data utama tersimpan tanpa SLA.", "error");
+                toast("Migrasi workflow belum dijalankan — data utama tersimpan tanpa SLA.", "error");
             }
             if (_r.error && /dp_amount/.test(_r.error.message || "")) {
                 delete payload.dp_amount;
@@ -509,7 +513,7 @@ async function saveReport() {
                 if (_ri.error && typeof workflowColumnsMissing === "function" && workflowColumnsMissing(_ri.error)) {
                     stripWorkflowColumns(payload);
                     _ri = await db.from("reports").insert(payload);
-                    toast("Migrasi Priority 1-2-3 belum dijalankan — data utama tersimpan tanpa SLA.", "error");
+                    toast("Migrasi workflow belum dijalankan — data utama tersimpan tanpa SLA.", "error");
                 }
                 if (_ri.error && /dp_amount/.test(_ri.error.message || "")) {
                     delete payload.dp_amount;
@@ -535,6 +539,7 @@ async function saveReport() {
         await loadAll();
         checkStorageWarn();
         const _tgt = id ? reports.find(x => x.id === id) : newTicket ? reports.find(x => x.ticket_no === newTicket) : null;
+        if (_tgt && typeof consumePartsForReportImmediate === "function") await consumePartsForReportImmediate(_tgt.id);
         if (_tgt && typeof ensureCrmCustomerForReport === "function") await ensureCrmCustomerForReport(_tgt);
         if (_tgt && typeof logWorkflowActivity === "function") {
             await logWorkflowActivity(_tgt.id, id ? "update" : "create", id ? "Data tiket servis diperbarui." : "Tiket servis dibuat.");
