@@ -1,6 +1,6 @@
-# RepairLog SaaS v3.4.0
+# RepairLog SaaS v3.4.1
 
-Pembaruan ini menambahkan **Prioritas 13–15**: Pusat Kesehatan Sistem, keuangan/pembayaran lanjutan, CRM setelah servis, serta perbaikan mobile.
+Pembaruan ini menyatukan Pusat Kesehatan Sistem, keuangan/pembayaran lanjutan, CRM setelah servis, serta perbaikan mobile.
 
 ## Yang baru
 - Diagnostik versi/migrasi, Supabase, Storage, RLS, RPC, tabel dan tipe kolom.
@@ -20,3 +20,11 @@ Jalankan berurutan di Supabase SQL Editor:
 Preflight selalu `ROLLBACK` dan tidak mengubah data. Jika gagal, perbaiki tipe/tabel yang disebutkan sebelum migrasi utama.
 
 Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Pertahankan `config.js` produksi. Script `priority-13-15.js` harus tetap setelah `productivity.js` dan sebelum `boot.js`.
+
+## Penyempurnaan v3.4.1
+- Tampilan lama Keuangan dan Pelanggan dihapus; seluruh data dibaca oleh tampilan baru.
+- Keuangan dipisahkan menjadi Service dan Garansi, termasuk transaksi, piutang, margin, dan ekspor CSV.
+- Kelompok jenis perangkat di keuangan otomatis hilang saat multi-perangkat dimatikan.
+- Absensi memiliki ringkasan kehadiran, durasi, status aktif, pencarian, dan tabel responsif.
+- Notifikasi merah langsung ditandai dibaca ketika tiket sumber dibuka.
+- Menyimpan alasan pembatalan langsung memindahkan tiket ke papan Batal.

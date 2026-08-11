@@ -1,4 +1,3 @@
-/* ===== ANIMASI & POLISH UI ===== */
 @keyframes rlFadeIn {
   from {
     opacity: 0;
@@ -121,7 +120,7 @@ nav button:hover {
 .tech-badge {
   transition: transform 0.12s ease;
 }
-/* ===== Control panel (Owner) - animasi v2.2 ===== */
+
 @keyframes opSecIn {
   from {
     opacity: 0;

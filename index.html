@@ -8,7 +8,7 @@
       name="description"
       content="Dashboard operasional servis dengan garansi terhubung, supplier, purchase order, ledger stok, dan analitik bisnis."
     />
-    <!-- Favicon: ganti saja file icon.png di folder yang sama (jangan ubah kode). Disarankan PNG persegi 512x512 / 192x192. -->
+    
     <link rel="icon" type="image/png" href="icon.png" />
     <link rel="apple-touch-icon" href="icon.png" />
     <link rel="manifest" href="manifest.json" />
@@ -124,8 +124,8 @@
           class="btn small secondary notifwrap"
           id="notifBtn"
           onclick="showTab('board')"
-          aria-label="Notifikasi komentar"
-          title="Notifikasi komentar"
+          aria-label="Notifikasi tiket"
+          title="Notifikasi tiket"
         >
           🔔<span class="notif-dot" id="notifDot" style="display: none">0</span>
         </button>
@@ -823,7 +823,7 @@
         <div id="editActWrap" style="display: none; margin-top: 8px">
           <label>📋 Aktivitas &amp; Log</label>
           <div id="editActLog"></div>
-          <label>💬 Komentar</label>
+          <label>Catatan internal</label>
           <div id="sideCmt"></div>
         </div>
         <div class="actions" style="margin-top: 18px">
@@ -1533,5 +1533,6 @@
     <script src="assets/js/productivity.js"></script>
     <script src="assets/js/priority-13-15.js"></script>
     <script src="assets/js/boot.js"></script>
+    <script src="assets/js/v341-refinements.js"></script>
   </body>
 </html>

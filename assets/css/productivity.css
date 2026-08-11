@@ -1,4 +1,3 @@
-/* RepairLog v3.2 — Global Search, Form Wizard, and Mobile Workflow */
 .global-search-button {
   display: inline-flex;
   align-items: center;
@@ -282,7 +281,6 @@
   gap: 5px;
 }
 
-/* Form wizard */
 #formModal > .modal {
   max-width: 760px;
 }
@@ -499,7 +497,6 @@
   color: var(--muted);
 }
 
-/* Mobile workflow */
 .mobile-bottom-nav {
   display: none;
 }
