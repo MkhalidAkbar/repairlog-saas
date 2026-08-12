@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="assets/css/v344-performance-ux.css" />
     <link rel="stylesheet" href="assets/css/v345-board-reports-print.css" />
     <link rel="stylesheet" href="assets/css/v346-thermal-calibration.css" />
+    <link rel="stylesheet" href="assets/css/v347-identity-receipt.css" />
   </head>
   <body>
     <div
@@ -71,7 +72,19 @@
       </div>
     </div>
     <div class="auth-screen" id="authScreen" style="display: none">
-      <div class="auth-box" style="text-align: center">
+      <div class="auth-layout-v347">
+        <aside class="auth-brand-panel-v347" aria-label="Identitas aplikasi">
+          <div class="auth-brand-content-v347">
+            <div class="auth-brand-logo-v347" id="authBrandLogoV347">🛠️</div>
+            <span class="auth-eyebrow-v347">Workspace operasional servis</span>
+            <h1 id="authBrandNameV347">RepairLog</h1>
+            <p id="authBrandTaglineV347">Manajemen servis, pelanggan, pembayaran, dan garansi dalam satu tempat.</p>
+            <ul class="auth-benefits-v347"><li>Data servis tersinkron</li><li>Akses tim lebih aman</li><li>Siap digunakan dari ponsel</li></ul>
+          </div>
+          <div class="auth-brand-foot-v347">Masuk hanya menggunakan akun yang terdaftar pada toko ini.</div>
+        </aside>
+        <div class="auth-box" style="text-align: center">
+          <div class="auth-login-heading-v347"><span>Area tim</span><h2>Selamat datang kembali</h2><p>Pilih biometrik atau gunakan email dan password untuk melanjutkan.</p></div>
         <div
           class="bio-circle"
           id="bioCircle"
@@ -131,11 +144,12 @@
         >
           Lupa password?
         </button>
+        </div>
       </div>
     </div>
     <header id="appHeader" style="display: none">
       <h1 id="brandTitle">
-        🛠️ RepairLog <small>Manajemen Servis & Garansi</small>
+        🛠️ <span class="brand-copy-v347"><strong>RepairLog</strong><small>Manajemen Servis & Garansi</small></span>
       </h1>
       <nav>
         <span
@@ -207,10 +221,11 @@
                 id="appRefreshBtn"
                 type="button"
                 onclick="refresh()"
+                aria-label="Perbarui data"
+                title="Perbarui data"
                 aria-describedby="dataFreshness"
               >
                 <span class="refresh-glyph" aria-hidden="true">↻</span>
-                <span class="refresh-label">Perbarui</span>
               </button>
               <span id="dataFreshness" aria-live="polite">Belum diperbarui</span>
             </div>
@@ -1101,6 +1116,11 @@
             <input id="brName" placeholder="cth: Service Laptop Jaya" />
             <label>Tagline</label>
             <input id="brTagline" placeholder="cth: Spesialis Servis Laptop" />
+            <div class="brand-contact-grid-v347">
+              <label>Alamat toko / service center<textarea id="brAddress" rows="2" placeholder="cth: Jl. Perintis No. 1, Bandung"></textarea></label>
+              <label>WhatsApp CS<input id="brServiceWhatsapp" inputmode="tel" autocomplete="tel" placeholder="cth: 0878-2266-6653" /></label>
+            </div>
+            <p class="brand-contact-note-v347">Alamat dan WhatsApp CS ditampilkan pada bagian atas resi thermal.</p>
             <div class="frow">
               <div>
                 <label>Logo (emoji)</label
@@ -1115,7 +1135,7 @@
                 />
               </div>
             </div>
-            <label>Logo PNG (opsional — untuk logo custom toko)</label>
+            <label>Logo custom toko (PNG/JPG/WebP)</label>
             <div class="row" style="gap: 10px; align-items: center">
               <div
                 id="brLogoPreview"
@@ -1153,7 +1173,7 @@
               id="brLogoStatus"
               style="font-size: 11px; margin-top: 4px"
             >
-              Jika diisi, logo PNG dipakai menggantikan emoji.
+              Logo ini dipakai di aplikasi dan dikonversi hitam-putih saat dicetak ke printer thermal.
             </div>
             <label>QRIS Pembayaran (upload gambar QRIS toko)</label>
             <div class="row" style="gap: 10px; align-items: center">

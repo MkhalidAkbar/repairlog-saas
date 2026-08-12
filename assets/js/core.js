@@ -45,7 +45,7 @@ if (db) {
 
 const BRANDS = [ "Asus", "Acer", "Lenovo", "HP", "Dell", "MSI", "Apple/MacBook", "Axioo", "Toshiba", "Samsung", "Lainnya" ];
 
-const APP_VERSION = "v3.4.6";
+const APP_VERSION = "v3.4.7";
 
 const DEVICE_TYPES = [ "Laptop", "PC/Komputer", "Printer", "HP/Smartphone", "CCTV" ];
 
@@ -144,6 +144,8 @@ const BRAND_DEFAULT = {
     tagline: "Manajemen Servis & Garansi",
     logo: "🛠️",
     logoUrl: "",
+    address: "",
+    serviceWhatsapp: "",
     color: "#6366f1",
     ticketCompany: "RL",
     ticketSide: "SVC",
@@ -160,6 +162,8 @@ const VENDOR_BRAND = {
     tagline: "Manajemen Servis Laptop",
     logo: "🛠️",
     logoUrl: "",
+    address: "",
+    serviceWhatsapp: "",
     color: "#4f46e5",
     ticketCompany: "TP",
     ticketSide: "SVC"
@@ -631,8 +635,12 @@ function applyBrand() {
         const _vb = $("verBadge");
         if (_vb) _vb.textContent = APP_VERSION;
     }
-    const lg = BRAND.logoUrl ? brandLogoImg(28) : esc(BRAND.logo || "🛠️");
-    $("brandTitle").innerHTML = `${lg} ${esc(BRAND.name || "RepairLog")} <small>${esc(BRAND.tagline || "")}</small>`;
+    const lg = BRAND.logoUrl ? brandLogoImg(34) : `<span aria-hidden="true">${esc(BRAND.logo || "🛠️")}</span>`;
+    $("brandTitle").innerHTML = `${lg}<span class="brand-copy-v347"><strong>${esc(BRAND.name || "RepairLog")}</strong><small>${esc(BRAND.tagline || "")}</small></span>`;
+    const authName = $("authBrandNameV347"), authTagline = $("authBrandTaglineV347"), authLogo = $("authBrandLogoV347");
+    if (authName) authName.textContent = BRAND.name || "RepairLog";
+    if (authTagline) authTagline.textContent = BRAND.tagline || "Manajemen servis, pelanggan, pembayaran, dan garansi dalam satu tempat.";
+    if (authLogo) authLogo.innerHTML = BRAND.logoUrl ? `<img src="${esc(BRAND.logoUrl)}" alt="Logo ${esc(BRAND.name || "toko")}">` : esc(BRAND.logo || "🛠️");
 }
 
 async function saveBrand(obj) {
@@ -658,6 +666,8 @@ async function saveBrandFromForm() {
         name: $("brName").value.trim() || "RepairLog",
         tagline: $("brTagline").value.trim(),
         logo: $("brLogo").value.trim() || "🛠️",
+        address: $("brAddress") ? $("brAddress").value.trim() : "",
+        serviceWhatsapp: $("brServiceWhatsapp") ? $("brServiceWhatsapp").value.trim() : "",
         color: $("brColor").value || "#6366f1",
         ticketCompany: BRAND.ticketCompany || "RL",
         ticketFmtSvc: $("brTicketSvc") && $("brTicketSvc").value.trim() || "RL/STTS/{BULAN}/{TAHUN}",

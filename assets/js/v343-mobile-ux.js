@@ -213,11 +213,13 @@
         const subtotal = lines.reduce((sum, line) => sum + line.total, 0);
         const total = Number(report.fee) || subtotal;
         const method = typeof payMetaStr === "function" ? payMetaStr(report) : "";
-        const logo = BRAND.logoUrl ? `<img src="${esc(BRAND.logoUrl)}" alt="logo">` : `<div class="pickup-receipt-logo">${esc(BRAND.logo || "🛠️")}</div>`;
+        const logo = BRAND.logoUrl ? `<img src="${esc(BRAND.logoUrl)}" alt="Logo ${esc(BRAND.name || "toko")}">` : `<div class="pickup-receipt-logo">${esc(BRAND.logo || "🛠️")}</div>`;
         const rows = lines.map(line => `<div class="pickup-receipt-item"><div>${esc(line.label)}</div><div>${line.qty} × ${rp(line.unit)}</div><strong>${rp(line.total)}</strong></div>`).join("");
         const printArea = document.getElementById("printArea");
         if (!printArea) return;
-        printArea.innerHTML = `<article class="pickup-receipt-v342">${logo}<h1>${esc(BRAND.name || "RepairLog")}</h1><p class="pickup-receipt-address">${esc(BRAND.tagline || "Service & Sparepart")}</p><div class="pickup-receipt-rule"></div><div class="pickup-receipt-meta"><span>No. tiket</span><strong>${esc(report.ticket_no || "-")}</strong><span>Tanggal ambil</span><strong>${fmtDate(report.date_out || (new Date).toISOString())}</strong><span>Customer</span><strong>${esc(report.customer || "-")}</strong><span>Perangkat</span><strong>${esc(report.device || "-")}</strong><span>Kasir / Teknisi</span><strong>${esc(typeof techName === "function" ? techName(report.assigned_to) : "-")}</strong></div><div class="pickup-receipt-rule"></div>${rows}<div class="pickup-receipt-rule"></div><div class="pickup-receipt-total"><span>Sub total</span><strong>${rp(subtotal)}</strong><span>Total</span><strong>${rp(total)}</strong>${method ? `<span>Bayar (${esc(method)})</span><strong>${rp(total)}</strong>` : ""}<span>Status</span><strong>${esc(report.payment_status || "Belum")}</strong></div><div class="pickup-receipt-rule"></div><h2>TERIMA KASIH</h2><p class="pickup-receipt-note">Struk ini menjadi bukti bahwa customer sudah mengambil barang. Mohon lakukan pengecekan sebelum meninggalkan toko. Barang yang sudah diambil tidak dapat dikembalikan atau diuangkan kembali.</p><p class="pickup-receipt-time">Dicetak ${(new Date).toLocaleString("id-ID")}</p></article>`;
+        const tagline = String(BRAND.tagline || "").trim(), address = String(BRAND.address || "").trim(), serviceWhatsapp = String(BRAND.serviceWhatsapp || "").trim();
+        const identity = `${tagline ? `<p class="pickup-receipt-contact-v347">${esc(tagline)}</p>` : ""}${address ? `<p class="pickup-receipt-contact-v347">${esc(address)}</p>` : ""}${serviceWhatsapp ? `<p class="pickup-receipt-contact-v347">WhatsApp: ${esc(serviceWhatsapp)}</p>` : ""}`;
+        printArea.innerHTML = `<article class="pickup-receipt-v342">${logo}<h1>${esc(BRAND.name || "RepairLog")}</h1>${identity}<div class="pickup-receipt-ticket-v347">${esc(report.ticket_no || "-")}</div><div class="pickup-receipt-rule"></div><div class="pickup-receipt-meta"><span>Tanggal ambil</span><strong>${fmtDate(report.date_out || (new Date).toISOString())}</strong><span>Customer</span><strong>${esc(report.customer || "-")}</strong><span>Perangkat</span><strong>${esc(report.device || "-")}</strong><span>Kasir / Teknisi</span><strong>${esc(typeof techName === "function" ? techName(report.assigned_to) : "-")}</strong></div><div class="pickup-receipt-rule"></div>${rows}<div class="pickup-receipt-rule"></div><div class="pickup-receipt-total"><span>Sub total</span><strong>${rp(subtotal)}</strong><span>Total</span><strong>${rp(total)}</strong>${method ? `<span>Bayar (${esc(method)})</span><strong>${rp(total)}</strong>` : ""}<span>Status</span><strong>${esc(report.payment_status || "Belum")}</strong></div><div class="pickup-receipt-rule"></div><h2>TERIMA KASIH</h2><p class="pickup-receipt-note">Struk ini menjadi bukti bahwa customer sudah mengambil barang. Mohon lakukan pengecekan sebelum meninggalkan toko. Barang yang sudah diambil tidak dapat dikembalikan atau diuangkan kembali.</p><p class="pickup-receipt-time">Dicetak ${(new Date).toLocaleString("id-ID")}</p></article>`;
     }
 
     function ascii(value) {
@@ -334,37 +336,28 @@
 
     function receiptTextDocumentV346(report, forcedProfile) {
         const profile = forcedProfile || printerProfileV346();
-        const width = profile.columns;
-        const divider = "-".repeat(width);
-        const items = receiptLines(report);
-        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-        const total = Number(report.fee) || subtotal;
-        const method = typeof payMetaStr === "function" ? ascii(payMetaStr(report)) : "";
-        const lines = [];
+        const width = profile.columns, divider = "-".repeat(width), items = receiptLines(report);
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0), total = Number(report.fee) || subtotal;
+        const method = typeof payMetaStr === "function" ? ascii(payMetaStr(report)) : "", lines = [];
         const addPair = (left, right) => lines.push(...pairLinesV346(left, right, width));
+        const addCentered = value => wrapTextV346(value, width).filter(Boolean).forEach(line => lines.push(centerLineV346(line, width)));
         lines.push(centerLineV346(String(BRAND.name || "RepairLog").toUpperCase(), width));
-        if (BRAND.tagline) lines.push(centerLineV346(BRAND.tagline, width));
+        if (BRAND.tagline) addCentered(BRAND.tagline);
+        if (BRAND.address) addCentered(BRAND.address);
+        if (BRAND.serviceWhatsapp) addCentered(`WhatsApp: ${BRAND.serviceWhatsapp}`);
+        lines.push(centerLineV346(report.ticket_no || "-", width));
         lines.push(divider);
-        addPair("No. tiket", report.ticket_no || "-");
         addPair("Tanggal ambil", fmtDate(report.date_out || (new Date).toISOString()));
         addPair("Customer", report.customer || "-");
         addPair("Perangkat", report.device || "-");
         addPair("Kasir / Teknisi", typeof techName === "function" ? techName(report.assigned_to) : "-");
         lines.push(divider);
-        items.forEach(item => {
-            lines.push(...wrapTextV346(item.label, width));
-            addPair(`${item.qty} x ${rp(item.unit)}`, rp(item.total));
-        });
-        lines.push(divider);
-        addPair("Sub total", rp(subtotal));
-        addPair("TOTAL", rp(total));
-        if (method) addPair(`Bayar (${method})`, rp(total));
-        addPair("Status", report.payment_status || "Belum");
-        lines.push(divider);
-        lines.push(centerLineV346("TERIMA KASIH", width));
+        items.forEach(item => { lines.push(...wrapTextV346(item.label, width)); addPair(`${item.qty} x ${rp(item.unit)}`, rp(item.total)); });
+        lines.push(divider); addPair("Sub total", rp(subtotal)); addPair("TOTAL", rp(total));
+        if (method) addPair(`Bayar (${method})`, rp(total)); addPair("Status", report.payment_status || "Belum");
+        lines.push(divider); lines.push(centerLineV346("TERIMA KASIH", width));
         wrapTextV346("Struk ini menjadi bukti bahwa customer sudah mengambil barang. Mohon lakukan pengecekan sebelum meninggalkan toko. Barang yang sudah diambil tidak dapat dikembalikan atau diuangkan kembali.", width).forEach(line => lines.push(centerLineV346(line, width)));
-        lines.push("");
-        lines.push(centerLineV346(`Dicetak ${(new Date).toLocaleString("id-ID")}`, width));
+        lines.push(""); lines.push(centerLineV346(`Dicetak ${(new Date).toLocaleString("id-ID")}`, width));
         return { profile, lines, reportId: report?.id ?? null };
     }
 
@@ -379,16 +372,40 @@
         return output;
     }
 
-    function receiptEscPos(report) {
-        const profile = printerProfileV346();
-        const cached = pendingReceiptDocumentV346;
-        const documentData = cached && String(cached.reportId) === String(report?.id) && cached.profile.paper === profile.paper && cached.profile.density === profile.density ? cached : receiptTextDocumentV346(report, profile);
-        const encoder = new TextEncoder;
-        return joinByteChunksV346([
-            new Uint8Array([ 27, 64, 27, 116, 0, 27, 77, documentData.profile.fontCode, 29, 33, 0, 27, 50, 27, 97, 0, 27, 69, 0 ]),
-            encoder.encode(documentData.lines.join("\n") + "\n\n\n"),
-            new Uint8Array([ 29, 86, 66, 0 ])
-        ]);
+    async function loadThermalLogoSourceV347(url) {
+        const response = await fetch(url, { cache: "force-cache" });
+        if (!response.ok) throw new Error("Logo tidak dapat dimuat untuk printer thermal.");
+        const blob = await response.blob();
+        if (typeof createImageBitmap === "function") return await createImageBitmap(blob);
+        return await new Promise((resolve, reject) => { const objectUrl = URL.createObjectURL(blob), image = new Image; image.onload = () => { URL.revokeObjectURL(objectUrl); resolve(image); }; image.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Format logo tidak dapat diproses.")); }; image.src = objectUrl; });
+    }
+    async function thermalLogoRasterV347(profile) {
+        if (!BRAND.logoUrl) return new Uint8Array(0);
+        let source = null;
+        try {
+            source = await loadThermalLogoSourceV347(BRAND.logoUrl);
+            const sw = Number(source.width || source.naturalWidth) || 1, sh = Number(source.height || source.naturalHeight) || 1;
+            const maxWidth = profile.paper === "80" ? 240 : 160, maxHeight = profile.paper === "80" ? 132 : 96;
+            const scale = Math.min(maxWidth / sw, maxHeight / sh, 1), scaledWidth = Math.max(8, Math.round(sw * scale));
+            const width = Math.max(8, Math.ceil(scaledWidth / 8) * 8), height = Math.max(1, Math.round(sh * scale));
+            const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
+            const context = canvas.getContext("2d", { willReadFrequently: true }); if (!context) throw new Error("Canvas logo tidak tersedia.");
+            context.fillStyle = "#fff"; context.fillRect(0, 0, width, height); context.drawImage(source, Math.floor((width - scaledWidth) / 2), 0, scaledWidth, height);
+            const pixels = context.getImageData(0, 0, width, height).data, gray = new Float32Array(width * height);
+            for (let i=0;i<gray.length;i++){ const o=i*4,a=pixels[o+3]/255,l=.299*pixels[o]+.587*pixels[o+1]+.114*pixels[o+2]; gray[i]=l*a+255*(1-a); }
+            const bytesPerRow=Math.ceil(width/8), data=new Uint8Array(bytesPerRow*height);
+            const spread=(x,y,e,w)=>{if(x<0||x>=width||y<0||y>=height)return;const i=y*width+x;gray[i]=Math.max(0,Math.min(255,gray[i]+e*w));};
+            for(let y=0;y<height;y++)for(let x=0;x<width;x++){const i=y*width+x,black=gray[i]<174,q=black?0:255,e=gray[i]-q;if(black)data[y*bytesPerRow+(x>>3)]|=128>>(x&7);spread(x+1,y,e,7/16);spread(x-1,y+1,e,3/16);spread(x,y+1,e,5/16);spread(x+1,y+1,e,1/16);}
+            const command=new Uint8Array([29,118,48,0,bytesPerRow&255,bytesPerRow>>8&255,height&255,height>>8&255]);
+            return joinByteChunksV346([new Uint8Array([27,97,1]),command,data,new Uint8Array([10,27,97,0])]);
+        } catch (error) { console.warn("Logo thermal dilewati:", error); return new Uint8Array(0); }
+        finally { if (source && typeof source.close === "function") source.close(); }
+    }
+    async function receiptEscPos(report) {
+        const profile=printerProfileV346(), cached=pendingReceiptDocumentV346;
+        const documentData=cached&&String(cached.reportId)===String(report?.id)&&cached.profile.paper===profile.paper&&cached.profile.density===profile.density?cached:receiptTextDocumentV346(report,profile);
+        const encoder=new TextEncoder, logo=await thermalLogoRasterV347(profile);
+        return joinByteChunksV346([new Uint8Array([27,64,27,116,0,27,77,documentData.profile.fontCode,29,33,0,27,50,27,69,0]),logo,new Uint8Array([27,97,0]),encoder.encode(documentData.lines.join("\n")+"\n\n\n"),new Uint8Array([29,86,66,0])]);
     }
 
     function calibrationLinesV346(profile) {
@@ -472,7 +489,8 @@
         if (!target || !report) return;
         const documentData = receiptTextDocumentV346(report);
         pendingReceiptDocumentV346 = documentData;
-        target.innerHTML = `<pre class="receipt-paper-v346" data-paper="${documentData.profile.paper}" data-density="${documentData.profile.density}">${esc(documentData.lines.join("\n"))}</pre>`;
+        const logo = BRAND.logoUrl ? `<div class="receipt-logo-wrap-v347"><img class="receipt-logo-monochrome-v347" src="${esc(BRAND.logoUrl)}" alt="Logo ${esc(BRAND.name || "toko")}"></div>` : "";
+        target.innerHTML = `<article class="receipt-paper-v346" data-paper="${documentData.profile.paper}" data-density="${documentData.profile.density}">${logo}<pre class="receipt-text-v347" data-paper="${documentData.profile.paper}" data-density="${documentData.profile.density}">${esc(documentData.lines.join("\n"))}</pre></article>`;
         syncPrinterProfileUiV346();
     }
 
@@ -518,7 +536,8 @@
         if (!report || !button) return;
         button.disabled = true;
         try {
-            await writePrinter(receiptEscPos(report));
+            const payload = await receiptEscPos(report);
+            await writePrinter(payload);
             closeModal("receiptPrintModal");
             if (typeof toast === "function") toast("Resi berhasil dikirim ke printer thermal.", "success");
         } catch (error) {
@@ -560,6 +579,7 @@
     window.savePrinterProfileV346 = savePrinterProfileV346;
     window.printerProfileV346 = printerProfileV346;
     window.receiptTextPreviewV346 = id => receiptTextDocumentV346(getReport(id));
+    window.thermalLogoRasterV347 = thermalLogoRasterV347;
     window.restoreThermalPrinterV345 = restorePrinterV345;
     window.thermalPrinterStateV345 = () => ({
         remembered: !!printerMemoryV345(),

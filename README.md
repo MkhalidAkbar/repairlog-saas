@@ -72,3 +72,11 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Pengaturan printer menyediakan kalibrasi profil aktif dan cetak penggaris semua profil.
 - Profil kertas dan font disimpan di browser bersama izin printer dan tetap aktif setelah refresh.
 - Format tiket, tanggal, customer, perangkat, kasir, item, subtotal, total, pembayaran, status, serta catatan dibuat responsif terhadap jumlah kolom.
+
+
+## RepairLog v3.4.7
+- Header desktop dirapikan dan refresh menjadi ikon-only.
+- Login diperbarui dan tetap responsif.
+- Branding mendukung alamat toko dan WhatsApp CS.
+- Resi Bluetooth mencetak logo custom hitam-putih serta nomor tiket terpusat tanpa label.
+- Alur lupa password dan PIN tidak diubah.

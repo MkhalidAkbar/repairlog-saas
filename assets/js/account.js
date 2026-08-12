@@ -433,6 +433,8 @@ async function showOwnerPanel() {
     $("brTagline").value = BRAND.tagline || "";
     $("brLogo").value = BRAND.logo || "";
     $("brColor").value = BRAND.color || "#6366f1";
+    if ($("brAddress")) $("brAddress").value = BRAND.address || "";
+    if ($("brServiceWhatsapp")) $("brServiceWhatsapp").value = BRAND.serviceWhatsapp || "";
     if ($("brTicketSvc")) $("brTicketSvc").value = BRAND.ticketFmtSvc || "RL/STTS/{BULAN}/{TAHUN}";
     if ($("brTicketWr")) $("brTicketWr").value = BRAND.ticketFmtWr || "STTS/{BULAN}/{TAHUN}";
     if (typeof ticketPreview === "function") ticketPreview();
