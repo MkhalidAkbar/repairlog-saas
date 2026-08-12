@@ -81,6 +81,10 @@ function resetFilters() {
         var e = $(id);
         if (e) e.value = "";
     });
+    if ($("search")) $("search").value = "";
+    _repMonth = null;
+    _repYear = null;
+    _repPage = 1;
     render();
 }
 
@@ -121,6 +125,7 @@ function render() {
     const _nav = $("repMonthNav");
     if (_nav) _nav.innerHTML = mNavHtml(_months, _repMonth, "setRepMonth", _repYear, "setRepYear");
     const mlist = _repMonth ? list.filter(r => (r.date_in || "").slice(0, 7) === _repMonth) : list;
+    if (typeof renderReportSummaryV345 === "function") renderReportSummaryV345(mlist, list, _repMonth);
     const _pages = Math.max(1, Math.ceil(mlist.length / per));
     if (_repPage > _pages) _repPage = _pages;
     if (_repPage < 1) _repPage = 1;

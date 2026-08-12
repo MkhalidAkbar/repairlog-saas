@@ -1,4 +1,4 @@
-# RepairLog SaaS v3.4.4
+# RepairLog SaaS v3.4.5
 
 ## Penyempurnaan v3.4.3
 - Dashboard memiliki grafik gabungan omzet dan laba harian untuk bulan kalender berjalan.
@@ -56,3 +56,11 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Halaman customer menampilkan bukti before/after segera setelah servis selesai, sebelum pembayaran.
 - Absensi hari sebelumnya yang belum check-out ditutup otomatis di akhir hari dan ditandai **Lupa check-out**.
 - Pemuatan data dideduplikasi, beberapa kueri dijalankan paralel, render tab berat dibuat sesuai kebutuhan, serta tersedia loading screen/progress bar.
+
+## v3.4.5 — Board, Receipt Preview & Reports
+- Navigasi tahap Papan pada HP/tablet dapat digeser, dilengkapi tombol tahap sebelumnya/berikutnya, indikator tahap, dan gesture swipe pada kartu.
+- Resi selalu menampilkan pratinjau 80 mm sebelum dicetak di HP maupun laptop.
+- Printer thermal BLE yang pernah dipilih disimpan oleh browser dan disambungkan kembali otomatis setelah refresh tanpa membuka pemilih perangkat lagi.
+- Tampilan Laporan memiliki hero, ringkasan periode, pencarian yang lebih jelas, toolbar responsif, dan kartu yang lebih rapi.
+- Tombol refresh dipindahkan dari filter Dashboard ke navigasi global; pada HP tersedia di menu Lainnya.
+- Reset filter Stok dipindahkan ke header daftar sparepart dan hanya aktif saat ada filter.

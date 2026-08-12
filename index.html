@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="assets/css/v342-stock-receipt.css" />
     <link rel="stylesheet" href="assets/css/v343-mobile-ux.css" />
     <link rel="stylesheet" href="assets/css/v344-performance-ux.css" />
+    <link rel="stylesheet" href="assets/css/v345-board-reports-print.css" />
   </head>
   <body>
     <div
@@ -199,6 +200,19 @@
             </button>
           </div>
           <div class="navactions">
+            <div class="global-refresh-v345" title="Perbarui seluruh data aplikasi">
+              <button
+                class="btn small secondary"
+                id="appRefreshBtn"
+                type="button"
+                onclick="refresh()"
+                aria-describedby="dataFreshness"
+              >
+                <span class="refresh-glyph" aria-hidden="true">↻</span>
+                <span class="refresh-label">Perbarui</span>
+              </button>
+              <span id="dataFreshness" aria-live="polite">Belum diperbarui</span>
+            </div>
             <button class="btn small" onclick="openForm()">+ Tambah</button>
             <button
               class="btn small secondary"
@@ -258,19 +272,6 @@
             >
               <option value="">📅 Semua Bulan</option>
             </select>
-            <div class="dashboard-refresh-cluster">
-              <button
-                class="btn small secondary"
-                id="appRefreshBtn"
-                type="button"
-                onclick="refresh()"
-                aria-describedby="dataFreshness"
-              >
-                <span class="refresh-glyph" aria-hidden="true">↻</span>
-                <span class="refresh-label">Perbarui data</span>
-              </button>
-              <span id="dataFreshness" aria-live="polite">Belum diperbarui</span>
-            </div>
           </div>
         </section>
         <div id="statGrid"></div>
@@ -325,50 +326,34 @@
           class="action-center report-action-center"
           aria-labelledby="actionCenterTitle"
         ></section>
-        <div class="row" style="margin-bottom: 10px; flex-wrap: wrap; gap: 8px">
-          <h2 style="margin: 0">📋 Laporan</h2>
-          <div class="board-zoom" id="listZoom" style="display: inline-flex">
-            <button type="button" onclick="listZoomBtn(-1)" title="Perkecil">
-              −</button
-            ><span id="listZoomLbl">100%</span
-            ><button type="button" onclick="listZoomBtn(1)" title="Perbesar">
-              +
-            </button>
+        <section class="reports-hero-v345" aria-labelledby="reportsTitleV345">
+          <div>
+            <span class="dashboard-kicker">Riwayat servis terpadu</span>
+            <h2 id="reportsTitleV345">Laporan Servis</h2>
+            <p>Cari tiket, pantau pekerjaan aktif, dan buka riwayat customer dalam satu tempat.</p>
+          </div>
+          <div class="reports-hero-actions-v345">
+            <span id="reportPeriodLabelV345" class="report-period-v345">Semua periode</span>
+            <div class="board-zoom" id="listZoom" style="display: inline-flex">
+              <button type="button" onclick="listZoomBtn(-1)" title="Perkecil">−</button><span id="listZoomLbl">100%</span><button type="button" onclick="listZoomBtn(1)" title="Perbesar">+</button>
+            </div>
+          </div>
+        </section>
+        <div id="reportSummaryV345" class="report-summary-v345" aria-live="polite"></div>
+        <div class="toolbar reports-toolbar-v345" aria-label="Pencarian dan tindakan laporan">
+          <label class="report-search-v345" for="search">
+            <span aria-hidden="true">⌕</span>
+            <input id="search" placeholder="Cari perangkat, customer, atau nomor tiket…" oninput="scheduleRender()" />
+            <button type="button" onclick="clearReportSearchV345()" aria-label="Hapus pencarian" title="Hapus pencarian">×</button>
+          </label>
+          <div class="report-toolbar-actions-v345">
+            <button class="btn small secondary" onclick="openModal('filterModal')">🔎 Filter<span id="filterCount" style="margin-left:6px;display:none;background:var(--accent);color:#fff;border-radius:999px;padding:0 7px;font-size:11px"></span></button>
+            <button id="reportResetV345" class="btn small secondary" onclick="resetFilters()">↺ Reset</button>
+            <button class="btn small report-add-v345" onclick="openForm()">+ Tambah Laporan</button>
           </div>
         </div>
-        <div class="toolbar" style="gap: 8px">
-          <input
-            id="search"
-            placeholder="Cari device / customer / tiket..."
-            oninput="scheduleRender()"
-            style="max-width: 240px"
-          />
-          <button
-            class="btn small secondary"
-            onclick="openModal('filterModal')"
-          >
-            🔎 Filter<span
-              id="filterCount"
-              style="
-                margin-left: 6px;
-                display: none;
-                background: var(--accent);
-                color: #fff;
-                border-radius: 999px;
-                padding: 0 7px;
-                font-size: 11px;
-              "
-            ></span>
-          </button>
-          <button class="btn small secondary" onclick="resetFilters()">
-            ↺ Reset
-          </button>
-          <button class="btn small" onclick="openForm()">
-            + Tambah Laporan
-          </button>
-        </div>
         <div
-          class="secrow"
+          class="secrow reports-content-v345"
           style="display: flex; gap: 12px; align-items: flex-start"
         >
           <div
@@ -402,7 +387,12 @@
             </button>
           </div>
         </div>
-        <nav id="boardStageTabs" class="board-stage-tabs" aria-label="Tahap papan"></nav>
+        <div class="board-mobile-stage-shell-v345" aria-label="Navigasi tahap papan">
+          <button id="boardStagePrevV345" class="board-stage-arrow-v345" type="button" onclick="moveBoardMobileStageV345(-1)" aria-label="Tahap sebelumnya">‹</button>
+          <nav id="boardStageTabs" class="board-stage-tabs" aria-label="Tahap papan"></nav>
+          <button id="boardStageNextV345" class="board-stage-arrow-v345" type="button" onclick="moveBoardMobileStageV345(1)" aria-label="Tahap berikutnya">›</button>
+        </div>
+        <div id="boardStageMetaV345" class="board-stage-meta-v345" aria-live="polite"></div>
         <div class="board" id="boardWrap"></div>
       </div>
 
@@ -1516,5 +1506,6 @@
     <script src="assets/js/v342-stock-receipt.js"></script>
     <script src="assets/js/v343-mobile-ux.js"></script>
     <script src="assets/js/v344-performance-ux.js"></script>
+    <script src="assets/js/v345-board-reports-print.js"></script>
   </body>
 </html>

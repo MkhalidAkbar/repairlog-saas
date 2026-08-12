@@ -17,20 +17,112 @@
     const isMobile = () => matchMedia("(max-width: 860px)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
     const supportsBluetoothPrint = () => !!navigator.bluetooth && !(typeof isIPhoneDevice === "function" && isIPhoneDevice());
 
-    function setPrinterStatus(message, connected = false) {
+    const PRINTER_MEMORY_KEY_V345 = "repairlog_thermal_printer_v345";
+    const boundPrinterDevicesV345 = new WeakSet;
+    let restorePrinterPromiseV345 = null;
+
+    function printerMemoryV345() {
+        try {
+            const value = JSON.parse(localStorage.getItem(PRINTER_MEMORY_KEY_V345) || "null");
+            return value && value.id ? value : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function rememberPrinterV345(device) {
+        if (!device?.id) return;
+        try {
+            localStorage.setItem(PRINTER_MEMORY_KEY_V345, JSON.stringify({
+                id: String(device.id),
+                name: device.name || "Printer thermal",
+                savedAt: (new Date).toISOString()
+            }));
+        } catch (error) {}
+    }
+
+    function deviceHasSupportedServiceV345(device) {
+        return Array.from(device?.uuids || []).some(uuid => SERVICE_UUIDS.includes(String(uuid).toLowerCase()));
+    }
+
+    async function permittedPrinterV345() {
+        if (!navigator.bluetooth?.getDevices) return null;
+        const known = await navigator.bluetooth.getDevices();
+        const saved = printerMemoryV345();
+        if (saved) {
+            const stored = known.find(device => device?.gatt && String(device.id) === String(saved.id));
+            if (stored) return stored;
+        }
+        return known.find(device => device?.gatt && deviceHasSupportedServiceV345(device)) || null;
+    }
+
+    function bindPrinterDeviceV345(device) {
+        if (!device || boundPrinterDevicesV345.has(device)) return;
+        boundPrinterDevicesV345.add(device);
+        device.addEventListener?.("gattserverdisconnected", () => {
+            printerCharacteristic = null;
+            const saved = printerMemoryV345();
+            setPrinterStatus(`${device.name || saved?.name || "Printer thermal"} tersimpan. Nyalakan Bluetooth lalu sambungkan ulang.`, false, true);
+        });
+    }
+
+    async function restorePrinterV345() {
+        if (!supportsBluetoothPrint()) return null;
+        if (printerDevice?.gatt?.connected && printerCharacteristic) return printerCharacteristic;
+        if (restorePrinterPromiseV345) return restorePrinterPromiseV345;
+        restorePrinterPromiseV345 = (async () => {
+            const saved = printerMemoryV345();
+            try {
+                const known = await permittedPrinterV345();
+                if (!known) {
+                    if (saved) setPrinterStatus(`${saved.name || "Printer thermal"} tersimpan. Ketuk Sambungkan jika izin browser perlu dipulihkan.`, false, true);
+                    return null;
+                }
+                printerDevice = known;
+                bindPrinterDeviceV345(printerDevice);
+                printerCharacteristic = await writableCharacteristic(printerDevice);
+                rememberPrinterV345(printerDevice);
+                setPrinterStatus(`${printerDevice.name || "Printer thermal"} tersambung otomatis dan siap mencetak.`, true, true);
+                return printerCharacteristic;
+            } catch (error) {
+                if (saved) setPrinterStatus(`${saved.name || "Printer thermal"} tetap tersimpan. Pastikan Bluetooth dan printer menyala.`, false, true);
+                return null;
+            } finally {
+                restorePrinterPromiseV345 = null;
+            }
+        })();
+        return restorePrinterPromiseV345;
+    }
+
+    function setPrinterStatus(message, connected = false, remembered = false) {
         const status = document.getElementById("thermalPrinterStatus");
         const button = document.getElementById("thermalPrinterBtn");
+        const memory = printerMemoryV345();
         if (status) status.textContent = message;
-        if (button) button.textContent = connected ? "Tersambung" : "Hubungkan";
+        if (button) button.textContent = connected ? "Tersambung" : remembered || memory ? "Sambungkan" : "Hubungkan";
+        const modalStatus = document.getElementById("receiptPrinterMemoryV345");
+        if (modalStatus) {
+            const name = printerDevice?.name || memory?.name;
+            modalStatus.classList.toggle("is-saved", !!name);
+            modalStatus.textContent = connected ? `✓ ${name || "Printer thermal"} tersambung dan akan digunakan.` : name ? `Printer tersimpan: ${name}. Aplikasi akan menyambungkannya kembali otomatis.` : "Belum ada printer tersimpan pada browser ini.";
+        }
     }
 
     function syncPrinterSettings() {
         const row = document.getElementById("thermalPrinterSetRow");
-        if (!row) return;
         const printEnabled = typeof FEATURES === "undefined" || FEATURES.print !== false;
-        row.style.display = supportsBluetoothPrint() && printEnabled ? "" : "none";
+        if (row) row.style.display = supportsBluetoothPrint() && printEnabled ? "" : "none";
+        if (!supportsBluetoothPrint() || !printEnabled) return;
         if (printerDevice?.gatt?.connected && printerCharacteristic) {
-            setPrinterStatus(`${printerDevice.name || "Printer thermal"} siap mencetak.`, true);
+            setPrinterStatus(`${printerDevice.name || "Printer thermal"} siap mencetak.`, true, true);
+            return;
+        }
+        const saved = printerMemoryV345();
+        if (saved) {
+            setPrinterStatus(`${saved.name || "Printer thermal"} tersimpan. Menyambungkan otomatis…`, false, true);
+            restorePrinterV345();
+        } else {
+            setPrinterStatus("Belum ada printer thermal yang disimpan.");
         }
     }
 
@@ -50,29 +142,29 @@
     async function connectPrinter(askUser = true) {
         if (!supportsBluetoothPrint()) throw new Error("Browser ini belum mendukung koneksi printer Bluetooth langsung.");
         if (printerDevice?.gatt?.connected && printerCharacteristic) return printerCharacteristic;
-        if (!printerDevice && !askUser && navigator.bluetooth.getDevices) {
-            const known = await navigator.bluetooth.getDevices();
-            printerDevice = known.find(device => device.gatt && Array.isArray(device.uuids) && device.uuids.some(uuid => SERVICE_UUIDS.includes(String(uuid).toLowerCase()))) || null;
+        if (!printerDevice && restorePrinterPromiseV345) await restorePrinterPromiseV345;
+        if (!printerDevice) {
+            printerDevice = await permittedPrinterV345();
+            if (printerDevice) bindPrinterDeviceV345(printerDevice);
         }
         if (!printerDevice) {
+            if (!askUser) return null;
             printerDevice = await navigator.bluetooth.requestDevice({
                 filters: SERVICE_UUIDS.map(service => ({ services: [ service ] })),
                 optionalServices: SERVICE_UUIDS
             });
-            printerDevice.addEventListener("gattserverdisconnected", () => {
-                printerCharacteristic = null;
-                setPrinterStatus("Printer terputus. Ketuk Hubungkan untuk menyambungkan ulang.");
-            });
+            bindPrinterDeviceV345(printerDevice);
         }
         printerCharacteristic = await writableCharacteristic(printerDevice);
-        setPrinterStatus(`${printerDevice.name || "Printer thermal"} siap mencetak.`, true);
+        rememberPrinterV345(printerDevice);
+        setPrinterStatus(`${printerDevice.name || "Printer thermal"} siap mencetak.`, true, true);
         return printerCharacteristic;
     }
 
     async function pairThermalPrinterV343() {
         const button = document.getElementById("thermalPrinterBtn");
         if (button) button.disabled = true;
-        setPrinterStatus("Mencari printer thermal BLE yang kompatibel…");
+        setPrinterStatus(printerMemoryV345() ? "Menyambungkan printer tersimpan…" : "Mencari printer thermal BLE yang kompatibel…", false, !!printerMemoryV345());
         try {
             await connectPrinter(true);
             if (typeof toast === "function") toast("Printer thermal tersambung.", "success");
@@ -199,9 +291,15 @@
         }
     }
 
+    function updateReceiptPreviewV345() {
+        const source = document.querySelector("#printArea .pickup-receipt-v342");
+        const target = document.getElementById("receiptPrintPreviewV345");
+        if (source && target) target.innerHTML = source.outerHTML;
+    }
+
     function ensurePrintModal() {
         if (document.getElementById("receiptPrintModal")) return;
-        document.body.insertAdjacentHTML("beforeend", '<div id="receiptPrintModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="receiptPrintTitle" onclick="if(event.target===this)closeModal(\'receiptPrintModal\')"><div class="modal" style="max-width:520px"><div class="row"><div><span class="dashboard-kicker">Resi pengambilan</span><h2 id="receiptPrintTitle" style="margin:3px 0">Pilih cara mencetak</h2></div><button class="btn small secondary" type="button" onclick="closeModal(\'receiptPrintModal\')">×</button></div><p id="receiptPrintHint" class="muted" style="margin-top:8px;line-height:1.5"></p><div class="receipt-print-options"><button id="receiptBluetoothOption" class="receipt-print-option primary" type="button" onclick="printReceiptBluetoothV343()"><strong>🖨️ Printer Bluetooth</strong><small>Cetak langsung ke printer thermal BLE ESC/POS.</small></button><button class="receipt-print-option" type="button" onclick="printReceiptSystemV343()"><strong>📄 Dialog cetak</strong><small>Gunakan dialog cetak bawaan ponsel, AirPrint, atau simpan PDF.</small></button></div></div></div>');
+        document.body.insertAdjacentHTML("beforeend", `<div id="receiptPrintModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="receiptPrintTitle" onclick="if(event.target===this)closeModal('receiptPrintModal')"><div class="modal receipt-print-modal-v345"><div class="row"><div><span class="dashboard-kicker">Resi pengambilan</span><h2 id="receiptPrintTitle" style="margin:3px 0">Pratinjau sebelum mencetak</h2></div><button class="btn small secondary" type="button" onclick="closeModal('receiptPrintModal')" aria-label="Tutup">×</button></div><div class="receipt-preview-layout-v345"><section class="receipt-preview-panel-v345"><div class="receipt-preview-head-v345"><strong>Hasil cetak thermal</strong><span>Lebar kertas 80 mm</span></div><div class="receipt-paper-stage-v345"><div id="receiptPrintPreviewV345"></div></div></section><aside class="receipt-choice-panel-v345"><p id="receiptPrintHint" class="muted" style="margin:0 0 10px;line-height:1.5"></p><div id="receiptPrinterMemoryV345" class="receipt-printer-memory-v345"></div><div class="receipt-print-options"><button id="receiptBluetoothOption" class="receipt-print-option primary" type="button" onclick="printReceiptBluetoothV343()"><strong>🖨️ Cetak ke Printer Bluetooth</strong><small>Gunakan printer thermal BLE ESC/POS yang tersimpan.</small></button><button class="receipt-print-option" type="button" onclick="printReceiptSystemV343()"><strong>📄 Dialog cetak / PDF</strong><small>Gunakan AirPrint, printer sistem, atau simpan sebagai PDF.</small></button></div></aside></div></div></div>`);
     }
 
     function openReceiptPrintOptions(id) {
@@ -210,12 +308,15 @@
             return typeof toast === "function" && toast("Cetak resi tersedia setelah tiket masuk papan Diambil.", "error");
         }
         pendingReceiptId = id;
-        renderReceipt(report);
         ensurePrintModal();
+        renderReceipt(report);
+        updateReceiptPreviewV345();
         const bluetooth = document.getElementById("receiptBluetoothOption");
         const hint = document.getElementById("receiptPrintHint");
+        const saved = printerMemoryV345();
         if (bluetooth) bluetooth.style.display = supportsBluetoothPrint() ? "grid" : "none";
-        if (hint) hint.textContent = supportsBluetoothPrint() ? "Untuk cetak langsung, nyalakan printer dan pilih Printer Bluetooth. Koneksi pertama akan meminta izin perangkat." : "Browser ini tidak membuka printer Bluetooth langsung. Gunakan Dialog cetak; pada iPhone pilih printer AirPrint yang tersedia.";
+        if (hint) hint.textContent = supportsBluetoothPrint() ? saved ? "Periksa pratinjau. Printer tersimpan akan disambungkan otomatis tanpa memilih ulang perangkat." : "Periksa pratinjau. Cetak Bluetooth pertama akan meminta Anda memilih printer yang kompatibel." : "Periksa pratinjau, lalu gunakan Dialog cetak. Pada iPhone pilih printer AirPrint yang tersedia.";
+        syncPrinterSettings();
         openModal("receiptPrintModal");
     }
 
@@ -275,11 +376,14 @@
     window.pairThermalPrinterV343 = pairThermalPrinterV343;
     window.printReceiptSystemV343 = printReceiptSystemV343;
     window.printReceiptBluetoothV343 = printReceiptBluetoothV343;
-    window.printPickupReceiptV342 = id => {
-        if (isMobile()) return openReceiptPrintOptions(id);
-        pendingReceiptId = id;
-        return printReceiptSystemV343();
-    };
+    window.restoreThermalPrinterV345 = restorePrinterV345;
+    window.thermalPrinterStateV345 = () => ({
+        remembered: !!printerMemoryV345(),
+        name: printerDevice?.name || printerMemoryV345()?.name || null,
+        connected: !!printerDevice?.gatt?.connected,
+        ready: !!printerCharacteristic
+    });
+    window.printPickupReceiptV342 = id => openReceiptPrintOptions(id);
 
     ensurePrintModal();
     syncPrinterSettings();
