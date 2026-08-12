@@ -1,4 +1,4 @@
-# RepairLog SaaS v3.4.3
+# RepairLog SaaS v3.4.4
 
 ## Penyempurnaan v3.4.3
 - Dashboard memiliki grafik gabungan omzet dan laba harian untuk bulan kalender berjalan.
@@ -47,3 +47,12 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Absensi memiliki ringkasan kehadiran, durasi, status aktif, pencarian, dan tabel responsif.
 - Notifikasi merah langsung ditandai dibaca ketika tiket sumber dibuka.
 - Menyimpan alasan pembatalan langsung memindahkan tiket ke papan Batal.
+
+## v3.4.4 — Refresh & Performance
+
+- Pemilih Bluetooth hanya menampilkan printer thermal BLE dengan layanan cetak yang didukung.
+- Keuangan, CRM/Pelanggan, dan Absensi kembali memenuhi lebar area kerja di laptop; tabel tetap dapat digeser di ponsel.
+- Dashboard memiliki hirarki KPI yang lebih jelas, kondisi periode, tombol pembaruan, waktu pembaruan terakhir, dan auto-refresh saat aplikasi terlihat.
+- Halaman customer menampilkan bukti before/after segera setelah servis selesai, sebelum pembayaran.
+- Absensi hari sebelumnya yang belum check-out ditutup otomatis di akhir hari dan ditandai **Lupa check-out**.
+- Pemuatan data dideduplikasi, beberapa kueri dijalankan paralel, render tab berat dibuat sesuai kebutuhan, serta tersedia loading screen/progress bar.

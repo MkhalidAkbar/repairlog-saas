@@ -1,6 +1,7 @@
 (() => {
     "use strict";
     let attendanceSearch = "";
+    let attendanceSearchTimer = null;
     function attendanceDuration(row) {
         if (!row?.check_in) return 0;
         const start = new Date(row.check_in).getTime();
@@ -27,6 +28,7 @@
     }
     function attendanceStatus(row) {
         if (!row?.check_in) return '<span class="rl-badge neutral">Belum masuk</span>';
+        if (typeof isForgottenCheckout === "function" && isForgottenCheckout(row)) return '<span class="rl-badge warn">Lupa check-out</span>';
         if (row.check_out) return '<span class="rl-badge good">Selesai</span>';
         return '<span class="rl-badge warn">Sedang bekerja</span>';
     }
@@ -98,7 +100,11 @@
     window.setAttendanceSearch = function setAttendanceSearch(value) {
         attendanceSearch = String(value || "").trim();
         _attPage = 1;
-        renderAttendEnhanced();
+        if (attendanceSearchTimer) clearTimeout(attendanceSearchTimer);
+        attendanceSearchTimer = setTimeout(() => {
+            attendanceSearchTimer = null;
+            renderAttendEnhanced();
+        }, 180);
     };
     window.renderAttend = renderAttendEnhanced;
     const baseApplyFeatures = window.applyFeatures;

@@ -244,6 +244,34 @@ function todayStr() {
     return (new Date).toLocaleDateString("en-CA");
 }
 
+function attendanceCutoffIso(workDate) {
+    const cutoff = new Date(String(workDate || "") + "T23:59:59.000");
+    return Number.isNaN(cutoff.getTime()) ? (new Date).toISOString() : cutoff.toISOString();
+}
+
+function isForgottenCheckout(row) {
+    if (!row || !row.work_date || !row.check_out) return false;
+    const actual = new Date(row.check_out).getTime();
+    const cutoff = new Date(String(row.work_date) + "T23:59:59.000").getTime();
+    return Number.isFinite(actual) && Number.isFinite(cutoff) && Math.abs(actual - cutoff) <= 2e3;
+}
+
+async function autoCloseStaleAttendance() {
+    if (!FEATURES.attendance || !db || !ME.user_id) return 0;
+    let query = db.from("attendance").select("id,user_id,work_date,check_in,check_out").lt("work_date", todayStr()).is("check_out", null);
+    query = isOwner() ? query.eq("store_id", STORE_ID) : query.eq("user_id", ME.user_id);
+    const result = await query.order("work_date", { ascending: true }).limit(100);
+    if (result.error) {
+        if (typeof reportAppError === "function") reportAppError("attendance.auto-close", result.error);
+        return 0;
+    }
+    const rows = (result.data || []).filter(row => row.check_in && !row.check_out);
+    const updates = await Promise.allSettled(rows.map(row => db.from("attendance").update({
+        check_out: attendanceCutoffIso(row.work_date)
+    }).eq("id", row.id).is("check_out", null)));
+    return updates.filter(item => item.status === "fulfilled" && !item.value?.error).length;
+}
+
 async function loadMyAttendanceToday() {
     if (!db || !ME.user_id) return null;
     const {data: data} = await db.from("attendance").select("*").eq("user_id", ME.user_id).eq("work_date", todayStr()).order("created_at", {

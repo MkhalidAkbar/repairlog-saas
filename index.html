@@ -30,10 +30,15 @@
     <link rel="stylesheet" href="assets/css/print.css" media="print" />
     <link rel="stylesheet" href="assets/css/v342-stock-receipt.css" />
     <link rel="stylesheet" href="assets/css/v343-mobile-ux.css" />
+    <link rel="stylesheet" href="assets/css/v344-performance-ux.css" />
   </head>
   <body>
     <div
       id="bootLoader"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      data-mode="boot"
       style="
         position: fixed;
         inset: 0;
@@ -46,8 +51,22 @@
         z-index: 600;
       "
     >
-      <div class="bootspin"></div>
-      <div class="muted">Memuat…</div>
+      <div class="boot-loader-card">
+        <div class="boot-loader-heading">
+          <div class="bootspin" aria-hidden="true"></div>
+          <div>
+            <strong id="bootLoaderTitle">Menyiapkan RepairLog</strong>
+            <span id="bootLoaderLabel">Memuat konfigurasi aplikasi…</span>
+          </div>
+        </div>
+        <div class="boot-progress-track" aria-hidden="true">
+          <span id="bootProgressBar"></span>
+        </div>
+        <div class="boot-progress-meta">
+          <span id="bootProgressPhase">Persiapan</span>
+          <span id="bootProgressPercent">4%</span>
+        </div>
+      </div>
     </div>
     <div class="auth-screen" id="authScreen" style="display: none">
       <div class="auth-box" style="text-align: center">
@@ -239,10 +258,24 @@
             >
               <option value="">📅 Semua Bulan</option>
             </select>
+            <div class="dashboard-refresh-cluster">
+              <button
+                class="btn small secondary"
+                id="appRefreshBtn"
+                type="button"
+                onclick="refresh()"
+                aria-describedby="dataFreshness"
+              >
+                <span class="refresh-glyph" aria-hidden="true">↻</span>
+                <span class="refresh-label">Perbarui data</span>
+              </button>
+              <span id="dataFreshness" aria-live="polite">Belum diperbarui</span>
+            </div>
           </div>
         </section>
         <div id="statGrid"></div>
         <div class="insight dashboard-insight" id="insight"></div>
+        <div id="dashboardPulse" class="dashboard-pulse" aria-label="Kondisi periode"></div>
         <div id="warrantyAlert"></div>
         <div class="charts" id="chartsWrap">
           <div class="chartbox chartbox-wide profitOnly" id="revChartBox">
@@ -307,7 +340,7 @@
           <input
             id="search"
             placeholder="Cari device / customer / tiket..."
-            oninput="render()"
+            oninput="scheduleRender()"
             style="max-width: 240px"
           />
           <button
@@ -956,9 +989,13 @@
         <div class="set-row" id="thermalPrinterSetRow" style="display: none">
           <div>
             <div style="font-weight: 600">🖨️ Printer thermal Bluetooth</div>
-            <div class="muted" id="thermalPrinterStatus">Hubungkan printer BLE ESC/POS untuk cetak resi langsung.</div>
+            <div class="muted" id="thermalPrinterStatus">
+              Hubungkan printer BLE ESC/POS untuk cetak resi langsung.
+            </div>
           </div>
-          <button class="btn small" id="thermalPrinterBtn" onclick="pairThermalPrinterV343()">Hubungkan</button>
+          <button class="btn small" id="thermalPrinterBtn" onclick="pairThermalPrinterV343()">
+            Hubungkan
+          </button>
         </div>
         <div class="set-row" id="ownerSetRow">
           <div>
@@ -1478,5 +1515,6 @@
     <script src="assets/js/v341-refinements.js"></script>
     <script src="assets/js/v342-stock-receipt.js"></script>
     <script src="assets/js/v343-mobile-ux.js"></script>
+    <script src="assets/js/v344-performance-ux.js"></script>
   </body>
 </html>

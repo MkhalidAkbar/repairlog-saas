@@ -192,6 +192,19 @@ function payBoxHtml(r, id) {
     return total + qris + bank + up;
 }
 
+
+function customerEvidenceHtml(media, prepayment = false) {
+    if (!media) {
+        return `<section class="customer-evidence ${prepayment ? "is-prepayment" : ""}"><div class="customer-evidence-head"><div><span class="dashboard-kicker">Dokumentasi servis</span><h3>Perbandingan sebelum & sesudah</h3><p>Menyiapkan bukti pengerjaan untuk Anda…</p></div></div><div class="rl-skeleton" style="height:190px"></div></section>`;
+    }
+    const before = Array.isArray(media.before_media) ? media.before_media : [];
+    const after = Array.isArray(media.after_media) ? media.after_media : [];
+    detailMedia = { before, after };
+    const beforeMedia = before.length ? mediaHtml(before, "before") : '<p class="muted">Belum ada foto kondisi awal.</p>';
+    const afterMedia = after.length ? mediaHtml(after, "after") : '<p class="muted">Belum ada foto hasil akhir.</p>';
+    return `<section class="customer-evidence ${prepayment ? "is-prepayment" : ""}"><div class="customer-evidence-head"><div><span class="dashboard-kicker">Dokumentasi servis</span><h3>Perbandingan sebelum & sesudah</h3><p>${prepayment ? "Periksa hasil pengerjaan berikut sebelum melanjutkan pembayaran." : "Dokumentasi ini tersimpan bersama riwayat servis dan garansi Anda."}</p></div><span class="customer-evidence-tag">${before.length + after.length} media</span></div><div class="customer-evidence-grid"><article class="customer-evidence-panel"><h4>🔧 Sebelum</h4><p class="muted">${esc(media.before_notes || "Kondisi saat perangkat diterima.")}</p>${beforeMedia}</article><article class="customer-evidence-panel"><h4>✅ Sesudah</h4><p class="muted">${esc(media.after_notes || "Hasil setelah pengerjaan selesai.")}</p>${afterMedia}</article></div></section>`;
+}
+
 async function submitProof(id, input) {
     const f = input.files && input.files[0];
     if (!f) return;
@@ -277,15 +290,12 @@ async function renderCustomer(id) {
             }
             body = beforeBox + '<div style="margin:16px 0;border:1px solid var(--border);border-radius:12px;padding:6px 16px">' + steps + '</div><div class="insight">ℹ️ Halaman ini menampilkan status pengerjaan servis Anda dan diperbarui otomatis. Setelah servis selesai, informasi pembayaran akan muncul di sini.</div>';
         } else if (!lunas) {
-            body = '<div class="pub-warranty ok" style="background:#dbeafe;color:#1e40af;border-color:#93c5fd">✅ Servis sudah SELESAI. Silakan lakukan pembayaran di bawah ini.</div>' + payBoxHtml(r, id);
+            body = '<div class="pub-warranty ok" style="background:#dbeafe;color:#1e40af;border-color:#93c5fd">✅ Servis sudah SELESAI. Periksa hasil pengerjaan, lalu lanjutkan pembayaran.</div>' + customerEvidenceHtml(_custMedia, true) + '<section class="customer-payment-panel">' + payBoxHtml(r, id) + '</section>';
         } else {
             const w = warrantyStatus(r);
             const wend = w.end ? fmtDate(w.end) : "-";
             const wHtml = r.warranty_days ? w.active ? '<div class="pub-warranty ok">🛡️ Garansi AKTIF — sisa <b>' + w.daysLeft + " hari</b><br>Berlaku sampai <b>" + wend + "</b></div>" : '<div class="pub-warranty no">❌ Garansi sudah berakhir' + (w.end ? " (" + wend + ")" : "") + "</div>" : '<div class="pub-warranty no">Tanpa garansi</div>';
-            let mediaBox = "";
-            if (_custMedia) {
-                mediaBox = '<div class="ba"><div class="box"><h4>🔧 Sebelum</h4><p class="muted">' + esc(_custMedia.before_notes || "-") + "</p>" + mediaHtml(_custMedia.before_media, "before") + '</div><div class="box"><h4>✅ Sesudah</h4><p class="muted">' + esc(_custMedia.after_notes || "-") + "</p>" + mediaHtml(_custMedia.after_media, "after") + "</div></div>";
-            }
+            const mediaBox = customerEvidenceHtml(_custMedia, false);
             const comps = r.components && r.components.length ? '<div style="margin-top:10px">' + r.components.map(c => '<span class="chip">' + esc(c) + "</span>").join("") + "</div>" : "";
             body = '<div class="pub-warranty ok" style="margin-bottom:10px">✅ Pembayaran LUNAS — terima kasih!</div>' + wHtml + compWarrantyHtml(r) + '<table class="ftbl"><tr><td>Perangkat</td><td>' + esc(r.device || "-") + "</td></tr><tr><td>Merek</td><td>" + esc(r.brand || "-") + "</td></tr><tr><td>Status</td><td>" + esc(r.status || "-") + "</td></tr><tr><td>Total Biaya</td><td>" + rp(r.fee) + "</td></tr><tr><td>Tgl Masuk</td><td>" + fmtDate(r.date_in) + "</td></tr><tr><td>Tgl Selesai</td><td>" + fmtDate(r.date_out) + "</td></tr><tr><td>Garansi</td><td>" + (r.warranty_days ? r.warranty_days + " hari" : "Tanpa garansi") + "</td></tr></table>" + comps + mediaBox + '<div style="text-align:center;margin-top:16px"><button class="btn" onclick="pubInvoice()">📄 Unduh Invoice / Bukti Bayar (PDF)</button></div><div class="insight" style="margin-top:14px"><b>ℹ️ Info garansi</b><br>• Simpan halaman ini sebagai bukti servis & garansi.<br>• Tunjukkan halaman ini saat klaim garansi.</div>';
         }
@@ -299,7 +309,7 @@ async function renderCustomer(id) {
                 }
             } catch (e) {}
         }
-        if (lunas && !_custMedia) {
+        if (done && !_custMedia) {
             try {
                 const {data: data} = await db.from("reports_public").select("before_media,after_media,before_notes,after_notes").eq("id", id).maybeSingle();
                 if (data) {

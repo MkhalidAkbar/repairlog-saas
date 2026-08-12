@@ -1,0 +1,518 @@
+/* RepairLog v3.4.4 — desktop width, refresh, loading, and customer evidence */
+
+/* Loading state: full screen for boot, compact non-blocking card for refresh. */
+#bootLoader {
+  color: var(--text);
+  transition: opacity 180ms ease;
+}
+
+#bootLoader .boot-loader-card {
+  width: min(420px, calc(100vw - 32px));
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 18px 55px rgba(26, 45, 70, 0.16);
+}
+
+.boot-loader-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.boot-loader-heading .bootspin {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+
+.boot-loader-heading strong,
+.boot-loader-heading span {
+  display: block;
+}
+
+.boot-loader-heading strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.boot-loader-heading span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.boot-progress-track {
+  height: 8px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--card2));
+}
+
+#bootProgressBar {
+  display: block;
+  width: 4%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #5e9fe8);
+  transition: width 220ms ease;
+}
+
+.boot-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+#bootLoader[data-mode="background"] {
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 12px !important;
+  background: transparent !important;
+  pointer-events: none;
+}
+
+#bootLoader[data-mode="background"] .boot-loader-card {
+  width: min(460px, calc(100vw - 24px));
+  padding: 13px 15px;
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow: 0 8px 28px rgba(26, 45, 70, 0.13);
+}
+
+#bootLoader[data-mode="background"] .boot-loader-heading .bootspin {
+  width: 24px;
+  height: 24px;
+}
+
+#bootLoader[data-mode="background"] .boot-loader-heading strong {
+  font-size: 13px;
+}
+
+#bootLoader[data-mode="background"] .boot-loader-heading span {
+  font-size: 11px;
+}
+
+#bootLoader[data-mode="background"] .boot-progress-track {
+  height: 5px;
+  margin-top: 10px;
+}
+
+#bootLoader[data-mode="background"] .boot-progress-meta {
+  display: none;
+}
+
+/* Dashboard hierarchy and freshness controls. */
+.dashboard-intro {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 5%, var(--card)), var(--card) 62%);
+}
+
+.dashboard-intro::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--accent);
+}
+
+.dashboard-copy,
+.dashboard-filters {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-refresh-cluster {
+  display: grid;
+  grid-template-columns: auto;
+  justify-items: end;
+  gap: 3px;
+  min-width: 154px;
+}
+
+#appRefreshBtn {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+#appRefreshBtn .refresh-glyph {
+  display: inline-block;
+  margin-right: 6px;
+}
+
+#appRefreshBtn.is-loading .refresh-glyph {
+  animation: rlRefreshSpin 800ms linear infinite;
+}
+
+#dataFreshness {
+  max-width: 190px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: right;
+}
+
+@keyframes rlRefreshSpin {
+  to { transform: rotate(360deg); }
+}
+
+.dashboard-pulse {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.dashboard-pulse-item {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.dashboard-pulse-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--card2));
+  color: var(--accent);
+  font-size: 17px;
+}
+
+.dashboard-pulse-item strong,
+.dashboard-pulse-item small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-pulse-item strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.dashboard-pulse-item small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+#statGrid .stat {
+  min-height: 106px;
+}
+
+#statGrid .stat .num {
+  letter-spacing: -0.025em;
+}
+
+.chartbox {
+  border-color: color-mix(in srgb, var(--accent) 10%, var(--border));
+}
+
+#revChartBox {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 4%, var(--card)), var(--card) 34%);
+}
+
+/* Desktop content must fill the available application width. */
+#tab-finance,
+#tab-cust,
+#tab-attend,
+#financeV34,
+#crmV34,
+#attendBox,
+.attendance-content,
+#financeV34 > *,
+#crmV34 > *,
+#attendBox > * {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+#tab-finance .rl-head,
+#tab-cust .rl-head,
+#tab-attend .rl-head,
+#finTabs,
+#crmTabs,
+#financeV34 .rl-panel,
+#crmV34 .rl-panel,
+#attendBox .rl-panel {
+  width: 100%;
+}
+
+.rl-table {
+  width: 100%;
+}
+
+.rl-table table {
+  width: 100%;
+  min-width: 100%;
+  max-width: none;
+}
+
+#financeV34 .rl-table::after,
+#crmV34 .rl-table::after {
+  display: none;
+}
+
+.attendance-layout {
+  width: 100%;
+  grid-template-columns: 128px minmax(0, 1fr);
+}
+
+.attendance-table table {
+  width: 100%;
+  min-width: 100%;
+}
+
+/* Completed job evidence shown before payment and retained for warranty. */
+#publicView {
+  width: 100%;
+  max-width: 1184px;
+}
+
+#publicView .pub-card {
+  width: min(1120px, calc(100% - 32px));
+  max-width: 1120px;
+}
+
+.customer-evidence {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 3%, var(--card));
+}
+
+.customer-evidence.is-prepayment {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.customer-evidence-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.customer-evidence-head h3 {
+  margin: 3px 0 4px;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.customer-evidence-head p {
+  max-width: 690px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.customer-evidence-tag {
+  flex: none;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.customer-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.customer-evidence-panel {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.customer-evidence-panel h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.customer-evidence-panel p {
+  min-height: 36px;
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.customer-evidence-panel .photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.customer-evidence-panel img,
+.customer-evidence-panel video {
+  width: 100%;
+  max-width: 100%;
+  height: 220px;
+  border-radius: 9px;
+  object-fit: cover;
+}
+
+.customer-payment-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.forgotten-checkout-note {
+  color: var(--rl-warn);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+@media (min-width: 701px) {
+  .container {
+    width: min(100%, 1440px);
+    max-width: 1440px;
+  }
+
+  #financeV34 .rl-table table,
+  #crmV34 .rl-table table,
+  .attendance-table table {
+    table-layout: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-refresh-cluster {
+    width: 100%;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: start;
+  }
+
+  #dataFreshness {
+    text-align: left;
+  }
+
+  .dashboard-pulse {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  #bootLoader .boot-loader-card {
+    padding: 20px;
+  }
+
+  .dashboard-refresh-cluster {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  #appRefreshBtn {
+    width: 100%;
+  }
+
+  #dataFreshness {
+    max-width: none;
+  }
+
+  .dashboard-pulse {
+    display: flex;
+    gap: 9px;
+    overflow-x: auto;
+    padding-bottom: 3px;
+    scroll-snap-type: x proximity;
+  }
+
+  .dashboard-pulse-item {
+    min-width: 230px;
+    scroll-snap-align: start;
+  }
+
+  .rl-table table,
+  #financeV34 .rl-table table,
+  #crmV34 .rl-table table,
+  .attendance-table table {
+    width: max-content;
+    min-width: 680px;
+    max-width: none;
+  }
+
+  #financeV34 .rl-table::after,
+  #crmV34 .rl-table::after {
+    display: block;
+  }
+
+  #publicView {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+
+  #publicView .pub-card {
+    width: 100%;
+    max-width: none;
+  }
+
+  .customer-evidence {
+    padding: 14px;
+  }
+
+  .customer-evidence-head {
+    display: block;
+  }
+
+  .customer-evidence-tag {
+    display: inline-block;
+    margin-top: 9px;
+  }
+
+  .customer-evidence-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-evidence-panel p {
+    min-height: 0;
+  }
+
+  .customer-evidence-panel img,
+  .customer-evidence-panel video {
+    height: 180px;
+  }
+
+  .customer-payment-panel {
+    padding: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #bootProgressBar,
+  #bootLoader,
+  #appRefreshBtn .refresh-glyph {
+    transition: none !important;
+    animation: none !important;
+  }
+}

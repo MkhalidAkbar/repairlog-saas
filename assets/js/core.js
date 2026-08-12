@@ -45,7 +45,7 @@ if (db) {
 
 const BRANDS = [ "Asus", "Acer", "Lenovo", "HP", "Dell", "MSI", "Apple/MacBook", "Axioo", "Toshiba", "Samsung", "Lainnya" ];
 
-const APP_VERSION = "v3.4.3";
+const APP_VERSION = "v3.4.4";
 
 const DEVICE_TYPES = [ "Laptop", "PC/Komputer", "Printer", "HP/Smartphone", "CCTV" ];
 
@@ -809,7 +809,9 @@ function applyFeatures() {
         }
     });
     if (!_md && typeof charts !== "undefined" && charts.devtype) {
-        try { charts.devtype.destroy(); } catch (e) {}
+        try {
+            charts.devtype.destroy();
+        } catch (e) {}
         delete charts.devtype;
     }
     [ "filterDevTypeWrap", "stockDevFilter" ].forEach(x => {
@@ -1170,16 +1172,68 @@ function nextTicketPrefix(jobType) {
     return String(mx + 1).padStart(3, "0");
 }
 
-async function loadAll() {
-    if (!db) return;
-    const {data: data, error: error} = await db.from("reports_view").select("*").order("created_at", {
-        ascending: false
-    });
-    if (!error && data) {
-        reports = data;
+let loadAllPromise = null;
+let lastDataLoadAt = null;
+let loadProgressHideTimer = null;
+let scheduledRenderTimer = null;
+
+function setLoadProgress(percent, label, phase = "Memuat data", mode = "boot") {
+    const loader = $("bootLoader");
+    if (!loader) return;
+    if (loadProgressHideTimer) {
+        clearTimeout(loadProgressHideTimer);
+        loadProgressHideTimer = null;
     }
-    try {
-        const workflowResult = await db.from("reports").select("id,sla_due_at,delay_reason,estimate_amount,estimate_notes,approval_status,approval_token,approval_requested_at,approval_responded_at,approval_customer_name,approval_note,wa_automation_state,wa_next_reminder_at,wa_last_sent_at,wa_last_event,qc_status,qc_items,qc_notes,qc_completed_at,qc_completed_by");
+    const safePercent = Math.max(2, Math.min(100, Number(percent) || 0));
+    loader.dataset.mode = mode === "boot" ? "boot" : "background";
+    loader.style.display = "flex";
+    loader.setAttribute("aria-busy", "true");
+    const title = $("bootLoaderTitle");
+    const message = $("bootLoaderLabel");
+    const bar = $("bootProgressBar");
+    const phaseEl = $("bootProgressPhase");
+    const percentEl = $("bootProgressPercent");
+    if (title) title.textContent = mode === "boot" ? "Menyiapkan RepairLog" : "Memperbarui data";
+    if (message) message.textContent = label || "Mohon tunggu sebentar…";
+    if (bar) bar.style.width = safePercent + "%";
+    if (phaseEl) phaseEl.textContent = phase;
+    if (percentEl) percentEl.textContent = Math.round(safePercent) + "%";
+}
+
+function finishLoadProgress(success = true, mode = "boot") {
+    const loader = $("bootLoader");
+    if (!loader) return;
+    setLoadProgress(success ? 100 : 96, success ? "Data terbaru siap digunakan." : "Pembaruan gagal. Data sebelumnya tetap tersedia.", success ? "Selesai" : "Terjadi kendala", mode);
+    loader.setAttribute("aria-busy", "false");
+    loadProgressHideTimer = setTimeout(() => {
+        loader.style.display = "none";
+        loader.dataset.mode = "boot";
+    }, mode === "boot" ? 320 : 240);
+}
+
+function updateDataFreshness(date = new Date) {
+    lastDataLoadAt = date instanceof Date ? date : new Date(date);
+    const el = $("dataFreshness");
+    if (el) {
+        el.textContent = "Baru saja diperbarui";
+        el.title = "Pembaruan data terakhir " + lastDataLoadAt.toLocaleString("id-ID");
+    }
+    if (typeof updateFreshnessUiV344 === "function") updateFreshnessUiV344();
+}
+
+async function loadAll(options = {}) {
+    if (!db) return;
+    if (loadAllPromise) return loadAllPromise;
+    const mode = options.mode || (lastDataLoadAt ? "background" : "boot");
+    loadAllPromise = (async () => {
+        setLoadProgress(8, "Menghubungkan ke data toko…", "Laporan", mode);
+        const [reportResult, workflowResult] = await Promise.all([
+            db.from("reports_view").select("*").order("created_at", { ascending: false }),
+            db.from("reports").select("id,sla_due_at,delay_reason,estimate_amount,estimate_notes,approval_status,approval_token,approval_requested_at,approval_responded_at,approval_customer_name,approval_note,wa_automation_state,wa_next_reminder_at,wa_last_sent_at,wa_last_event,qc_status,qc_items,qc_notes,qc_completed_at,qc_completed_by")
+        ]);
+        if (reportResult.error) throw reportResult.error;
+        reports = reportResult.data || [];
+        setLoadProgress(38, "Menyelaraskan status dan alur kerja…", "Workflow", mode);
         if (!workflowResult.error && workflowResult.data) {
             const workflowById = new Map(workflowResult.data.map(row => [ row.id, row ]));
             reports = reports.map(row => ({
@@ -1187,15 +1241,69 @@ async function loadAll() {
                 ...workflowById.get(row.id) || {}
             }));
         }
-    } catch (workflowError) {}
-    await loadParts();
-    if (typeof loadBusinessSuiteData === "function") await loadBusinessSuiteData();
-    if (typeof loadPriorityReportMetadata === "function") await loadPriorityReportMetadata();
-    render();
+        setLoadProgress(56, "Memuat stok, keuangan, pelanggan, dan absensi…", "Modul bisnis", mode);
+        const tasks = [];
+        if (typeof loadParts === "function") tasks.push(Promise.resolve().then(() => loadParts()));
+        if (typeof loadBusinessSuiteData === "function") tasks.push(Promise.resolve().then(() => loadBusinessSuiteData()));
+        if (typeof loadPriorityReportMetadata === "function") tasks.push(Promise.resolve().then(() => loadPriorityReportMetadata()));
+        if (typeof autoCloseStaleAttendance === "function") tasks.push(Promise.resolve().then(() => autoCloseStaleAttendance()));
+        const settled = await Promise.allSettled(tasks);
+        settled.forEach((result, index) => {
+            if (result.status === "rejected" && typeof reportAppError === "function") {
+                reportAppError("load.module." + index, result.reason);
+            }
+        });
+        setLoadProgress(88, "Menyiapkan tampilan terbaru…", "Render", mode);
+        render();
+        updateDataFreshness(new Date);
+        finishLoadProgress(true, mode);
+        return reports;
+    })();
+    try {
+        return await loadAllPromise;
+    } catch (error) {
+        finishLoadProgress(false, mode);
+        throw error;
+    } finally {
+        loadAllPromise = null;
+    }
+}
+
+async function refreshAppData(mode = "manual") {
+    const background = mode === "background";
+    const button = $("appRefreshBtn");
+    if (button && !background) {
+        button.disabled = true;
+        button.classList.add("is-loading");
+        const label = button.querySelector(".refresh-label");
+        if (label) label.textContent = "Memperbarui…";
+    }
+    try {
+        await loadAll({ mode: background ? "background" : "refresh" });
+        if (!background && typeof toast === "function") toast("Data sudah diperbarui.", "success");
+    } catch (error) {
+        if (!background && typeof toast === "function") toast("Gagal memperbarui data: " + (error.message || error), "error");
+        throw error;
+    } finally {
+        if (button && !background) {
+            button.disabled = false;
+            button.classList.remove("is-loading");
+            const label = button.querySelector(".refresh-label");
+            if (label) label.textContent = "Perbarui data";
+        }
+    }
 }
 
 function refresh() {
-    loadAll();
+    return refreshAppData("manual");
+}
+
+function scheduleRender(delay = 140) {
+    if (scheduledRenderTimer) clearTimeout(scheduledRenderTimer);
+    scheduledRenderTimer = setTimeout(() => {
+        scheduledRenderTimer = null;
+        render();
+    }, delay);
 }
 
 function showTab(t) {

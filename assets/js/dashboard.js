@@ -141,8 +141,10 @@ function render() {
         const rr = recentReports();
         rec.innerHTML = rr.length ? rr.map(card).join("") : `<div class="empty">${LANG === "en" ? `No jobs in the last ${recentDays} days. Everything is still saved under the Board menu.` : `Tidak ada pekerjaan dalam ${recentDays} hari terakhir. Semua tetap tersimpan di menu Papan.`}</div>`;
     }
-    renderDash();
-    renderBoard();
+    const dashTab = $("tab-dash");
+    const boardTab = $("tab-board");
+    if (!dashTab || dashTab.style.display !== "none") renderDash();
+    if (boardTab && boardTab.style.display !== "none") renderBoard();
     try {
         applyLang();
     } catch (e) {}
@@ -185,6 +187,13 @@ function renderDash() {
             const top = Object.keys(lc).sort((a, b) => lc[b] - lc[a])[0];
             ins.innerHTML = LANG === "en" ? `💡 Total <b>${total}</b> jobs, <b>${selesai}</b> done. Mostly <b>Level ${top}</b> (${LEVELS[top].name}).` : `💡 Total <b>${total}</b> pekerjaan, <b>${selesai}</b> selesai. Paling banyak <b>Level ${top}</b> (${LEVELS[top].name}).`;
         }
+    }
+    const pulse = $("dashboardPulse");
+    if (pulse) {
+        const completion = total ? Math.round(selesai / total * 100) : 0;
+        const active = src.filter(r => !isFinalized(r) && !/batal|gagal|cancel/i.test(r.status || "")).length;
+        const averageTicket = finSrc.length ? revenue / finSrc.length : 0;
+        pulse.innerHTML = `<article class="dashboard-pulse-item"><span class="dashboard-pulse-icon" aria-hidden="true">✓</span><div><strong>${completion}% selesai</strong><small>${selesai} dari ${total} laporan pada periode</small></div></article><article class="dashboard-pulse-item"><span class="dashboard-pulse-icon" aria-hidden="true">↗</span><div><strong>${active} pekerjaan aktif</strong><small>Belum masuk status final</small></div></article><article class="dashboard-pulse-item"><span class="dashboard-pulse-icon" aria-hidden="true">Rp</span><div><strong>${averageTicket ? rpShort(averageTicket) : "Rp0"} rata-rata</strong><small>Nilai tiket selesai</small></div></article>`;
     }
     const wal = $("warrantyAlert");
     if (wal) {
@@ -264,7 +273,9 @@ function renderCharts() {
         const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const currentDay = now.getDate();
-        const rdays = Array.from({ length: daysInMonth }, (_, index) => String(index + 1));
+        const rdays = Array.from({
+            length: daysInMonth
+        }, (_, index) => String(index + 1));
         const monthReports = reports.filter(r => {
             if (!isFinalized(r) || !String(revenueDate(r)).startsWith(monthKey)) return false;
             return !_dt || (r.device_type || "Laptop") === _dt;
@@ -282,7 +293,10 @@ function renderCharts() {
             return monthReports.filter(r => revenueDate(r) === key).reduce((sum, r) => sum + (Number(r.fee) || 0) - (Number(r.cost) || 0), 0);
         });
         const title = $("revenueChartTitle");
-        if (title) title.textContent = `📈 Omzet & Laba • ${now.toLocaleDateString("id-ID", { month: "long", year: "numeric" })}`;
+        if (title) title.textContent = `📈 Omzet & Laba • ${now.toLocaleDateString("id-ID", {
+            month: "long",
+            year: "numeric"
+        })}`;
         const crev = $("chartRevenue");
         if (crev) charts.rev = new Chart(crev, {
             type: "line",
@@ -314,12 +328,19 @@ function renderCharts() {
             },
             options: {
                 maintainAspectRatio: false,
-                interaction: { mode: "index", intersect: false },
+                interaction: {
+                    mode: "index",
+                    intersect: false
+                },
                 plugins: {
                     legend: {
                         display: true,
                         position: "bottom",
-                        labels: { usePointStyle: true, boxWidth: 8, padding: 18 }
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                            padding: 18
+                        }
                     },
                     tooltip: {
                         callbacks: {
@@ -339,9 +360,17 @@ function renderCharts() {
                         }
                     },
                     x: {
-                        title: { display: true, text: "Tanggal" },
-                        ticks: { autoSkip: true, maxTicksLimit: 16 },
-                        grid: { display: false }
+                        title: {
+                            display: true,
+                            text: "Tanggal"
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 16
+                        },
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }
@@ -440,8 +469,20 @@ function renderCharts() {
         const cdt = $("chartDevType");
         if (cdt) charts.devtype = new Chart(cdt, {
             type: "doughnut",
-            data: { labels: dtl, datasets: [ { data: dtl.map(k => dtc[k]), backgroundColor: [ "#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#06b6d4", "#a855f7" ] } ] },
-            options: { plugins: { legend: { position: "bottom" } } }
+            data: {
+                labels: dtl,
+                datasets: [ {
+                    data: dtl.map(k => dtc[k]),
+                    backgroundColor: [ "#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#06b6d4", "#a855f7" ]
+                } ]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
         });
     }
     const _svc = _rbase.filter(r => (r.job_type || "Service") !== "Garansi").length, _gar = _rbase.filter(r => (r.job_type || "") === "Garansi").length;
@@ -1151,7 +1192,10 @@ function setBoardMobileStage(stage) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
         const root = $("boardStageTabs");
         const active = root?.querySelector("button.active");
-        if (root && active) root.scrollTo({ left: Math.max(0, active.offsetLeft - root.offsetLeft - 4), behavior: "smooth" });
+        if (root && active) root.scrollTo({
+            left: Math.max(0, active.offsetLeft - root.offsetLeft - 4),
+            behavior: "smooth"
+        });
     }));
 }
 
@@ -1185,7 +1229,9 @@ function renderBoard() {
     }).join("");
     const addCol = isOwner() ? `<div class="bcol bcol-addcol" onclick="addStage()">+ Tambah kolom</div>` : "";
     wrap.innerHTML = cols + special + addCol;
-    try { applyBoardZoom(); } catch (e) {}
+    try {
+        applyBoardZoom();
+    } catch (e) {}
     try {
         applyLang();
     } catch (e) {}
