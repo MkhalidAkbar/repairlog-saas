@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="assets/css/priority-13-15.css" />
     <link rel="stylesheet" href="assets/css/print.css" media="print" />
     <link rel="stylesheet" href="assets/css/v342-stock-receipt.css" />
+    <link rel="stylesheet" href="assets/css/v343-mobile-ux.css" />
   </head>
   <body>
     <div
@@ -242,15 +243,11 @@
         </section>
         <div id="statGrid"></div>
         <div class="insight dashboard-insight" id="insight"></div>
-        <section
-          id="actionCenter"
-          class="action-center"
-          aria-labelledby="actionCenterTitle"
-        ></section>
         <div id="warrantyAlert"></div>
         <div class="charts" id="chartsWrap">
-          <div class="chartbox profitOnly" id="revChartBox">
-            <h3>💰 Pendapatan 7 Hari Terakhir</h3>
+          <div class="chartbox chartbox-wide profitOnly" id="revChartBox">
+            <h3 id="revenueChartTitle">📈 Omzet &amp; Laba • Bulan Ini</h3>
+            <p class="chart-caption">Perbandingan harian pada bulan berjalan.</p>
             <canvas id="chartRevenue"></canvas>
           </div>
           <div class="chartbox">
@@ -290,6 +287,11 @@
       </div>
 
       <div id="tab-list" style="display: none">
+        <section
+          id="actionCenter"
+          class="action-center report-action-center"
+          aria-labelledby="actionCenterTitle"
+        ></section>
         <div class="row" style="margin-bottom: 10px; flex-wrap: wrap; gap: 8px">
           <h2 style="margin: 0">📋 Laporan</h2>
           <div class="board-zoom" id="listZoom" style="display: inline-flex">
@@ -352,8 +354,12 @@
       </div>
 
       <div id="tab-board" style="display: none">
-        <div class="row" style="margin-bottom: 12px">
-          <h2 style="margin: 0">🗂️ Papan Pengerjaan</h2>
+        <div class="row board-page-head" style="margin-bottom: 12px">
+          <div>
+            <span class="dashboard-kicker">Alur pekerjaan</span>
+            <h2 style="margin: 3px 0 0">🗂️ Papan Pengerjaan</h2>
+            <p class="board-retention-note">Tiket Diambil tetap tampil 1 hari, lalu berada di Arsip selama 3 hari.</p>
+          </div>
           <div class="board-zoom" id="boardZoom">
             <button type="button" onclick="boardZoomBtn(-1)" title="Perkecil">
               −</button
@@ -363,6 +369,7 @@
             </button>
           </div>
         </div>
+        <nav id="boardStageTabs" class="board-stage-tabs" aria-label="Tahap papan"></nav>
         <div class="board" id="boardWrap"></div>
       </div>
 
@@ -933,7 +940,7 @@
         </div>
         <div class="set-row" id="bioSetRow">
           <div>
-            <div style="font-weight: 600">Login sidik jari</div>
+            <div id="bioSetTitle" style="font-weight: 600">Login biometrik</div>
             <div class="muted" id="bioStatus">
               Masuk cukup dengan biometrik di perangkat ini.
             </div>
@@ -945,6 +952,13 @@
           >
             Aktifkan
           </button>
+        </div>
+        <div class="set-row" id="thermalPrinterSetRow" style="display: none">
+          <div>
+            <div style="font-weight: 600">🖨️ Printer thermal Bluetooth</div>
+            <div class="muted" id="thermalPrinterStatus">Hubungkan printer BLE ESC/POS untuk cetak resi langsung.</div>
+          </div>
+          <button class="btn small" id="thermalPrinterBtn" onclick="pairThermalPrinterV343()">Hubungkan</button>
         </div>
         <div class="set-row" id="ownerSetRow">
           <div>
@@ -1463,5 +1477,6 @@
     <script src="assets/js/boot.js"></script>
     <script src="assets/js/v341-refinements.js"></script>
     <script src="assets/js/v342-stock-receipt.js"></script>
+    <script src="assets/js/v343-mobile-ux.js"></script>
   </body>
 </html>

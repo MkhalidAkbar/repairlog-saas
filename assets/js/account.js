@@ -13,6 +13,9 @@ function showAuth(show) {
     try {
         applyLang();
     } catch (e) {}
+    try {
+        applyBiometricUi();
+    } catch (e) {}
 }
 
 function showApp() {
@@ -160,7 +163,7 @@ function lockApp() {
         $("pwForm").style.display = "none";
         $("pwToggle").style.display = "block";
         $("forgotBtn").style.display = "none";
-        $("authSub").textContent = "Terkunci — tap sidik jari untuk lanjut";
+        $("authSub").textContent = `Terkunci — tap ${biometricLabel()} untuk lanjut`;
     } else {
         $("authSub").textContent = "Terkunci — masuk lagi";
         togglePwFormForce();
@@ -174,6 +177,34 @@ function lockApp() {
 }));
 
 const BIO_KEY = "rl_bio", BIO_CRED = "rl_bio_id", BIO_LOGIN = "rl_bio_login";
+
+function isIPhoneDevice() {
+    return /iPhone/i.test(navigator.userAgent || "");
+}
+
+function isAndroidDevice() {
+    return /Android/i.test(navigator.userAgent || "");
+}
+
+function biometricLabel(capitalized = false) {
+    let label = isIPhoneDevice() ? "Face ID" : isAndroidDevice() ? "sidik jari" : "biometrik perangkat";
+    if (capitalized && label === "sidik jari") label = "Sidik jari";
+    return label;
+}
+
+function applyBiometricUi() {
+    const label = biometricLabel();
+    const title = $("bioSetTitle");
+    if (title) title.textContent = `Login ${label}`;
+    const circle = $("bioCircle");
+    if (circle) {
+        circle.title = `Masuk dengan ${label}`;
+        if (isIPhoneDevice() && circle.dataset.biometricIcon !== "face") {
+            circle.dataset.biometricIcon = "face";
+            circle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M8.5 9.5v1M15.5 9.5v1M9 15c1.8 1.5 4.2 1.5 6 0M12 8v4l-1 1"/></svg>';
+        }
+    }
+}
 
 function bioEnabled() {
     return !!localStorage.getItem(BIO_KEY);
@@ -207,7 +238,7 @@ function clearBio() {
 
 function bioTap() {
     if (bioEnabled()) doBiometric(); else {
-        $("authSub").textContent = "Sidik jari belum aktif. Masuk dulu, lalu aktifkan di ⚙️.";
+        $("authSub").textContent = `${biometricLabel(true)} belum aktif. Masuk dulu, lalu aktifkan di ⚙️.`;
         togglePwFormForce();
     }
 }
@@ -304,14 +335,15 @@ async function doBiometric() {
             await afterLogin();
         } else togglePwFormForce();
     } catch (e) {
-        $("authError").textContent = "Verifikasi sidik jari gagal.";
+        $("authError").textContent = `Verifikasi ${biometricLabel()} gagal.`;
     }
 }
 
 function openSettings() {
+    applyBiometricUi();
     const on = bioEnabled();
     $("bioToggleBtn").textContent = on ? "Nonaktifkan" : "Aktifkan";
-    $("bioStatus").textContent = on ? "Sidik jari aktif di perangkat ini." : "Masuk cukup dengan biometrik di perangkat ini.";
+    $("bioStatus").textContent = on ? `${biometricLabel(true)} aktif di perangkat ini.` : `Masuk cukup dengan ${biometricLabel()} di perangkat ini.`;
     if ($("setName")) $("setName").value = ME.name || "";
     if (typeof renderAvatarPrev === "function") renderAvatarPrev();
     openModal("settingsModal");
@@ -327,7 +359,7 @@ async function toggleBiometric() {
         toast("Biometrik dinonaktifkan.", "success");
     } else {
         const ok = await enableBiometric();
-        if (ok) toast("Biometrik aktif. Lain kali cukup tap sidik jari.", "success");
+        if (ok) toast(`${biometricLabel(true)} aktif. Lain kali cukup tap untuk masuk.`, "success");
     }
     openSettings();
 }

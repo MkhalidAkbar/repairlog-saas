@@ -1,10 +1,10 @@
-# Deployment RepairLog v3.4.2
+# Deployment RepairLog v3.4.3
 
 1. Backup website, `config.js`, dan database Supabase.
 2. Jalankan `20260811_priority_13_14_15_preflight.sql`.
 3. Hanya jika preflight lulus, jalankan `20260811_priority_13_14_15.sql`.
 4. Upload seluruh folder tanpa menimpa `config.js` produksi.
-5. Refresh dua kali, tutup/buka PWA. Cache baru: `repairlog-v3.4.2-stock-receipt`.
+5. Refresh dua kali, tutup/buka PWA. Cache baru: `repairlog-v3.4.3-mobile-ux`.
 
 ## Smoke test
 - Sistem: diagnostik hijau, backup JSON/CSV, pindah ke Sampah dan pulihkan.

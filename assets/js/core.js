@@ -45,7 +45,7 @@ if (db) {
 
 const BRANDS = [ "Asus", "Acer", "Lenovo", "HP", "Dell", "MSI", "Apple/MacBook", "Axioo", "Toshiba", "Samsung", "Lainnya" ];
 
-const APP_VERSION = "v3.4.2";
+const APP_VERSION = "v3.4.3";
 
 const DEVICE_TYPES = [ "Laptop", "PC/Komputer", "Printer", "HP/Smartphone", "CCTV" ];
 
@@ -197,7 +197,7 @@ const FEAT_LABELS = {
     charts: "Grafik",
     publicLink: "Link garansi publik",
     print: "Cetak / PDF",
-    biometric: "Login sidik jari",
+    biometric: "Login biometrik perangkat",
     profit: "Modal & Laba",
     whatsapp: "No. WhatsApp customer",
     collab: "Kolaborasi (Papan, catatan, notifikasi)",
@@ -803,8 +803,15 @@ function applyFeatures() {
     const _md = !!FEATURES.multiDevice;
     [ "devTypeRow", "dashDevFilter", "devTypeChartBox" ].forEach(x => {
         const e = $(x);
-        if (e) e.style.display = _md ? "" : "none";
+        if (e) {
+            e.style.display = _md ? "" : "none";
+            e.hidden = !_md;
+        }
     });
+    if (!_md && typeof charts !== "undefined" && charts.devtype) {
+        try { charts.devtype.destroy(); } catch (e) {}
+        delete charts.devtype;
+    }
     [ "filterDevTypeWrap", "stockDevFilter" ].forEach(x => {
         const e = $(x);
         if (e) e.style.display = _md ? "" : "none";
@@ -1218,6 +1225,7 @@ function showTab(t) {
     if (_nca) _nca.classList.toggle("active", t === "cust");
     if (typeof syncMobileNav === "function") syncMobileNav(t);
     if (t === "dash") renderDash();
+    if (t === "list" && typeof renderActionCenter === "function") renderActionCenter(reports);
     if (t === "board") renderBoard();
     if (t === "finance") renderFinance();
     if (t === "attend") renderAttend();

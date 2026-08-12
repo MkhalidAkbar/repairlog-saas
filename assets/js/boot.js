@@ -394,6 +394,8 @@ applyBrand();
 
 applyFeatures();
 
+applyBiometricUi();
+
 async function boot() {
     await fetchConfig();
     if (!await checkLicense()) return;
@@ -415,7 +417,7 @@ async function boot() {
         if (le && $("authEmail")) $("authEmail").value = le;
         showAuth(true);
         if (bioEnabled()) {
-            $("authSub").textContent = "Tap sidik jari untuk masuk";
+            $("authSub").textContent = `Tap ${biometricLabel()} untuk masuk`;
         } else {
             togglePwFormForce();
             if (le && $("authPass")) $("authPass").focus();

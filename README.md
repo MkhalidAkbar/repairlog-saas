@@ -1,4 +1,13 @@
-# RepairLog SaaS v3.4.2
+# RepairLog SaaS v3.4.3
+
+## Penyempurnaan v3.4.3
+- Dashboard memiliki grafik gabungan omzet dan laba harian untuk bulan kalender berjalan.
+- Pusat Tindakan dipindahkan ke bagian teratas tab Laporan.
+- Grafik distribusi perangkat benar-benar mengikuti toggle multi-perangkat.
+- Papan mobile memakai pemilih tahap, kartu satu kolom, dan retensi Diambil 1 hari + Arsip 3 hari.
+- Tab CRM/Keuangan dan tabel Margin dapat digeser horizontal dengan nyaman di ponsel.
+- Cetak resi mobile menyediakan dialog cetak dan koneksi langsung printer thermal BLE ESC/POS pada browser yang mendukung Web Bluetooth.
+- iPhone menampilkan Face ID, Android menampilkan sidik jari.
 
 Pembaruan ini menyatukan Pusat Kesehatan Sistem, keuangan/pembayaran lanjutan, CRM setelah servis, serta perbaikan mobile.
 
