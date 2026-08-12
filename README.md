@@ -1,4 +1,4 @@
-# RepairLog SaaS v3.4.5
+# RepairLog SaaS v3.4.6
 
 ## Penyempurnaan v3.4.3
 - Dashboard memiliki grafik gabungan omzet dan laba harian untuk bulan kalender berjalan.
@@ -64,3 +64,11 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Tampilan Laporan memiliki hero, ringkasan periode, pencarian yang lebih jelas, toolbar responsif, dan kartu yang lebih rapi.
 - Tombol refresh dipindahkan dari filter Dashboard ke navigasi global; pada HP tersedia di menu Lainnya.
 - Reset filter Stok dipindahkan ke header daftar sparepart dan hanya aktif saat ada filter.
+
+## v3.4.6 — Thermal Print Calibration
+- Cetak Bluetooth ESC/POS memiliki profil 58 mm dan 80 mm dengan pilihan Font A/normal atau Font B/rapat.
+- Profil default 58 mm / Font A menggunakan 32 kolom agar sesuai dengan printer thermal pada foto contoh dan mencegah baris terpotong.
+- Preview Bluetooth dibuat dari baris teks yang sama dengan payload ESC/POS, sehingga pemenggalan dan posisi kolom dapat diperiksa sebelum mencetak.
+- Pengaturan printer menyediakan kalibrasi profil aktif dan cetak penggaris semua profil.
+- Profil kertas dan font disimpan di browser bersama izin printer dan tetap aktif setelah refresh.
+- Format tiket, tanggal, customer, perangkat, kasir, item, subtotal, total, pembayaran, status, serta catatan dibuat responsif terhadap jumlah kolom.

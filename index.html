@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="assets/css/v343-mobile-ux.css" />
     <link rel="stylesheet" href="assets/css/v344-performance-ux.css" />
     <link rel="stylesheet" href="assets/css/v345-board-reports-print.css" />
+    <link rel="stylesheet" href="assets/css/v346-thermal-calibration.css" />
   </head>
   <body>
     <div
@@ -976,16 +977,32 @@
             Aktifkan
           </button>
         </div>
-        <div class="set-row" id="thermalPrinterSetRow" style="display: none">
+        <div class="set-row thermal-printer-settings-v346" id="thermalPrinterSetRow" style="display: none">
           <div>
             <div style="font-weight: 600">🖨️ Printer thermal Bluetooth</div>
             <div class="muted" id="thermalPrinterStatus">
               Hubungkan printer BLE ESC/POS untuk cetak resi langsung.
             </div>
           </div>
-          <button class="btn small" id="thermalPrinterBtn" onclick="pairThermalPrinterV343()">
-            Hubungkan
-          </button>
+          <div class="thermal-printer-actions-v346">
+            <button class="btn small secondary" type="button" onclick="openPrinterCalibrationV346()">Kalibrasi</button>
+            <button class="btn small" id="thermalPrinterBtn" type="button" onclick="pairThermalPrinterV343()">Hubungkan</button>
+          </div>
+          <div id="thermalPrinterProfileV346" class="thermal-printer-profile-v346">
+            <label>Lebar kertas
+              <select id="thermalPaperSizeV346" onchange="savePrinterProfileV346('settings')">
+                <option value="58">58 mm</option>
+                <option value="80">80 mm</option>
+              </select>
+            </label>
+            <label>Kepadatan karakter
+              <select id="thermalDensityV346" onchange="savePrinterProfileV346('settings')">
+                <option value="normal">Normal / Font A</option>
+                <option value="compact">Rapat / Font B</option>
+              </select>
+            </label>
+            <div id="thermalProfileSummaryV346" class="thermal-profile-summary-v346"></div>
+          </div>
         </div>
         <div class="set-row" id="ownerSetRow">
           <div>

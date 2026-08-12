@@ -1,0 +1,267 @@
+/* RepairLog v3.4.6 — calibrated ESC/POS receipt profiles */
+
+.thermal-printer-settings-v346 {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 14px 18px;
+  align-items: center;
+}
+
+.thermal-printer-actions-v346 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.thermal-printer-profile-v346 {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(150px, 220px)) minmax(180px, 1fr);
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.thermal-printer-profile-v346 label,
+.receipt-profile-controls-v346 label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.thermal-printer-profile-v346 select,
+.receipt-profile-controls-v346 select {
+  width: 100%;
+  min-width: 0;
+  background: var(--card);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.thermal-profile-summary-v346 {
+  align-self: end;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card2);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.receipt-preview-head-v345 > div {
+  min-width: 0;
+}
+
+.receipt-preview-head-v345 > div strong,
+.receipt-preview-head-v345 > div small {
+  display: block;
+}
+
+.receipt-preview-head-v345 > div small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.receipt-profile-controls-v346 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.receipt-paper-stage-v345 {
+  align-items: flex-start;
+}
+
+.receipt-paper-v346 {
+  box-sizing: border-box;
+  min-height: 106mm;
+  margin: 0;
+  flex: none;
+  overflow: hidden;
+  border: 0;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 10px 28px rgba(18, 29, 43, 0.17);
+  font-family: "Courier New", "Liberation Mono", monospace;
+  font-weight: 400;
+  line-height: 1.32;
+  tab-size: 1;
+  white-space: pre;
+}
+
+.receipt-paper-v346[data-paper="58"] {
+  width: 58mm;
+  padding: 4mm 3mm 6mm;
+}
+
+.receipt-paper-v346[data-paper="80"] {
+  width: 80mm;
+  padding: 4mm 4mm 6mm;
+}
+
+.receipt-paper-v346[data-paper="58"][data-density="normal"] {
+  font-size: 10px;
+}
+
+.receipt-paper-v346[data-paper="58"][data-density="compact"] {
+  font-size: 7.6px;
+}
+
+.receipt-paper-v346[data-paper="80"][data-density="normal"] {
+  font-size: 9.3px;
+}
+
+.receipt-paper-v346[data-paper="80"][data-density="compact"] {
+  font-size: 7px;
+}
+
+.receipt-profile-badge-v346 {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.receipt-calibration-trigger-v346 {
+  width: 100%;
+  min-height: 38px;
+  margin: 0 0 10px;
+}
+
+.printer-calibration-modal-v346 {
+  width: min(680px, calc(100vw - 28px));
+  max-width: 680px !important;
+}
+
+.calibration-profile-card-v346 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.calibration-profile-card-v346 article {
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card2);
+}
+
+.calibration-profile-card-v346 span,
+.calibration-profile-card-v346 strong,
+.calibration-profile-card-v346 small {
+  display: block;
+}
+
+.calibration-profile-card-v346 span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.calibration-profile-card-v346 strong {
+  margin: 4px 0;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.calibration-profile-card-v346 small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.calibration-steps-v346 {
+  margin: 12px 0;
+  padding: 12px 14px 12px 32px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card2);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.calibration-steps-v346 li + li {
+  margin-top: 5px;
+}
+
+.calibration-actions-v346 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.calibration-actions-v346 .btn {
+  min-height: 44px;
+}
+
+#printerCalibrationStatusV346 {
+  min-height: 18px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .thermal-printer-settings-v346 {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .thermal-printer-actions-v346 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .thermal-printer-actions-v346 .btn {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .thermal-printer-profile-v346 {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .receipt-profile-controls-v346 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .receipt-paper-stage-v345 {
+    max-height: 39vh;
+    justify-content: flex-start;
+  }
+
+  .receipt-paper-v346 {
+    margin: 0 auto;
+  }
+
+  .calibration-profile-card-v346 {
+    grid-template-columns: 1fr;
+  }
+
+  .calibration-actions-v346 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .receipt-profile-controls-v346 {
+    grid-template-columns: 1fr;
+  }
+}
