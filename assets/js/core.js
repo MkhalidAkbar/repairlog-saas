@@ -45,7 +45,7 @@ if (db) {
 
 const BRANDS = [ "Asus", "Acer", "Lenovo", "HP", "Dell", "MSI", "Apple/MacBook", "Axioo", "Toshiba", "Samsung", "Lainnya" ];
 
-const APP_VERSION = "v3.4.7";
+const APP_VERSION = "v3.4.8";
 
 const DEVICE_TYPES = [ "Laptop", "PC/Komputer", "Printer", "HP/Smartphone", "CCTV" ];
 
@@ -381,7 +381,7 @@ const I18N_EN = {
     Password: "Password",
     "Masuk dengan email & password": "Sign in with email & password",
     "Lupa password?": "Forgot password?",
-    "⚙️ Pengaturan": "⚙️ Settings",
+    "⚙�� Pengaturan": "⚙️ Settings",
     "👤 Nama tampilan": "👤 Display name",
     "Nama ini muncul di catatan, aktivitas, dan papan — bukan dari email.": "This name shows in comments, activity & board — not your email.",
     "Login sidik jari": "Fingerprint login",
@@ -637,7 +637,9 @@ function applyBrand() {
     }
     const lg = BRAND.logoUrl ? brandLogoImg(34) : `<span aria-hidden="true">${esc(BRAND.logo || "🛠️")}</span>`;
     $("brandTitle").innerHTML = `${lg}<span class="brand-copy-v347"><strong>${esc(BRAND.name || "RepairLog")}</strong><small>${esc(BRAND.tagline || "")}</small></span>`;
-    const authName = $("authBrandNameV347"), authTagline = $("authBrandTaglineV347"), authLogo = $("authBrandLogoV347");
+    const authName = $("authBrandNameV347");
+    const authTagline = $("authBrandTaglineV347");
+    const authLogo = $("authBrandLogoV347");
     if (authName) authName.textContent = BRAND.name || "RepairLog";
     if (authTagline) authTagline.textContent = BRAND.tagline || "Manajemen servis, pelanggan, pembayaran, dan garansi dalam satu tempat.";
     if (authLogo) authLogo.innerHTML = BRAND.logoUrl ? `<img src="${esc(BRAND.logoUrl)}" alt="Logo ${esc(BRAND.name || "toko")}">` : esc(BRAND.logo || "🛠️");

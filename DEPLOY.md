@@ -20,4 +20,20 @@ Panel lama sudah dihapus sepenuhnya; data historis tetap dibaca oleh tampilan te
 
 
 ## Pemeriksaan v3.4.7
-Isi logo, alamat, dan WhatsApp CS; verifikasi header, login, serta resi Bluetooth hitam-putih. Fitur lupa password dan PIN sengaja tidak diubah.
+
+1. Buka Pengaturan Toko dan isi logo, alamat, serta WhatsApp CS.
+2. Pastikan header desktop tidak terpotong dan tombol refresh hanya menampilkan ikon.
+3. Cetak resi Bluetooth: logo harus hitam-putih dan nomor tiket berada di tengah tanpa label.
+4. Verifikasi login pada desktop dan ponsel.
+5. Fitur lupa password dan PIN sengaja tidak diubah.
+
+
+## Deploy v3.4.8 — Reset Password OTP
+
+1. Ikuti `SUPABASE_PASSWORD_RESET_SETUP.md`.
+2. Aktifkan Email provider dan ubah template Magic Link agar menampilkan `{{ .Token }}`.
+3. Atur Email OTP expiration menjadi 600 detik dan cooldown minimal 60 detik.
+4. Gunakan Custom SMTP untuk produksi.
+5. Upload `assets/js/v348-password-reset.js` dan `assets/css/v348-password-reset.css` bersama seluruh aplikasi.
+6. Jangan menaruh service role key atau secret SMTP di `config.js`.
+7. Refresh dua kali atau tutup/buka PWA. Cache baru: `repairlog-v3.4.8-password-reset-otp`.

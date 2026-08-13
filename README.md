@@ -75,8 +75,21 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 
 
 ## RepairLog v3.4.7
-- Header desktop dirapikan dan refresh menjadi ikon-only.
-- Login diperbarui dan tetap responsif.
-- Branding mendukung alamat toko dan WhatsApp CS.
-- Resi Bluetooth mencetak logo custom hitam-putih serta nomor tiket terpusat tanpa label.
-- Alur lupa password dan PIN tidak diubah.
+
+- Header desktop dirapikan dengan tab yang tetap dapat digeser dan tombol refresh ikon-only.
+- Login ditingkatkan menjadi workspace dua panel yang responsif.
+- Branding toko mendukung alamat service center dan WhatsApp CS.
+- Resi Bluetooth mencetak logo custom sebagai raster ESC/POS hitam-putih.
+- Nomor tiket dipusatkan di bawah identitas toko tanpa label “No. tiket”.
+- Alur lupa password dan lupa PIN tidak diubah pada rilis ini.
+
+
+## RepairLog v3.4.8
+
+- Lupa password menggunakan OTP email 6 digit bawaan Supabase Auth.
+- Kode ditampilkan berlaku 10 menit dengan cooldown kirim ulang 60 detik.
+- Kolom password baru hanya muncul setelah OTP terverifikasi.
+- Password minimal 10 karakter, harus dikonfirmasi, dan dilengkapi indikator kekuatan.
+- Setelah password berubah, kredensial biometrik lama dibersihkan dan sesi dikeluarkan.
+- Setup lengkap tersedia di `SUPABASE_PASSWORD_RESET_SETUP.md`.
+- Implementasi tidak memakai Edge Function, tabel SQL, atau service role key di frontend.

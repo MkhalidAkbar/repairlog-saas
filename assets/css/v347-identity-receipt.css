@@ -1,28 +1,560 @@
-/* RepairLog v3.4.7 — header, login, and monochrome receipt identity */
-@media (min-width:861px){
-  header#appHeader{display:grid;grid-template-columns:minmax(190px,238px) minmax(0,1fr);align-items:center;gap:14px;min-height:82px;padding:12px clamp(18px,2.4vw,34px)}
-  header#appHeader h1{min-width:0;margin:0;flex-wrap:nowrap;gap:10px}
-  header#appHeader h1>img,.brand-logo-v347{width:34px!important;height:34px!important;flex:0 0 34px;border-radius:9px!important}
-  .brand-copy-v347{display:grid;min-width:0;gap:3px}.brand-copy-v347 strong,.brand-copy-v347 small{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.brand-copy-v347 strong{font-size:18px;line-height:1.15}
-  header#appHeader nav{width:100%;min-width:0;flex-wrap:nowrap;justify-content:flex-end;gap:8px}
-  #navMenu{display:flex;flex:1 1 auto;min-width:0;flex-wrap:nowrap;align-items:center;gap:8px}
-  #navTabs{flex:1 1 auto;min-width:0;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}#navTabs::-webkit-scrollbar{display:none}#navTabs button{flex:0 0 auto;min-height:40px;white-space:nowrap}
-  .navactions{flex:0 0 auto;flex-wrap:nowrap;gap:6px}
-  .global-refresh-v345{display:block!important;min-width:44px;padding:0;border:0;background:transparent}.global-refresh-v345 .refresh-label,.global-refresh-v345 #dataFreshness{display:none!important}
-  .global-refresh-v345 #appRefreshBtn{display:inline-grid;place-items:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:0!important;border:1px solid var(--border)!important;border-radius:10px;background:var(--card)!important}#appRefreshBtn .refresh-glyph{margin:0;font-size:19px;line-height:1}
-  #notifBtn,#settingsBtn,.navactions>.btn.secondary:not(.global-search-button){min-width:42px;padding-inline:10px}
-}
-@media (min-width:861px) and (max-width:1320px){header#appHeader{grid-template-columns:minmax(168px,205px) minmax(0,1fr);padding-inline:18px}.rolebadge{display:none}#navTabs button{padding-inline:9px;font-size:12px}#globalSearchBtn{width:44px;min-width:44px;padding-inline:0;justify-content:center}#globalSearchBtn span,#globalSearchBtn kbd{display:none}}
+/* RepairLog v3.4.7 — refined header, login, and receipt identity */
 
-.auth-screen{overflow:auto;background:radial-gradient(circle at 12% 16%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 34%),radial-gradient(circle at 88% 86%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 28%),var(--bg)}
-.auth-layout-v347{display:grid;grid-template-columns:minmax(300px,.88fr) minmax(380px,1fr);width:min(940px,100%);min-height:540px;overflow:hidden;border:1px solid var(--border);border-radius:22px;background:var(--card);box-shadow:0 24px 70px rgba(21,42,68,.14)}
-.auth-brand-panel-v347{display:flex;flex-direction:column;justify-content:space-between;min-width:0;padding:38px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 92%,#123a66),color-mix(in srgb,var(--accent) 68%,#10243c));color:#fff}.auth-brand-content-v347,.auth-brand-foot-v347{position:relative}
-.auth-brand-logo-v347{display:grid;place-items:center;width:64px;height:64px;margin-bottom:28px;overflow:hidden;border:1px solid rgba(255,255,255,.28);border-radius:16px;background:rgba(255,255,255,.16);font-size:32px}.auth-brand-logo-v347 img{width:100%;height:100%;padding:7px;object-fit:contain}
-.auth-eyebrow-v347{display:block;margin-bottom:9px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.78}.auth-brand-panel-v347 h1{margin:0;color:#fff;font-size:clamp(28px,3.2vw,40px);line-height:1.08;letter-spacing:-.035em}.auth-brand-panel-v347 p{margin:14px 0 0;max-width:31ch;color:rgba(255,255,255,.78);font-size:14px;line-height:1.65}
-.auth-benefits-v347{display:grid;gap:10px;margin:28px 0 0;padding:0;list-style:none}.auth-benefits-v347 li{display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.9);font-size:13px;font-weight:650}.auth-benefits-v347 li:before{content:"✓";display:grid;place-items:center;width:21px;height:21px;border-radius:7px;background:rgba(255,255,255,.17);font-size:11px}.auth-brand-foot-v347{color:rgba(255,255,255,.68);font-size:11px;line-height:1.5}
-.auth-layout-v347 .auth-box{align-self:stretch;display:flex;flex-direction:column;justify-content:center;width:100%;max-width:none;padding:40px clamp(30px,5vw,58px);border:0;border-radius:0;box-shadow:none;text-align:center!important}.auth-login-heading-v347{margin-bottom:18px;text-align:left}.auth-login-heading-v347 span{color:var(--accent);font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}.auth-login-heading-v347 h2{margin:6px 0;color:var(--text);font-size:25px;letter-spacing:-.025em}.auth-login-heading-v347 p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
-.auth-layout-v347 .bio-circle{width:96px;height:96px;margin:4px auto 10px;border-width:1px;box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 8%,transparent)}.auth-layout-v347 .bio-circle svg{width:48px;height:48px}.auth-layout-v347 #authSub{margin:8px 0 2px;font-size:13px}.auth-layout-v347 #pwForm{margin-top:6px}.auth-layout-v347 #pwForm label{display:block;margin:12px 0 6px;color:var(--text);font-size:12px;font-weight:750}.auth-layout-v347 #pwForm input{min-height:48px;padding-inline:14px}.auth-layout-v347 #authBtn{min-height:48px;margin-top:16px!important;font-size:14px}.auth-layout-v347 .linklike{min-height:42px;text-underline-offset:3px}
-.brand-contact-grid-v347{display:grid;grid-template-columns:1.25fr .75fr;gap:10px}.brand-contact-grid-v347>label{display:grid;gap:5px}.brand-contact-grid-v347 textarea{min-height:74px;resize:vertical}.brand-contact-note-v347{margin:5px 0 10px;color:var(--muted);font-size:11px;line-height:1.45}
-.receipt-paper-v346{white-space:normal}.receipt-logo-wrap-v347{display:grid;place-items:center;margin:0 0 8px}.receipt-logo-monochrome-v347{display:block;width:auto;max-width:31mm;max-height:19mm;object-fit:contain;filter:grayscale(1) contrast(1.75);mix-blend-mode:multiply}.receipt-paper-v346[data-paper="80"] .receipt-logo-monochrome-v347{max-width:38mm;max-height:22mm}.receipt-text-v347{margin:0;overflow:visible;color:#000;background:transparent;font:inherit;line-height:inherit;white-space:pre}.pickup-receipt-v342>img{filter:grayscale(1) contrast(1.8);mix-blend-mode:multiply}.pickup-receipt-contact-v347,.pickup-receipt-ticket-v347{margin:2px auto;text-align:center;overflow-wrap:anywhere}.pickup-receipt-contact-v347{font-size:10px;line-height:1.4}.pickup-receipt-ticket-v347{margin-top:5px;font-family:"Courier New",monospace;font-size:11px;font-weight:800}
-@media(max-width:760px){.auth-screen{align-items:flex-start;padding:14px}.auth-layout-v347{grid-template-columns:1fr;min-height:0;margin:auto 0;border-radius:18px}.auth-brand-panel-v347{min-height:0;padding:24px}.auth-brand-content-v347{display:grid;grid-template-columns:50px minmax(0,1fr);gap:0 14px;align-items:center}.auth-brand-logo-v347{grid-row:1/4;width:50px;height:50px;margin:0;border-radius:13px;font-size:24px}.auth-eyebrow-v347{margin:0 0 3px;font-size:9px}.auth-brand-panel-v347 h1{font-size:22px}.auth-brand-panel-v347 p{margin:4px 0 0;font-size:11px;line-height:1.4}.auth-benefits-v347,.auth-brand-foot-v347{display:none}.auth-layout-v347 .auth-box{padding:26px 22px 24px}.auth-login-heading-v347{margin-bottom:12px}.auth-login-heading-v347 h2{font-size:21px}.auth-layout-v347 .bio-circle{width:82px;height:82px}.auth-layout-v347 .bio-circle svg{width:42px;height:42px}.brand-contact-grid-v347{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){.auth-layout-v347 .bio-circle,#appRefreshBtn .refresh-glyph{transition:none}}
+/* Desktop navigation: readable, balanced, and horizontally resilient. */
+@media (min-width: 861px) {
+  header#appHeader {
+    display: grid;
+    grid-template-columns: minmax(190px, 238px) minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    min-height: 82px;
+    padding: 12px clamp(18px, 2.4vw, 34px);
+  }
+
+  header#appHeader h1 {
+    min-width: 0;
+    margin: 0;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+
+  header#appHeader h1 > img,
+  .brand-logo-v347 {
+    width: 34px !important;
+    height: 34px !important;
+    flex: 0 0 34px;
+    border-radius: 9px !important;
+  }
+
+  .brand-copy-v347 {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .brand-copy-v347 strong,
+  .brand-copy-v347 small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand-copy-v347 strong {
+    font-size: 18px;
+    line-height: 1.15;
+  }
+
+  header#appHeader nav {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  #navMenu {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #navTabs {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #navTabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  #navTabs button {
+    flex: 0 0 auto;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  .navactions {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .global-refresh-v345 {
+    display: block !important;
+    min-width: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .global-refresh-v345 .refresh-label,
+  .global-refresh-v345 #dataFreshness {
+    display: none !important;
+  }
+
+  .global-refresh-v345 #appRefreshBtn {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px;
+    background: var(--card) !important;
+  }
+
+  #appRefreshBtn .refresh-glyph {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1;
+  }
+
+  #notifBtn,
+  #settingsBtn,
+  .navactions > .btn.secondary:not(.global-search-button) {
+    min-width: 42px;
+    padding-inline: 10px;
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1320px) {
+  header#appHeader {
+    grid-template-columns: minmax(168px, 205px) minmax(0, 1fr);
+    padding-inline: 18px;
+  }
+
+  .rolebadge {
+    display: none;
+  }
+
+  #navTabs button {
+    padding-inline: 9px;
+    font-size: 12px;
+  }
+
+  #globalSearchBtn {
+    width: 44px;
+    min-width: 44px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  #globalSearchBtn span,
+  #globalSearchBtn kbd {
+    display: none;
+  }
+}
+
+/* Login workspace */
+.auth-screen {
+  overflow: auto;
+  background:
+    radial-gradient(circle at 12% 16%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 86%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 28%),
+    var(--bg);
+}
+
+.auth-layout-v347 {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.88fr) minmax(380px, 1fr);
+  width: min(940px, 100%);
+  min-height: 540px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--card);
+  box-shadow: 0 24px 70px rgba(21, 42, 68, 0.14);
+}
+
+.auth-brand-panel-v347 {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 38px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 92%, #123a66), color-mix(in srgb, var(--accent) 68%, #10243c));
+  color: #fff;
+}
+
+.auth-brand-panel-v347::before,
+.auth-brand-panel-v347::after {
+  content: none;
+}
+
+.auth-brand-panel-v347::before {
+  width: 240px;
+  height: 240px;
+  top: -95px;
+  right: -105px;
+}
+
+.auth-brand-panel-v347::after {
+  width: 150px;
+  height: 150px;
+  bottom: -65px;
+  left: -50px;
+}
+
+.auth-brand-content-v347,
+.auth-brand-foot-v347 {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-brand-logo-v347 {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 32px;
+  backdrop-filter: blur(10px);
+}
+
+.auth-brand-logo-v347 img {
+  width: 100%;
+  height: 100%;
+  padding: 7px;
+  object-fit: contain;
+}
+
+.auth-eyebrow-v347 {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.auth-brand-panel-v347 h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.auth-brand-panel-v347 p {
+  margin: 14px 0 0;
+  max-width: 31ch;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.auth-benefits-v347 {
+  display: grid;
+  gap: 10px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-benefits-v347 li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.auth-benefits-v347 li::before {
+  content: "✓";
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.17);
+  font-size: 11px;
+}
+
+.auth-brand-foot-v347 {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.auth-layout-v347 .auth-box {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  padding: 40px clamp(30px, 5vw, 58px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-align: center !important;
+}
+
+.auth-login-heading-v347 {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.auth-login-heading-v347 span {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.auth-login-heading-v347 h2 {
+  margin: 6px 0;
+  color: var(--text);
+  font-size: 25px;
+  letter-spacing: -0.025em;
+}
+
+.auth-login-heading-v347 p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.auth-layout-v347 .bio-circle {
+  width: 96px;
+  height: 96px;
+  margin: 4px auto 10px;
+  border-width: 1px;
+  box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.auth-layout-v347 .bio-circle svg {
+  width: 48px;
+  height: 48px;
+}
+
+.auth-layout-v347 #authSub {
+  margin: 8px 0 2px;
+  font-size: 13px;
+}
+
+.auth-layout-v347 #pwForm {
+  margin-top: 6px;
+}
+
+.auth-layout-v347 #pwForm label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.auth-layout-v347 #pwForm input {
+  min-height: 48px;
+  padding-inline: 14px;
+}
+
+.auth-layout-v347 #authBtn {
+  min-height: 48px;
+  margin-top: 16px !important;
+  font-size: 14px;
+}
+
+.auth-layout-v347 .linklike {
+  min-height: 42px;
+  text-underline-offset: 3px;
+}
+
+/* Store contact identity */
+.brand-contact-grid-v347 {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 10px;
+}
+
+.brand-contact-grid-v347 > label {
+  display: grid;
+  gap: 5px;
+}
+
+.brand-contact-grid-v347 textarea {
+  min-height: 74px;
+  resize: vertical;
+}
+
+.brand-contact-note-v347 {
+  margin: 5px 0 10px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* Monochrome receipt identity */
+.receipt-paper-v346 {
+  white-space: normal;
+}
+
+.receipt-logo-wrap-v347 {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  margin: 0 0 8px;
+}
+
+.receipt-logo-monochrome-v347 {
+  display: block;
+  width: auto;
+  max-width: 31mm;
+  max-height: 19mm;
+  object-fit: contain;
+  filter: grayscale(1) contrast(1.75);
+  mix-blend-mode: multiply;
+}
+
+.receipt-paper-v346[data-paper="80"] .receipt-logo-monochrome-v347 {
+  max-width: 38mm;
+  max-height: 22mm;
+}
+
+.receipt-text-v347 {
+  margin: 0;
+  overflow: visible;
+  color: #000;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  white-space: pre;
+}
+
+.pickup-receipt-v342 > img {
+  filter: grayscale(1) contrast(1.8);
+  mix-blend-mode: multiply;
+}
+
+.pickup-receipt-contact-v347,
+.pickup-receipt-ticket-v347 {
+  margin: 2px auto;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.pickup-receipt-contact-v347 {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.pickup-receipt-ticket-v347 {
+  margin-top: 5px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .auth-screen {
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .auth-layout-v347 {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    margin: auto 0;
+    border-radius: 18px;
+  }
+
+  .auth-brand-panel-v347 {
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .auth-brand-content-v347 {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 0 14px;
+    align-items: center;
+  }
+
+  .auth-brand-logo-v347 {
+    grid-row: 1 / 4;
+    width: 50px;
+    height: 50px;
+    margin: 0;
+    border-radius: 13px;
+    font-size: 24px;
+  }
+
+  .auth-eyebrow-v347 {
+    margin: 0 0 3px;
+    font-size: 9px;
+  }
+
+  .auth-brand-panel-v347 h1 {
+    font-size: 22px;
+  }
+
+  .auth-brand-panel-v347 p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .auth-benefits-v347,
+  .auth-brand-foot-v347 {
+    display: none;
+  }
+
+  .auth-layout-v347 .auth-box {
+    padding: 26px 22px 24px;
+  }
+
+  .auth-login-heading-v347 {
+    margin-bottom: 12px;
+  }
+
+  .auth-login-heading-v347 h2 {
+    font-size: 21px;
+  }
+
+  .auth-layout-v347 .bio-circle {
+    width: 82px;
+    height: 82px;
+  }
+
+  .auth-layout-v347 .bio-circle svg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-contact-grid-v347 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-layout-v347 .bio-circle,
+  #appRefreshBtn .refresh-glyph {
+    transition: none;
+  }
+}
