@@ -45,7 +45,7 @@ if (db) {
 
 const BRANDS = [ "Asus", "Acer", "Lenovo", "HP", "Dell", "MSI", "Apple/MacBook", "Axioo", "Toshiba", "Samsung", "Lainnya" ];
 
-const APP_VERSION = "v3.5.0";
+const APP_VERSION = "v3.5.1";
 
 const DEVICE_TYPES = [ "Laptop", "PC/Komputer", "Printer", "HP/Smartphone", "CCTV" ];
 

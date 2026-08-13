@@ -1,4 +1,4 @@
-# Deployment RepairLog v3.4.6
+# Deployment RepairLog v3.5.1
 
 1. Backup website, `config.js`, dan database Supabase.
 2. Jalankan `20260811_priority_13_14_15_preflight.sql`.
@@ -49,11 +49,21 @@ Panel lama sudah dihapus sepenuhnya; data historis tetap dibaca oleh tampilan te
 6. Uji mode gelap pada desktop dan HP, submenu Pengaturan, koneksi printer, serta swipe tab Papan setelah deploy.
 
 
-## Deploy v3.5.0 — Pengaturan, Panduan, dan Papan HP
+## Deploy v3.5.0 — Settings, Panduan, dan Papan
 
-1. Upload seluruh aplikasi termasuk `assets/css/v350-settings-guide-board.css` dan `assets/js/v350-settings-guide-board.js`.
+1. Upload seluruh aplikasi, termasuk aset `v350-settings-guide-board`.
+2. Pastikan Pusat Kesehatan Sistem tersedia di Pengaturan → Sistem.
+3. Uji Pengaturan pada desktop dan viewport 390 px.
+4. Uji seluruh tab Papan mobile, terutama Antri, Batal Diambil, dan Arsip.
+
+## Deploy v3.5.1 — Customer Portal & Pengaturan Toko
+
+1. Upload seluruh aplikasi, termasuk `assets/css/v351-customer-store.css` dan `assets/js/v351-customer-store.js`.
 2. Pastikan `index.html`, `assets/js/core.js`, dan `sw.js` ikut diganti.
-3. Cache baru: `repairlog-v3.5.0-settings-guide-board`.
-4. Setelah deploy, refresh dua kali atau tutup dan buka kembali PWA agar service worker lama diganti.
-5. Uji Pengaturan → Toko dan Sistem, menu Lainnya HP, seluruh langkah panduan, serta tahap pertama/tengah/terakhir pada Papan HP.
-6. Paket Basic/Pro masih disimpan lokal di browser dan belum mengunci fitur melalui Supabase.
+3. Cache aplikasi baru: `repairlog-v3.5.1-customer-store`.
+4. Tidak ada migrasi Supabase baru. Rilis ini memakai RPC tracking, approval, payment proof, dan reports public yang sudah ada.
+5. Refresh dua kali atau tutup/buka PWA untuk mengganti service worker lama.
+6. Uji link customer `#/c/{id}` pada kondisi proses, menunggu persetujuan, selesai belum lunas, dan lunas.
+7. Pastikan tombol keputusan biaya mengarah ke `#/a/{approval_token}` dan tahap pengerjaan diblokir saat approval masih pending/ditolak.
+8. Uji QRIS/rekening, upload bukti, invoice PDF, garansi, WhatsApp CS, serta tampilan before–after.
+9. Buka Pengaturan → Toko; uji enam submenu pada desktop dan 390 px, lalu simpan branding, fitur, pengguna, dan PIN.

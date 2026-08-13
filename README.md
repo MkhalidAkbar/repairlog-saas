@@ -1,4 +1,4 @@
-# RepairLog SaaS v3.4.6
+# RepairLog SaaS v3.5.1
 
 ## Penyempurnaan v3.4.3
 - Dashboard memiliki grafik gabungan omzet dan laba harian untuk bulan kalender berjalan.
@@ -106,12 +106,20 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Paket aktif disimpan hanya pada browser melalui `localStorage` dan belum membatasi fitur atau tersinkron ke Supabase.
 
 
-## RepairLog v3.5.0
+## RepairLog v3.5.0 — Settings, Panduan, dan Papan
 
-- Pusat Kesehatan Sistem dipindahkan dari navigasi utama ke Pengaturan → Sistem.
-- Toko & Identitas tidak lagi membuka modal kedua; verifikasi PIN dan seluruh form toko berjalan langsung di workspace Pengaturan.
-- Tombol submenu Pengaturan desktop diratakan dengan kolom ikon dan teks yang konsisten.
-- Pengaturan HP sekarang tampil sebagai halaman penuh dengan enam submenu dalam grid 3 × 2 tanpa scroll horizontal.
-- Menu Lainnya HP memakai aksi header ringkas: ikon refresh, label paket aktif, dan tombol tutup.
-- Tutorial diperbarui menjadi delapan langkah sesuai Dashboard, Papan, pelanggan, laporan, printer, paket, dan Pengaturan terbaru.
-- Navigasi tahap Papan HP menghitung ruang kiri/kanan berdasarkan lebar tombol aktif sehingga Antri, Batal Diambil, Arsip, dan tahap lainnya selalu dapat dipusatkan.
+- Pusat Kesehatan Sistem berada di Pengaturan → Sistem.
+- Pengaturan Toko dibuka langsung di dalam workspace Pengaturan tanpa modal kedua.
+- Pengaturan mobile memakai halaman penuh dengan enam grup yang tidak terpotong.
+- Menu Lainnya mobile memiliki refresh ikon-only, label paket ringkas, dan tombol tutup.
+- Panduan diperbarui menjadi delapan langkah fitur terbaru.
+- Navigasi tahap Papan mobile memusatkan tab aktif secara konsisten.
+
+## RepairLog v3.5.1 — Customer Portal & Pengaturan Toko
+
+- Customer Portal dirombak menjadi dashboard responsif untuk status, ringkasan tiket, rincian biaya/sparepart, dokumentasi before–after, pembayaran, garansi, dan bantuan.
+- Persetujuan biaya ditampilkan di portal dan diarahkan ke halaman keputusan aman yang sudah tersedia.
+- Tiket dengan persetujuan pending atau ditolak tidak dapat diteruskan ke tahap pengerjaan/selesai/diambil dari UI.
+- QRIS, transfer bank, upload bukti bayar, invoice PDF, masa garansi, serta WhatsApp CS tetap terhubung dalam satu portal.
+- Pengaturan Toko dikelompokkan menjadi Identitas, Pembayaran, Tiket & Resi, Pengguna, Fitur, dan Keamanan.
+- Seluruh ID input dan fungsi simpan lama dipertahankan; tidak ada migrasi database baru pada rilis ini.
