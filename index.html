@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="assets/css/v346-thermal-calibration.css" />
     <link rel="stylesheet" href="assets/css/v347-identity-receipt.css" />
     <link rel="stylesheet" href="assets/css/v348-password-reset.css" />
+    <link rel="stylesheet" href="assets/css/v349-theme-settings-plans.css" />
   </head>
   <body>
     <div
@@ -413,9 +414,7 @@
           </div>
         </div>
         <div class="board-mobile-stage-shell-v345" aria-label="Navigasi tahap papan">
-          <button id="boardStagePrevV345" class="board-stage-arrow-v345" type="button" onclick="moveBoardMobileStageV345(-1)" aria-label="Tahap sebelumnya">‹</button>
-          <nav id="boardStageTabs" class="board-stage-tabs" aria-label="Tahap papan"></nav>
-          <button id="boardStageNextV345" class="board-stage-arrow-v345" type="button" onclick="moveBoardMobileStageV345(1)" aria-label="Tahap berikutnya">›</button>
+          <nav id="boardStageTabs" class="board-stage-tabs" aria-label="Tahap papan — geser untuk melihat tahap lainnya"></nav>
         </div>
         <div id="boardStageMetaV345" class="board-stage-meta-v345" aria-live="polite"></div>
         <div class="board" id="boardWrap"></div>
@@ -923,165 +922,88 @@
     </div>
 
     <div class="modal-bg" id="settingsModal">
-      <div class="modal" style="max-width: 460px">
-        <h2>⚙️ Pengaturan</h2>
-        <div
-          style="
-            padding: 16px 0 18px;
-            border-bottom: 1px solid var(--border);
-            text-align: center;
-          "
-        >
-          <div
-            id="setAvatarPrev"
-            style="
-              width: 76px;
-              height: 76px;
-              border-radius: 50%;
-              background: var(--card2);
-              border: 1px solid var(--border);
-              background-size: cover;
-              background-position: center;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 30px;
-              color: #9ca3af;
-              margin: 0 auto 12px;
-            "
-          >
-            👤
+      <div class="modal settings-modal-v349">
+        <header class="settings-top-v349">
+          <div class="settings-title-v349">
+            <div class="settings-title-icon-v349" aria-hidden="true">⚙</div>
+            <div><h2>Pengaturan</h2><p>Akun, toko, printer, tampilan, dan paket dalam satu tempat.</p></div>
           </div>
-          <input
-            type="file"
-            id="setAvatarInput"
-            accept="image/*"
-            style="display: none"
-            onchange="pickAvatar(this)"
-          />
-          <div
-            class="row"
-            style="gap: 8px; justify-content: center; margin-bottom: 14px"
-          >
-            <button
-              class="btn small secondary"
-              onclick="document.getElementById('setAvatarInput').click()"
-            >
-              Pilih Foto
-            </button>
-            <button
-              class="btn small secondary"
-              id="setAvatarDel"
-              style="display: none"
-              onclick="removeAvatar()"
-            >
-              Hapus
-            </button>
+          <div class="settings-top-actions-v349">
+            <button id="settingsPlanBadgeV349" class="plan-badge-v349" type="button" onclick="switchSettingsSectionV349('plans',true)">PRO</button>
+            <button class="btn small secondary settings-close-v349" type="button" onclick="closeSettings()" aria-label="Tutup pengaturan">×</button>
           </div>
-          <div class="row" style="gap: 8px">
-            <input
-              id="setName"
-              placeholder="Nama tampilan"
-              style="flex: 1"
-            /><button class="btn small" onclick="saveMyName()">Simpan</button>
-          </div>
-        </div>
-        <div class="set-row" id="bioSetRow">
-          <div>
-            <div id="bioSetTitle" style="font-weight: 600">Login biometrik</div>
-            <div class="muted" id="bioStatus">
-              Masuk cukup dengan biometrik di perangkat ini.
-            </div>
-          </div>
-          <button
-            class="btn small"
-            id="bioToggleBtn"
-            onclick="toggleBiometric()"
-          >
-            Aktifkan
-          </button>
-        </div>
-        <div class="set-row thermal-printer-settings-v346" id="thermalPrinterSetRow" style="display: none">
-          <div>
-            <div style="font-weight: 600">🖨️ Printer thermal Bluetooth</div>
-            <div class="muted" id="thermalPrinterStatus">
-              Hubungkan printer BLE ESC/POS untuk cetak resi langsung.
-            </div>
-          </div>
-          <div class="thermal-printer-actions-v346">
-            <button class="btn small secondary" type="button" onclick="openPrinterCalibrationV346()">Kalibrasi</button>
-            <button class="btn small" id="thermalPrinterBtn" type="button" onclick="pairThermalPrinterV343()">Hubungkan</button>
-          </div>
-          <div id="thermalPrinterProfileV346" class="thermal-printer-profile-v346">
-            <label>Lebar kertas
-              <select id="thermalPaperSizeV346" onchange="savePrinterProfileV346('settings')">
-                <option value="58">58 mm</option>
-                <option value="80">80 mm</option>
-              </select>
-            </label>
-            <label>Kepadatan karakter
-              <select id="thermalDensityV346" onchange="savePrinterProfileV346('settings')">
-                <option value="normal">Normal / Font A</option>
-                <option value="compact">Rapat / Font B</option>
-              </select>
-            </label>
-            <div id="thermalProfileSummaryV346" class="thermal-profile-summary-v346"></div>
-          </div>
-        </div>
-        <div class="set-row" id="ownerSetRow">
-          <div>
-            <div style="font-weight: 600">🔒 Pengaturan Toko</div>
-          </div>
-          <button class="btn small" onclick="openOwner()">Buka</button>
-        </div>
-        <div class="set-row">
-          <div>
-            <div style="font-weight: 600">🎨 Tema Tampilan</div>
-          </div>
-          <select
-            id="themeSelect"
-            onchange="setTheme(this.value)"
-            style="width: auto; min-width: 150px"
-          >
-            <option value="auto">Otomatis (Perangkat)</option>
-            <option value="light">Terang</option>
-            <option value="dark">Gelap</option>
-          </select>
-        </div>
-        <div class="set-row">
-          <div>
-            <div style="font-weight: 600">🌐 Bahasa / Language</div>
-          </div>
-          <select
-            id="langSelect"
-            onchange="setLang(this.value)"
-            style="width: auto; min-width: 150px"
-          >
-            <option value="id">Indonesia</option>
-            <option value="en">English (US)</option>
-          </select>
-        </div>
-        <div class="set-row" id="installRow" style="display: none">
-          <div>
-            <div style="font-weight: 600">📲 Pasang Aplikasi</div>
-          </div>
-          <button class="btn small" id="installBtn" onclick="installApp()">
-            Pasang
-          </button>
-        </div>
-        <div class="set-row">
-          <div>
-            <div style="font-weight: 600">Logout</div>
-          </div>
-          <button class="btn danger small" onclick="doLogout()">Logout</button>
-        </div>
-        <div
-          class="actions"
-          style="justify-content: flex-end; margin-top: 18px"
-        >
-          <button class="btn secondary small" onclick="closeSettings()">
-            Tutup
-          </button>
+        </header>
+        <div class="settings-layout-v349">
+          <nav class="settings-nav-v349" role="tablist" aria-label="Kelompok pengaturan">
+            <button class="active" type="button" data-settings-tab="account" role="tab" onclick="switchSettingsSectionV349('account',true)"><span>👤</span><span><strong>Akun</strong><small>Profil & keamanan</small></span></button>
+            <button type="button" data-settings-tab="store" role="tab" onclick="switchSettingsSectionV349('store',true)"><span>🏪</span><span><strong>Toko</strong><small>Identitas & branding</small></span></button>
+            <button type="button" data-settings-tab="printer" role="tab" onclick="switchSettingsSectionV349('printer',true)"><span>🖨️</span><span><strong>Printer</strong><small>Koneksi & kalibrasi</small></span></button>
+            <button type="button" data-settings-tab="appearance" role="tab" onclick="switchSettingsSectionV349('appearance',true)"><span>🎨</span><span><strong>Tampilan</strong><small>Tema & bahasa</small></span></button>
+            <button type="button" data-settings-tab="plans" role="tab" onclick="switchSettingsSectionV349('plans',true)"><span>◆</span><span><strong>Paket</strong><small>Basic & Pro</small></span></button>
+            <button type="button" data-settings-tab="system" role="tab" onclick="switchSettingsSectionV349('system',true)"><span>⚙️</span><span><strong>Sistem</strong><small>Versi & aplikasi</small></span></button>
+          </nav>
+          <main class="settings-content-v349">
+            <section class="settings-panel-v349" data-settings-panel="account">
+              <div class="settings-section-head-v349"><h3>Akun & Keamanan</h3><p>Kelola nama, foto profil, dan login biometrik pada perangkat ini.</p></div>
+              <div class="settings-card-v349 settings-profile-v349">
+                <div>
+                  <div id="setAvatarPrev" class="settings-avatar-v349">👤</div>
+                  <input type="file" id="setAvatarInput" accept="image/*" style="display:none" onchange="pickAvatar(this)" />
+                </div>
+                <div class="settings-profile-fields-v349">
+                  <div class="settings-card-title-v349"><span>👤</span>Profil pengguna</div>
+                  <div class="settings-avatar-actions-v349"><button class="btn small secondary" type="button" onclick="document.getElementById('setAvatarInput').click()">Pilih foto</button><button class="btn small secondary" id="setAvatarDel" type="button" style="display:none" onclick="removeAvatar()">Hapus</button></div>
+                  <div class="settings-name-row-v349"><input id="setName" placeholder="Nama tampilan" /><button class="btn small" type="button" onclick="saveMyName()">Simpan</button></div>
+                </div>
+              </div>
+              <div class="settings-card-v349 set-row" id="bioSetRow">
+                <div class="settings-control-row-v349" style="width:100%"><div><strong id="bioSetTitle">Login biometrik</strong><small id="bioStatus">Masuk menggunakan biometrik perangkat ini.</small></div><button class="btn small" id="bioToggleBtn" type="button" onclick="toggleBiometric()">Aktifkan</button></div>
+              </div>
+            </section>
+
+            <section class="settings-panel-v349" data-settings-panel="store" hidden>
+              <div class="settings-section-head-v349"><h3>Toko & Identitas</h3><p>Logo, alamat, WhatsApp, pembayaran, pengguna, dan PIN pengaturan toko.</p></div>
+              <div class="settings-card-v349">
+                <div class="settings-brand-preview-v349"><div class="settings-brand-mark-v349" id="settingsBrandMarkV349">🛠️</div><div><strong id="settingsBrandNameV349">RepairLog</strong><small id="settingsBrandMetaV349">Identitas toko belum dilengkapi</small></div></div>
+                <div class="set-row" id="ownerSetRow"><div><strong>Pengaturan toko terlindungi</strong><div class="muted">Buka dengan PIN untuk mengubah data dan pengguna.</div></div><button class="btn small" type="button" onclick="openOwner()">Buka pengaturan</button></div>
+              </div>
+            </section>
+
+            <section class="settings-panel-v349" data-settings-panel="printer" hidden>
+              <div class="settings-section-head-v349"><h3>Printer Thermal</h3><p>Sambungkan printer, pilih lebar kertas, lalu jalankan kalibrasi bila hasil cetak belum pas.</p></div>
+              <div class="set-row thermal-printer-settings-v346 printer-workspace-v349" id="thermalPrinterSetRow" style="display:grid">
+                <div class="printer-status-card-v349">
+                  <div class="printer-status-copy-v349"><i class="printer-status-dot-v349" id="printerStatusDotV349"></i><div><strong>Printer Bluetooth</strong><span id="thermalPrinterStatus">Belum ada printer.</span></div></div>
+                  <div class="thermal-printer-actions-v346"><button class="btn small secondary" type="button" onclick="openPrinterCalibrationV346()">Kalibrasi</button><button class="btn small" id="thermalPrinterBtn" type="button" onclick="pairThermalPrinterV343()">Sambungkan</button></div>
+                </div>
+                <div id="thermalPrinterProfileV346" class="thermal-printer-profile-v346">
+                  <label>Lebar kertas<select id="thermalPaperSizeV346" onchange="savePrinterProfileV346('settings')"><option value="58">58 mm</option><option value="80">80 mm</option></select></label>
+                  <label>Kepadatan karakter<select id="thermalDensityV346" onchange="savePrinterProfileV346('settings')"><option value="normal">Normal / Font A</option><option value="compact">Rapat / Font B</option></select></label>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-panel-v349" data-settings-panel="appearance" hidden>
+              <div class="settings-section-head-v349"><h3>Tampilan & Bahasa</h3><p>Pilih tema yang nyaman. Seluruh halaman dan navigasi HP mengikuti pilihan ini.</p></div>
+              <div class="settings-card-v349"><div class="settings-control-row-v349"><div><strong>Tema tampilan</strong><small>Otomatis mengikuti pengaturan perangkat.</small></div><select id="themeSelect" onchange="setTheme(this.value)"><option value="auto">Otomatis (Perangkat)</option><option value="light">Terang</option><option value="dark">Gelap</option></select></div></div>
+              <div class="settings-card-v349"><div class="settings-control-row-v349"><div><strong>Bahasa / Language</strong><small>Bahasa utama antarmuka aplikasi.</small></div><select id="langSelect" onchange="setLang(this.value)"><option value="id">Indonesia</option><option value="en">English (US)</option></select></div></div>
+            </section>
+
+            <section class="settings-panel-v349" data-settings-panel="plans" hidden>
+              <div class="settings-section-head-v349"><h3>Paket & Langganan</h3><p>Lihat paket aktif dan bandingkan Basic dengan Pro. Pilihan ini masih khusus tampilan browser.</p></div>
+              <div id="planPanelV349"></div>
+            </section>
+
+            <section class="settings-panel-v349" data-settings-panel="system" hidden>
+              <div class="settings-section-head-v349"><h3>Data & Sistem</h3><p>Perbarui data, pasang aplikasi, lihat versi, atau keluar dari akun.</p></div>
+              <div class="settings-system-grid-v349">
+                <div class="settings-system-tile-v349"><div><strong>Versi aplikasi</strong><small id="settingsVersionV349">v3.4.9</small></div><span>✓</span></div>
+                <div class="settings-system-tile-v349"><div><strong>Sinkronisasi</strong><small>Ambil data terbaru</small></div><button class="btn small secondary" type="button" onclick="refresh()">↻</button></div>
+              </div>
+              <div class="settings-card-v349 set-row" id="installRow" style="display:none"><div><strong>Pasang aplikasi</strong><div class="muted">Tambahkan RepairLog ke perangkat.</div></div><button class="btn small" id="installBtn" type="button" onclick="installApp()">Pasang</button></div>
+              <div class="settings-danger-v349"><div class="settings-control-row-v349"><div><strong>Keluar dari akun</strong><small>Data lokal aman dan sesi perangkat akan ditutup.</small></div><button class="btn danger small" type="button" onclick="doLogout()">Logout</button></div></div>
+            </section>
+          </main>
         </div>
       </div>
     </div>
@@ -1558,5 +1480,6 @@
     <script src="assets/js/v344-performance-ux.js"></script>
     <script src="assets/js/v345-board-reports-print.js"></script>
     <script src="assets/js/v348-password-reset.js"></script>
+    <script src="assets/js/v349-theme-settings-plans.js"></script>
   </body>
 </html>

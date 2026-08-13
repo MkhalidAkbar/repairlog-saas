@@ -37,3 +37,13 @@ Panel lama sudah dihapus sepenuhnya; data historis tetap dibaca oleh tampilan te
 5. Upload `assets/js/v348-password-reset.js` dan `assets/css/v348-password-reset.css` bersama seluruh aplikasi.
 6. Jangan menaruh service role key atau secret SMTP di `config.js`.
 7. Refresh dua kali atau tutup/buka PWA. Cache baru: `repairlog-v3.4.8-password-reset-otp`.
+
+
+## Deploy v3.4.9 — Tema, Pengaturan, dan Paket
+
+1. Upload seluruh aplikasi, termasuk `assets/css/v349-theme-settings-plans.css` dan `assets/js/v349-theme-settings-plans.js`.
+2. Pastikan `index.html`, `assets/js/core.js`, dan `sw.js` ikut diganti.
+3. Cache aplikasi baru: `repairlog-v3.4.9-theme-settings-plans`.
+4. Refresh dua kali atau tutup/buka kembali PWA agar service worker lama diganti.
+5. Pilihan Basic/Pro pada versi ini hanya tampilan browser dengan key `repairlog_plan_preview_v349`; belum ada penguncian fitur atau pembayaran Supabase.
+6. Uji mode gelap pada desktop dan HP, submenu Pengaturan, koneksi printer, serta swipe tab Papan setelah deploy.

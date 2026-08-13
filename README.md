@@ -93,3 +93,14 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Setelah password berubah, kredensial biometrik lama dibersihkan dan sesi dikeluarkan.
 - Setup lengkap tersedia di `SUPABASE_PASSWORD_RESET_SETUP.md`.
 - Implementasi tidak memakai Edge Function, tabel SQL, atau service role key di frontend.
+
+
+## RepairLog v3.4.9
+
+- Dark mode menyeluruh untuk modul revisi, CRM, keuangan, stok, absensi, modal, tabel, empty state, mobile bottom navigation, dan menu Lainnya.
+- Navigasi tahap Papan pada HP tanpa tombol panah; dapat digeser manual dan tahap yang diketuk dipusatkan otomatis.
+- Pengaturan baru dengan submenu Akun, Toko, Printer, Tampilan, Paket, dan Sistem.
+- Status printer dibuat ringkas; pengaturan lebar kertas, kepadatan, sambungan, dan kalibrasi berada di submenu Printer.
+- Badge paket aktif tersedia di header dan menu mobile.
+- Perbandingan Basic/Pro diperbarui berdasarkan fitur RepairLog terbaru.
+- Paket aktif disimpan hanya pada browser melalui `localStorage` dan belum membatasi fitur atau tersinkron ke Supabase.
