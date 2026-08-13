@@ -104,3 +104,14 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Badge paket aktif tersedia di header dan menu mobile.
 - Perbandingan Basic/Pro diperbarui berdasarkan fitur RepairLog terbaru.
 - Paket aktif disimpan hanya pada browser melalui `localStorage` dan belum membatasi fitur atau tersinkron ke Supabase.
+
+
+## RepairLog v3.5.0
+
+- Pusat Kesehatan Sistem dipindahkan dari navigasi utama ke Pengaturan → Sistem.
+- Toko & Identitas tidak lagi membuka modal kedua; verifikasi PIN dan seluruh form toko berjalan langsung di workspace Pengaturan.
+- Tombol submenu Pengaturan desktop diratakan dengan kolom ikon dan teks yang konsisten.
+- Pengaturan HP sekarang tampil sebagai halaman penuh dengan enam submenu dalam grid 3 × 2 tanpa scroll horizontal.
+- Menu Lainnya HP memakai aksi header ringkas: ikon refresh, label paket aktif, dan tombol tutup.
+- Tutorial diperbarui menjadi delapan langkah sesuai Dashboard, Papan, pelanggan, laporan, printer, paket, dan Pengaturan terbaru.
+- Navigasi tahap Papan HP menghitung ruang kiri/kanan berdasarkan lebar tombol aktif sehingga Antri, Batal Diambil, Arsip, dan tahap lainnya selalu dapat dipusatkan.

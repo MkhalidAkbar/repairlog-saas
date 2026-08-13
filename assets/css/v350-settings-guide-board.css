@@ -1,0 +1,235 @@
+/* RepairLog v3.5.0 — integrated settings, responsive guide, and reliable board tabs */
+
+/* Settings desktop: one clean alignment system. */
+.settings-modal-v349{width:min(1080px,94vw)!important;max-width:min(1080px,94vw)!important;}
+.settings-layout-v349{height:calc(min(88vh,820px) - 80px)!important;max-height:calc(min(88vh,820px) - 80px)!important;}
+.settings-nav-v349{align-items:stretch;}
+.settings-nav-v349 button{
+  width:100%;
+  grid-template-columns:36px minmax(0,1fr)!important;
+  justify-content:start;
+  align-items:center;
+  gap:11px!important;
+  margin:0!important;
+  padding:8px 10px!important;
+}
+.settings-nav-v349 button>span:first-child{
+  width:36px!important;
+  height:36px!important;
+  margin:0!important;
+  flex:none;
+}
+.settings-nav-v349 button>span:last-child{
+  display:block;
+  width:100%;
+  min-width:0;
+  margin:0;
+  text-align:left;
+}
+.settings-nav-v349 button strong,.settings-nav-v349 button small{line-height:1.25;}
+
+/* Store settings now live inside the prepared Settings workspace. */
+.store-inline-v350{display:grid;gap:14px;}
+.store-inline-v350>.settings-card-v349{margin:0;}
+.store-inline-shell-v350{padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);}
+.store-inline-shell-v350 #ownerLock{padding:2px;}
+.store-lock-head-v350{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;}
+.store-lock-head-v350 h4{margin:0;color:var(--text);font-size:16px;}
+.store-lock-head-v350 p{margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.45;}
+.store-lock-badge-v350{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid var(--border);border-radius:10px;background:var(--card2);font-size:18px;}
+.store-unlock-row-v350{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:end;}
+.store-unlock-row-v350 label{margin:0;}
+.store-unlock-row-v350 input{margin-top:6px;}
+.store-inline-v350 #ownerPanel{padding:0!important;}
+.store-inline-v350 #ownerPanel>div,.store-inline-v350 #ownerPanel>.checks{
+  min-width:0;
+}
+.store-inline-v350 #brandingSection{
+  padding:16px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--card2);
+}
+.store-inline-v350 #ownerPanel>hr{margin:16px 0!important;}
+.store-inline-v350 input,.store-inline-v350 textarea,.store-inline-v350 select{max-width:100%;}
+.store-inline-v350 .actions:last-child{position:static;padding:12px 0 2px;background:transparent;}
+
+/* System Health is part of Settings instead of a main navigation destination. */
+.settings-health-v350{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+.settings-health-label-v350{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px;}
+.settings-health-label-v350 h4{margin:0;color:var(--text);font-size:16px;}
+.settings-health-label-v350 p{margin:4px 0 0;color:var(--muted);font-size:11px;}
+.settings-health-chip-v350{padding:6px 9px;border-radius:8px;background:var(--success-soft);color:var(--success);font-size:10px;font-weight:850;white-space:nowrap;}
+.settings-health-v350 #healthBox>.rl-head{margin:0 0 10px;padding:15px;border:1px solid var(--border);border-radius:12px;background:var(--card2);box-shadow:none;}
+.settings-health-v350 #healthBox>.rl-head h2{margin:3px 0;font-size:18px;}
+.settings-health-v350 #healthBox>.rl-head p{font-size:11px;}
+.settings-health-v350 #healthBox>.rl-head .dashboard-kicker{display:none;}
+.settings-health-v350 #healthBox>.rl-tabs{margin:0 0 12px;}
+.settings-health-v350 #healthContent{min-width:0;}
+.settings-health-v350 .rl-actions{flex-wrap:wrap;}
+.settings-health-v350 .rl-table-wrap{max-width:100%;overflow:auto;}
+
+/* Compact actions in the mobile More sheet. */
+.mobile-more-actions-v350{display:flex;align-items:center;gap:7px;margin-left:auto;}
+.mobile-more-actions-v350 button{display:grid;place-items:center;height:42px;min-width:42px;margin:0;padding:0 11px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--text);font:inherit;font-size:12px;font-weight:850;cursor:pointer;}
+.mobile-more-actions-v350 .mobile-refresh-head-v350{width:42px;padding:0;font-size:22px;color:var(--accent);}
+.mobile-more-actions-v350 .mobile-plan-head-v350{color:#f0a657;border-color:color-mix(in srgb,#d5803b 55%,var(--border));background:color-mix(in srgb,#d5803b 10%,var(--card));}
+.mobile-more-actions-v350 .rl-sheet-close{width:42px!important;min-width:42px!important;padding:0!important;}
+#mobilePlanV349,#mobileRefreshV345{display:none!important;}
+
+/* Updated responsive product tour. */
+.tour-mask{background:transparent;}
+.tour-spot{border-radius:12px;box-shadow:0 0 0 3px var(--accent),0 0 0 9999px rgba(5,12,22,.64);transition:all .22s ease;}
+.tour-tip{
+  width:min(390px,calc(100vw - 32px));
+  max-width:none;
+  padding:0;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 22px 64px rgba(0,0,0,.34);
+}
+.tour-card-head-v350{display:grid;grid-template-columns:44px minmax(0,1fr) 34px;align-items:center;gap:11px;padding:16px 16px 12px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 11%,var(--card)),var(--card));}
+.tour-icon-v350{display:grid;place-items:center;width:44px;height:44px;border-radius:11px;background:var(--accent);color:#fff;font-size:21px;}
+.tour-eyebrow-v350{display:block;margin-bottom:3px;color:var(--accent);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.09em;}
+.tour-tip h4{margin:0!important;color:var(--text);font-size:17px!important;line-height:1.25;}
+.tour-close-v350{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid var(--border);border-radius:9px;background:var(--card2);color:var(--muted);font-size:18px;cursor:pointer;}
+.tour-body-v350{padding:2px 16px 15px;}
+.tour-tip p{margin:8px 0!important;color:var(--muted);font-size:13px!important;line-height:1.55!important;}
+.tour-points-v350{display:grid;gap:6px;margin:10px 0 14px;padding:0;list-style:none;}
+.tour-points-v350 li{position:relative;padding-left:18px;color:var(--text);font-size:11px;line-height:1.4;}
+.tour-points-v350 li:before{content:"✓";position:absolute;left:0;color:var(--success);font-weight:900;}
+.tour-progress-v350{height:4px;margin:0 16px;background:var(--card2);border-radius:999px;overflow:hidden;}
+.tour-progress-v350 i{display:block;width:0;height:100%;border-radius:inherit;background:var(--accent);transition:width .2s ease;}
+.tour-actions{margin:0!important;padding:13px 16px 16px;}
+.tour-step{font-weight:800;}
+.tour-action-group-v350{display:flex;gap:7px;}
+.tour-action-group-v350 .btn{min-height:40px;}
+
+/* Board tabs: JS supplies exact padding per active tab; keep a safe base. */
+@media(max-width:760px){
+  .board-stage-tabs{padding-inline:12px!important;scroll-padding-inline:50%!important;overscroll-behavior-inline:contain;}
+  .board-stage-tabs button{scroll-snap-align:center;}
+
+  /* Settings behaves like a dedicated mobile page, not a floating modal. */
+  #settingsModal.modal-bg,#settingsModal.modal-bg.open{
+    position:fixed!important;
+    inset:0!important;
+    display:none;
+    align-items:stretch!important;
+    padding:0!important;
+    background:var(--bg)!important;
+    overflow:hidden!important;
+  }
+  #settingsModal.modal-bg.open{display:block!important;}
+  .settings-modal-v349{
+    position:relative;
+    width:100%!important;
+    height:100dvh!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    transform:none!important;
+    animation:none!important;
+  }
+  .settings-top-v349{height:68px;min-height:68px;padding:10px 14px!important;}
+  .settings-title-icon-v349{width:38px!important;height:38px!important;border-radius:10px;}
+  .settings-title-v349 h2{font-size:18px!important;}
+  .settings-layout-v349{
+    display:flex!important;
+    flex-direction:column;
+    height:calc(100dvh - 68px)!important;
+    max-height:none!important;
+    overflow:hidden!important;
+  }
+  .settings-nav-v349{
+    position:relative!important;
+    top:auto!important;
+    z-index:3;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:6px!important;
+    flex:none;
+    width:100%;
+    padding:9px 10px!important;
+    border:0!important;
+    border-bottom:1px solid var(--border)!important;
+    overflow:visible!important;
+  }
+  .settings-nav-v349 button{
+    display:grid!important;
+    grid-template-columns:28px minmax(0,1fr)!important;
+    gap:6px!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:48px!important;
+    padding:6px!important;
+    border-radius:9px!important;
+  }
+  .settings-nav-v349 button>span:first-child{width:28px!important;height:28px!important;font-size:14px!important;border-radius:8px!important;}
+  .settings-nav-v349 button>span:last-child{min-width:0;}
+  .settings-nav-v349 button strong{font-size:10px!important;overflow:visible!important;text-overflow:clip!important;}
+  .settings-nav-v349 button small{display:none!important;}
+  .settings-content-v349{flex:1;min-height:0;padding:16px 14px calc(26px + env(safe-area-inset-bottom))!important;overflow:auto!important;}
+  .settings-section-head-v349{margin-bottom:14px;}
+  .settings-section-head-v349 h3{font-size:19px!important;}
+  .settings-section-head-v349 p{font-size:11px;}
+  .settings-brand-preview-v349{grid-template-columns:44px minmax(0,1fr);padding:11px;}
+  .settings-brand-mark-v349{width:44px;height:44px;}
+  #ownerSetRow{align-items:stretch!important;flex-direction:column;}
+  #ownerSetRow .btn{width:100%;}
+  .store-inline-shell-v350{padding:13px;}
+  .store-unlock-row-v350{grid-template-columns:1fr;}
+  .store-unlock-row-v350 .btn{width:100%;min-height:44px;}
+  .store-inline-v350 #brandingSection{padding:13px;}
+  .store-inline-v350 .frow,.store-inline-v350 .brand-contact-grid-v347{grid-template-columns:1fr!important;}
+  .store-inline-v350 .row{flex-wrap:wrap;}
+  .store-inline-v350 input[type="file"]{width:100%;flex-basis:100%!important;}
+  .settings-system-grid-v349{grid-template-columns:1fr!important;}
+  .settings-health-label-v350{align-items:flex-start;}
+  .settings-health-v350 #healthBox>.rl-head{padding:13px;}
+  .settings-health-v350 #healthBox>.rl-head,.settings-health-v350 #healthBox>.rl-head .rl-actions{display:grid!important;grid-template-columns:1fr!important;}
+  .settings-health-v350 #healthBox>.rl-head .btn{width:100%;}
+  .settings-health-v350 #healthBox>.rl-tabs{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible!important;}
+  .settings-health-v350 #healthBox>.rl-tabs button{width:100%;min-width:0!important;}
+
+  .rl-sheet-head{gap:8px;}
+  .rl-sheet-head>div:first-child{min-width:0;}
+  .mobile-more-actions-v350{gap:6px;}
+
+  /* Mobile guide is a stable bottom card with no off-screen tooltip. */
+  .tour-tip{
+    position:fixed!important;
+    left:12px!important;
+    right:12px!important;
+    top:auto!important;
+    bottom:calc(82px + env(safe-area-inset-bottom))!important;
+    width:auto!important;
+    max-height:min(60dvh,520px);
+    overflow:auto;
+    border-radius:15px;
+  }
+  .tour-card-head-v350{grid-template-columns:40px minmax(0,1fr) 32px;padding:13px 13px 10px;}
+  .tour-icon-v350{width:40px;height:40px;}
+  .tour-body-v350{padding:1px 13px 12px;}
+  .tour-progress-v350{margin:0 13px;}
+  .tour-actions{padding:11px 13px 13px;align-items:flex-end!important;}
+  .tour-action-group-v350{gap:5px;}
+  .tour-action-group-v350 .btn{min-width:0!important;padding:8px 10px!important;}
+}
+
+@media(max-width:390px){
+  .settings-nav-v349{padding-inline:8px!important;gap:5px!important;}
+  .settings-nav-v349 button{grid-template-columns:26px minmax(0,1fr)!important;gap:5px!important;padding:5px!important;}
+  .settings-nav-v349 button>span:first-child{width:26px!important;height:26px!important;}
+  .settings-nav-v349 button strong{font-size:9.5px!important;}
+  .settings-top-actions-v349{gap:6px;}
+  .tour-tip p{font-size:12px!important;}
+  .tour-points-v350 li{font-size:10px;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .tour-spot,.tour-progress-v350 i{transition:none!important;}
+}

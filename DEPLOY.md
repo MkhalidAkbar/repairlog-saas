@@ -47,3 +47,13 @@ Panel lama sudah dihapus sepenuhnya; data historis tetap dibaca oleh tampilan te
 4. Refresh dua kali atau tutup/buka kembali PWA agar service worker lama diganti.
 5. Pilihan Basic/Pro pada versi ini hanya tampilan browser dengan key `repairlog_plan_preview_v349`; belum ada penguncian fitur atau pembayaran Supabase.
 6. Uji mode gelap pada desktop dan HP, submenu Pengaturan, koneksi printer, serta swipe tab Papan setelah deploy.
+
+
+## Deploy v3.5.0 — Pengaturan, Panduan, dan Papan HP
+
+1. Upload seluruh aplikasi termasuk `assets/css/v350-settings-guide-board.css` dan `assets/js/v350-settings-guide-board.js`.
+2. Pastikan `index.html`, `assets/js/core.js`, dan `sw.js` ikut diganti.
+3. Cache baru: `repairlog-v3.5.0-settings-guide-board`.
+4. Setelah deploy, refresh dua kali atau tutup dan buka kembali PWA agar service worker lama diganti.
+5. Uji Pengaturan → Toko dan Sistem, menu Lainnya HP, seluruh langkah panduan, serta tahap pertama/tengah/terakhir pada Papan HP.
+6. Paket Basic/Pro masih disimpan lokal di browser dan belum mengunci fitur melalui Supabase.
