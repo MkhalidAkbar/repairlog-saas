@@ -1,0 +1,28 @@
+# Pengujian Otomatis RepairLog v3.5.2
+
+## Menjalankan
+
+```bash
+npm install
+npm test
+```
+
+Jika Playwright belum memiliki Chromium:
+
+```bash
+npx playwright install chromium
+npm test
+```
+
+## Cakupan rilis ini
+
+- Validasi sintaks seluruh JavaScript produksi.
+- ID HTML harus unik dan semua aset lokal harus tersedia.
+- Service worker harus memuat seluruh aset, fallback offline, dan background sync.
+- Hook penyimpanan tiket offline harus terpasang sebelum upload jaringan.
+- Snapshot laporan, antrean IndexedDB, perpindahan tahap offline, dan penyelesaian konflik diuji di browser.
+- Guard persetujuan biaya tetap mencegah tahap pengerjaan saat approval pending.
+- Pusat sinkronisasi diuji pada viewport desktop dan 390 px tanpa horizontal overflow.
+- Lazy loading media, deferred business modules, pagination laporan, kompresi foto, dan pemantauan Web Vitals diperiksa.
+
+Pengujian ini tidak memakai database produksi. Browser test menjalankan Supabase mock sehingga aman digunakan di CI.

@@ -123,3 +123,14 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - QRIS, transfer bank, upload bukti bayar, invoice PDF, masa garansi, serta WhatsApp CS tetap terhubung dalam satu portal.
 - Pengaturan Toko dikelompokkan menjadi Identitas, Pembayaran, Tiket & Resi, Pengguna, Fitur, dan Keamanan.
 - Seluruh ID input dan fungsi simpan lama dipertahankan; tidak ada migrasi database baru pada rilis ini.
+
+## RepairLog v3.5.2 — Offline, Performance & Automated Testing
+
+- Tiket baru dapat disimpan ke IndexedDB saat offline dan ditandai **Menunggu sinkronisasi**.
+- Perubahan tahap, status, dan teknisi dapat masuk antrean lokal; sinkronisasi berjalan otomatis setelah jaringan kembali.
+- Snapshot laporan terakhir dipakai sebagai fallback ketika Supabase tidak dapat dijangkau.
+- Konflik perubahan antarperangkat membandingkan `updated_at` dan menyediakan pilihan gunakan server, pertahankan lokal, atau bandingkan.
+- Pengaturan → Sistem menampilkan status jaringan, antrean, konflik, snapshot, sinkron terakhir, dan Web Vitals.
+- Service worker memakai navigation fallback, stale-while-revalidate untuk aset lokal, serta notifikasi Background Sync.
+- Modul bisnis nonkritis ditunda saat boot, media memakai lazy loading, foto dibatasi 1280 px/quality 0,68, dan list panjang memakai viewport rendering.
+- Pengujian otomatis tersedia melalui `npm test`; panduan lengkap ada di `AUTOMATED_TESTING.md`.

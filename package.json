@@ -1,0 +1,14 @@
+{
+  "name": "repairlog-saas",
+  "version": "3.5.2",
+  "private": true,
+  "description": "Automated validation for RepairLog static application",
+  "scripts": {
+    "test": "node tests/static-checks.js && node tests/browser-smoke.js",
+    "test:static": "node tests/static-checks.js",
+    "test:browser": "node tests/browser-smoke.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

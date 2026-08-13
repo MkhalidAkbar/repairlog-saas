@@ -45,7 +45,7 @@ if (db) {
 
 const BRANDS = [ "Asus", "Acer", "Lenovo", "HP", "Dell", "MSI", "Apple/MacBook", "Axioo", "Toshiba", "Samsung", "Lainnya" ];
 
-const APP_VERSION = "v3.5.1";
+const APP_VERSION = "v3.5.2";
 
 const DEVICE_TYPES = [ "Laptop", "PC/Komputer", "Printer", "HP/Smartphone", "CCTV" ];
 
@@ -137,7 +137,7 @@ const LEVELS = {
     }
 };
 
-const IMG_MAX_DIM = 1600, IMG_QUALITY = .7, VIDEO_MAX_MB = 50;
+const IMG_MAX_DIM = 1280, IMG_QUALITY = .68, VIDEO_MAX_MB = 50;
 
 const BRAND_DEFAULT = {
     name: "RepairLog",
@@ -1255,10 +1255,22 @@ async function loadAll(options = {}) {
         }
         setLoadProgress(56, "Memuat stok, keuangan, pelanggan, dan absensi…", "Modul bisnis", mode);
         const tasks = [];
+        const deferredTasks = [];
         if (typeof loadParts === "function") tasks.push(Promise.resolve().then(() => loadParts()));
-        if (typeof loadBusinessSuiteData === "function") tasks.push(Promise.resolve().then(() => loadBusinessSuiteData()));
-        if (typeof loadPriorityReportMetadata === "function") tasks.push(Promise.resolve().then(() => loadPriorityReportMetadata()));
+        if (typeof loadBusinessSuiteData === "function") deferredTasks.push(() => loadBusinessSuiteData());
+        if (typeof loadPriorityReportMetadata === "function") deferredTasks.push(() => loadPriorityReportMetadata());
         if (typeof autoCloseStaleAttendance === "function") tasks.push(Promise.resolve().then(() => autoCloseStaleAttendance()));
+        if (mode === "boot" && deferredTasks.length && typeof requestIdleCallback === "function") {
+            globalThis.__repairlogDeferredModulesPromiseV352 = new Promise(resolve => requestIdleCallback(async () => {
+                const lazyResults = await Promise.allSettled(deferredTasks.map(task => Promise.resolve().then(task)));
+                lazyResults.forEach((result, index) => {
+                    if (result.status === "rejected" && typeof reportAppError === "function") reportAppError("load.deferred." + index, result.reason);
+                });
+                resolve(lazyResults);
+            }, { timeout: 2500 }));
+        } else {
+            deferredTasks.forEach(task => tasks.push(Promise.resolve().then(task)));
+        }
         const settled = await Promise.allSettled(tasks);
         settled.forEach((result, index) => {
             if (result.status === "rejected" && typeof reportAppError === "function") {

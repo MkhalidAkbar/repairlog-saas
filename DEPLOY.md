@@ -67,3 +67,15 @@ Panel lama sudah dihapus sepenuhnya; data historis tetap dibaca oleh tampilan te
 7. Pastikan tombol keputusan biaya mengarah ke `#/a/{approval_token}` dan tahap pengerjaan diblokir saat approval masih pending/ditolak.
 8. Uji QRIS/rekening, upload bukti, invoice PDF, garansi, WhatsApp CS, serta tampilan before–after.
 9. Buka Pengaturan → Toko; uji enam submenu pada desktop dan 390 px, lalu simpan branding, fitur, pengguna, dan PIN.
+
+## Deploy v3.5.2 — Offline, Performance & Automated Testing
+
+1. Upload seluruh aplikasi, termasuk `assets/css/v352-offline-performance.css`, `assets/js/v352-offline-performance.js`, `package.json`, folder `tests`, dan `AUTOMATED_TESTING.md`.
+2. Pastikan `index.html`, `assets/js/core.js`, `assets/js/operations.js`, dan `sw.js` ikut diganti.
+3. Cache aplikasi baru: `repairlog-v3.5.2-offline-performance`.
+4. Tidak ada migrasi Supabase. Antrean dan snapshot disimpan per browser menggunakan IndexedDB `repairlog-offline-v352`.
+5. Jalankan `npm install` lalu `npm test` sebelum deploy. Jika perlu, pasang Chromium dengan `npx playwright install chromium`.
+6. Setelah upload, refresh dua kali atau tutup/buka PWA agar service worker lama diganti.
+7. Uji: buat tiket saat offline, pindahkan tahap Papan, kembali online, cek sinkronisasi, dan coba pilihan konflik di Pengaturan → Sistem.
+8. Pada iPhone/Safari, tes mode offline dari PWA yang sudah pernah dibuka online agar aset dan snapshot tersedia.
+9. Jika antrean belum terkirim, jangan hapus data situs/browser; aktifkan internet lalu tekan **Sinkronkan sekarang**.

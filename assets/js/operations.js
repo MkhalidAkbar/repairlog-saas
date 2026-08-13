@@ -66,7 +66,7 @@ function renderThumbs(side) {
     const wrap = $("thumbs_" + side);
     wrap.innerHTML = formMedia[side].map((m, i) => {
         const src = m.url || m.data;
-        const inner = m.type === "video" ? `<video src="${src}"></video><span class="vtag">VIDEO</span>` : `<img src="${src}" />`;
+        const inner = m.type === "video" ? `<video src="${src}"></video><span class="vtag">VIDEO</span>` : `<img src="${src}" loading="lazy" decoding="async" />`;
         return `<div class="thumb" onclick="previewForm('${side}',${i})">${inner}<button class="x" onclick="event.stopPropagation();removeMedia('${side}',${i})">×</button></div>`;
     }).join("");
 }
@@ -384,6 +384,7 @@ function closeForm() {
 
 async function saveReport() {
     if (typeof validateReportBeforeSave === "function" && !await validateReportBeforeSave()) return;
+    if (typeof shouldQueueOfflineV352 === "function" && shouldQueueOfflineV352()) return queueCurrentReportOfflineV352();
     const device = autoDeviceName();
     $("saveBtn").disabled = true;
     $("saveBtn").textContent = "Menyimpan...";
@@ -927,7 +928,7 @@ function mediaHtml(arr, label) {
     if (!arr.length) return `<p class="muted">Tidak ada media.</p>`;
     return `<div class="photo-grid">` + arr.map((m, i) => {
         const src = m.url || m.data;
-        return m.type === "video" ? `<video src="${src}" controls></video>` : `<img src="${src}" onclick="previewDetail('${label}',${i})" />`;
+        return m.type === "video" ? `<video src="${src}" controls></video>` : `<img src="${src}" loading="lazy" decoding="async" onclick="previewDetail('${label}',${i})" />`;
     }).join("") + `</div>`;
 }
 
@@ -1377,7 +1378,7 @@ function card(r) {
     const st = (r.status || "Proses").toLowerCase();
     const stClass = st.includes("selesai") ? "selesai" : st.includes("batal") || st.includes("gagal") ? "batal" : "proses";
     const firstImg = (r.after_media || []).concat(r.before_media || []).find(m => m.type === "image");
-    const thumb = firstImg ? `<img src="${firstImg.url || firstImg.data}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" />` : "";
+    const thumb = firstImg ? `<img src="${firstImg.url || firstImg.data}" loading="lazy" decoding="async" style="width:100%;height:140px;object-fit:cover;border-radius:8px" />` : "";
     return `<div class="card" style="position:relative">${statusBadge(r)}${thumb}<div class="row"><h3>${esc(r.device)}</h3><span class="badge" style="background:${lv.color}">L${r.level}</span></div><div class="muted">${esc(r.brand || "-")} • ${esc(r.customer || "-")}${isWarranty(r) ? ' • <b style="color:#8b5cf6">🛡️ Garansi</b>' : ""}</div><div class="row"><span class="pill ${stClass}">${esc(r.status || "Proses")}</span>${isOwner() && FEATURES.profit ? `<span>${rp(r.fee)}</span>` : ""}</div><div class="row">${techBadge(r.assigned_to)}${ageBadge(r)}</div><div class="muted" style="font-size:12px">Tiket: ${esc(r.ticket_no || "-")} • ${fmtDate(r.date_in)}</div><div class="actions"><button class="btn small" onclick="openDetail('${r.id}')">Detail</button><button class="btn secondary small" onclick="openForm('${r.id}')">Edit</button></div></div>`;
 }
 
