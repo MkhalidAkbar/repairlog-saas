@@ -26,3 +26,13 @@ npm test
 - Lazy loading media, deferred business modules, pagination laporan, kompresi foto, dan pemantauan Web Vitals diperiksa.
 
 Pengujian ini tidak memakai database produksi. Browser test menjalankan Supabase mock sehingga aman digunakan di CI.
+
+## Tambahan cakupan v3.5.3
+
+- Runtime bundle produksi benar-benar memuat hanya satu CSS dan satu JavaScript lokal.
+- Perhitungan jarak geofence dan keterlambatan dengan zona waktu Asia/Jakarta.
+- Jadwal shift, permohonan izin, persetujuan owner, check-in, lokasi, serta detail kehadiran.
+- Monitoring Supabase, Storage, sinkronisasi, error 24 jam, dan Web Vitals.
+- Konteks error mencakup versi, halaman, viewport, browser/perangkat, koneksi, dan zona waktu.
+- Layout absensi serta kesehatan pada desktop, tablet, dan 390 px tanpa horizontal overflow.
+- Verifikasi bahwa tidak ada kontrol atau skema penggajian.

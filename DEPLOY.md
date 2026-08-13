@@ -79,3 +79,16 @@ Panel lama sudah dihapus sepenuhnya; data historis tetap dibaca oleh tampilan te
 7. Uji: buat tiket saat offline, pindahkan tahap Papan, kembali online, cek sinkronisasi, dan coba pilihan konflik di Pengaturan → Sistem.
 8. Pada iPhone/Safari, tes mode offline dari PWA yang sudah pernah dibuka online agar aset dan snapshot tersedia.
 9. Jika antrean belum terkirim, jangan hapus data situs/browser; aktifkan internet lalu tekan **Sinkronkan sekarang**.
+
+## Deploy v3.5.3 — Absensi Lanjutan, Performa & Monitoring
+
+1. Backup website dan database Supabase.
+2. Ikuti `SUPABASE_V353_SETUP.md` dan jalankan `20260813_v353_attendance_health.sql`.
+3. Setelah migrasi, set `profiles.role = 'owner'` untuk email owner sesuai `config.js`.
+4. Upload seluruh aplikasi, termasuk bundle `repairlog-v353.bundle`, source `v353-attendance-health`, SQL, dan dokumentasi setup.
+5. Cache baru: `repairlog-v3.5.3-attendance-health-performance`.
+6. Refresh dua kali atau tutup/buka PWA agar bundle dan service worker baru aktif.
+7. Uji jadwal, check-in lokasi, foto opsional, izin/sakit/cuti, koreksi, dan keputusan owner.
+8. Buka Pengaturan → Sistem; periksa Supabase, Storage, sinkronisasi, error, Web Vitals, unduhan diagnostik, dan laporan masalah.
+9. Jalankan `npm install` lalu `npm test` sebelum deploy.
+10. Rilis ini tidak menambahkan penggajian.

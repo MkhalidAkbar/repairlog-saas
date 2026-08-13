@@ -134,3 +134,14 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Service worker memakai navigation fallback, stale-while-revalidate untuk aset lokal, serta notifikasi Background Sync.
 - Modul bisnis nonkritis ditunda saat boot, media memakai lazy loading, foto dibatasi 1280 px/quality 0,68, dan list panjang memakai viewport rendering.
 - Pengujian otomatis tersedia melalui `npm test`; panduan lengkap ada di `AUTOMATED_TESTING.md`.
+
+## RepairLog v3.5.3 — Absensi Lanjutan & Kesehatan Aplikasi
+
+- Absensi memiliki jadwal shift per pengguna, toleransi keterlambatan, ringkasan jam kerja, dan status kehadiran.
+- Pengguna dapat mengajukan izin, sakit, cuti, atau koreksi jam; owner dapat menyetujui atau menolak dengan riwayat keputusan.
+- Check-in mendukung batas lokasi toko dan foto opsional. Tidak ada fitur, tabel, atau ekspor penggajian.
+- Pengaturan → Sistem menampilkan status **Sehat**, **Perlu perhatian**, atau **Bermasalah** berdasarkan koneksi, Supabase, Storage, antrean offline, error 24 jam, dan Web Vitals.
+- Error JavaScript serta aset gagal dimuat dicatat bersama versi, halaman, browser/perangkat, koneksi, viewport, dan zona waktu tanpa data pelanggan.
+- Tombol **Kirim laporan masalah** mendukung diagnostik dan screenshot opsional.
+- Runtime CSS/JavaScript digabung dari 51 request aset menjadi 2 request bundle; source modular tetap disertakan untuk pemeliharaan.
+- Setup Supabase tersedia di `SUPABASE_V353_SETUP.md`.

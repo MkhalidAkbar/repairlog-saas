@@ -45,7 +45,7 @@ if (db) {
 
 const BRANDS = [ "Asus", "Acer", "Lenovo", "HP", "Dell", "MSI", "Apple/MacBook", "Axioo", "Toshiba", "Samsung", "Lainnya" ];
 
-const APP_VERSION = "v3.5.2";
+const APP_VERSION = "v3.5.3";
 
 const DEVICE_TYPES = [ "Laptop", "PC/Komputer", "Printer", "HP/Smartphone", "CCTV" ];
 
@@ -860,7 +860,7 @@ async function fetchMe() {
     });
     const prof = Array.isArray(data) ? data[0] : data;
     if (!error && prof) {
-        ME.role = "member";
+        ME.role = prof.role || (String(ME.email || "").toLowerCase() === String(OWNER_EMAIL || "").toLowerCase() ? "owner" : "member");
         ME.name = prof.name || "";
         ME.store_id = prof.store_id || null;
     } else if (error && String(error.message || "").indexOf("WRONG_STORE") >= 0) {
@@ -873,10 +873,11 @@ async function fetchMe() {
         ME.store_id = null;
     }
     try {
-        const {data: _av} = await db.from("profiles").select("avatar_url,color").eq("user_id", user.id).maybeSingle();
+        const {data: _av} = await db.from("profiles").select("avatar_url,color,role").eq("user_id", user.id).maybeSingle();
         if (_av) {
             ME.avatar = _av.avatar_url || "";
             ME.color = _av.color || "";
+            if (_av.role) ME.role = _av.role;
         }
     } catch (e) {}
 }

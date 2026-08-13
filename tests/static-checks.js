@@ -26,6 +26,8 @@ const approval = read('assets/js/v351-customer-store.js');
 const password = read('assets/js/v348-password-reset.js');
 const inventory = read('assets/js/inventory-core.js');
 const attendance = read('assets/js/boot.js');
+const advanced = read('assets/js/v353-attendance-health.js');
+const migration = read('20260813_v353_attendance_health.sql');
 
 assert(operations.includes('shouldQueueOfflineV352') && operations.indexOf('shouldQueueOfflineV352') < operations.indexOf('uploadList(formMedia.before)'), 'Offline ticket hook must run before upload');
 assert(offline.includes('indexedDB.open') && offline.includes('restoreSnapshot') && offline.includes('resolveConflict'), 'Offline queue primitives missing');
@@ -39,5 +41,11 @@ assert(password.includes('verifyPasswordOtpV348') && password.includes('submitNe
 assert(inventory.includes('applyStockMovement') && inventory.includes('releaseReservedPartsForReport'), 'Stock movement safeguards missing');
 assert(attendance.includes('attendCheckIn') && attendance.includes('attendCheckOut') && attendance.includes('autoCloseStaleAttendance'), 'Attendance workflow missing');
 assert(/@media\(max-width:700px\)/.test(read('assets/css/v352-offline-performance.css')), '390px responsive rules missing');
+assert(advanced.includes('attendance_schedules') && advanced.includes('attendance_requests') && advanced.includes('geofence') && advanced.includes('lateMinutes'), 'Advanced attendance missing');
+assert(advanced.includes('resource-load') && advanced.includes('runHealthMonitorV353') && advanced.includes('openIssueReportV353'), 'Automatic error monitoring missing');
+assert(migration.includes('attendance_settings') && migration.includes('attendance_details') && migration.includes('app_issue_reports') && !/create\s+table[^;]*(payroll|salary)|salary_amount|payroll_export/i.test(migration), 'Migration scope invalid');
+assert(core.includes('const APP_VERSION = "v3.5.3"'), 'App version is not v3.5.3');
+assert(assets.includes('assets/css/repairlog-v353.bundle.css') && assets.includes('assets/js/repairlog-v353.bundle.js') && assets.length <= 3, 'Runtime assets are not bundled');
+assert(read('assets/js/repairlog-v353.bundle.js').includes('source: assets/js/v353-attendance-health.js'), 'v3.5.3 is missing from JS bundle');
 
-console.log(JSON.stringify({ suite: 'static', jsFiles: jsFiles.length, htmlIds: ids.length, assets: assets.length, checks: 14 }, null, 2));
+console.log(JSON.stringify({ suite: 'static', jsFiles: jsFiles.length, htmlIds: ids.length, assets: assets.length, checks: 20 }, null, 2));
