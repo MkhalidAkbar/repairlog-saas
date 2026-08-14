@@ -279,7 +279,7 @@ function renderCharts() {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const currentDay = now.getDate();
         const rdays = Array.from({
-            length: daysInMonth
+            length: Math.min(currentDay, daysInMonth)
         }, (_, index) => String(index + 1));
         const monthReports = reports.filter(r => {
             if (!isFinalized(r) || !String(revenueDate(r)).startsWith(monthKey)) return false;
@@ -287,13 +287,11 @@ function renderCharts() {
         });
         const omzetVals = rdays.map((_, index) => {
             const day = index + 1;
-            if (day > currentDay) return null;
             const key = `${monthKey}-${String(day).padStart(2, "0")}`;
             return monthReports.filter(r => revenueDate(r) === key).reduce((sum, r) => sum + (Number(r.fee) || 0), 0);
         });
         const labaVals = rdays.map((_, index) => {
             const day = index + 1;
-            if (day > currentDay) return null;
             const key = `${monthKey}-${String(day).padStart(2, "0")}`;
             return monthReports.filter(r => revenueDate(r) === key).reduce((sum, r) => sum + (Number(r.fee) || 0) - (Number(r.cost) || 0), 0);
         });
@@ -313,8 +311,9 @@ function renderCharts() {
                     borderColor: "#2783de",
                     backgroundColor: "rgba(39,131,222,.10)",
                     borderWidth: 2.5,
-                    pointRadius: 2,
+                    pointRadius: context => Number(context.raw) ? 3 : 0,
                     pointHoverRadius: 5,
+                    pointHitRadius: 12,
                     fill: false,
                     tension: .3,
                     spanGaps: false
@@ -324,8 +323,9 @@ function renderCharts() {
                     borderColor: "#46a171",
                     backgroundColor: "rgba(70,161,113,.10)",
                     borderWidth: 2.5,
-                    pointRadius: 2,
+                    pointRadius: context => Number(context.raw) ? 3 : 0,
                     pointHoverRadius: 5,
+                    pointHitRadius: 12,
                     fill: false,
                     tension: .3,
                     spanGaps: false
@@ -333,6 +333,14 @@ function renderCharts() {
             },
             options: {
                 maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 8,
+                        right: 8,
+                        bottom: 2,
+                        left: 4
+                    }
+                },
                 interaction: {
                     mode: "index",
                     intersect: false
@@ -358,6 +366,9 @@ function renderCharts() {
                 scales: {
                     y: {
                         beginAtZero: true,
+                        grid: {
+                            color: "rgba(125,122,117,.14)"
+                        },
                         ticks: {
                             callback: function(v) {
                                 return rpShort(v);
@@ -365,6 +376,9 @@ function renderCharts() {
                         }
                     },
                     x: {
+                        grid: {
+                            display: false
+                        },
                         title: {
                             display: true,
                             text: "Tanggal"

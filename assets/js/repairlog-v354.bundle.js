@@ -3885,7 +3885,7 @@ function renderCharts() {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const currentDay = now.getDate();
         const rdays = Array.from({
-            length: daysInMonth
+            length: Math.min(currentDay, daysInMonth)
         }, (_, index) => String(index + 1));
         const monthReports = reports.filter(r => {
             if (!isFinalized(r) || !String(revenueDate(r)).startsWith(monthKey)) return false;
@@ -3893,13 +3893,11 @@ function renderCharts() {
         });
         const omzetVals = rdays.map((_, index) => {
             const day = index + 1;
-            if (day > currentDay) return null;
             const key = `${monthKey}-${String(day).padStart(2, "0")}`;
             return monthReports.filter(r => revenueDate(r) === key).reduce((sum, r) => sum + (Number(r.fee) || 0), 0);
         });
         const labaVals = rdays.map((_, index) => {
             const day = index + 1;
-            if (day > currentDay) return null;
             const key = `${monthKey}-${String(day).padStart(2, "0")}`;
             return monthReports.filter(r => revenueDate(r) === key).reduce((sum, r) => sum + (Number(r.fee) || 0) - (Number(r.cost) || 0), 0);
         });
@@ -3919,8 +3917,9 @@ function renderCharts() {
                     borderColor: "#2783de",
                     backgroundColor: "rgba(39,131,222,.10)",
                     borderWidth: 2.5,
-                    pointRadius: 2,
+                    pointRadius: context => Number(context.raw) ? 3 : 0,
                     pointHoverRadius: 5,
+                    pointHitRadius: 12,
                     fill: false,
                     tension: .3,
                     spanGaps: false
@@ -3930,8 +3929,9 @@ function renderCharts() {
                     borderColor: "#46a171",
                     backgroundColor: "rgba(70,161,113,.10)",
                     borderWidth: 2.5,
-                    pointRadius: 2,
+                    pointRadius: context => Number(context.raw) ? 3 : 0,
                     pointHoverRadius: 5,
+                    pointHitRadius: 12,
                     fill: false,
                     tension: .3,
                     spanGaps: false
@@ -3939,6 +3939,14 @@ function renderCharts() {
             },
             options: {
                 maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 8,
+                        right: 8,
+                        bottom: 2,
+                        left: 4
+                    }
+                },
                 interaction: {
                     mode: "index",
                     intersect: false
@@ -3964,6 +3972,9 @@ function renderCharts() {
                 scales: {
                     y: {
                         beginAtZero: true,
+                        grid: {
+                            color: "rgba(125,122,117,.14)"
+                        },
                         ticks: {
                             callback: function(v) {
                                 return rpShort(v);
@@ -3971,6 +3982,9 @@ function renderCharts() {
                         }
                     },
                     x: {
+                        grid: {
+                            display: false
+                        },
                         title: {
                             display: true,
                             text: "Tanggal"
@@ -4879,9 +4893,53 @@ window.setInterval(() => {
 ;
 
 /* source: assets/js/account.js */
-let authReady = false, lastCred = null, sessChannel = null, idleTimer = null, currentSid = null;
+let authReady = false, lastCred = null, sessChannel = null, idleTimer = null, currentSid = null, inactivityLogoutInProgress = false;
 
-const IDLE_LIMIT_MS = 30 * 60 * 1e3;
+const DEFAULT_IDLE_TIMEOUT_MINUTES = 30;
+const IDLE_TIMEOUT_OPTIONS = new Set([ 0, 15, 30, 60, 120 ]);
+const IDLE_TIMEOUT_STORAGE_PREFIX = "rl_idle_timeout_minutes_v354";
+
+function idleTimeoutStorageKey() {
+    return `${IDLE_TIMEOUT_STORAGE_PREFIX}:${ME && ME.user_id || "device"}`;
+}
+
+function idleTimeoutMinutes() {
+    try {
+        const stored = Number(localStorage.getItem(idleTimeoutStorageKey()));
+        return IDLE_TIMEOUT_OPTIONS.has(stored) ? stored : DEFAULT_IDLE_TIMEOUT_MINUTES;
+    } catch (e) {
+        return DEFAULT_IDLE_TIMEOUT_MINUTES;
+    }
+}
+
+function syncIdleTimeoutUi() {
+    const select = $("idleTimeoutSelect");
+    if (select) select.value = String(idleTimeoutMinutes());
+}
+
+function setIdleTimeoutPreference(value) {
+    const minutes = Number(value);
+    const next = IDLE_TIMEOUT_OPTIONS.has(minutes) ? minutes : DEFAULT_IDLE_TIMEOUT_MINUTES;
+    try {
+        localStorage.setItem(idleTimeoutStorageKey(), String(next));
+    } catch (e) {}
+    syncIdleTimeoutUi();
+    resetIdle();
+    toast(next ? `Logout otomatis diatur setelah ${next} menit tidak aktif.` : "Logout otomatis dinonaktifkan pada perangkat ini.", "success");
+}
+
+function closeSensitiveSessionUi() {
+    try {
+        if (typeof closeWorkPlannerV354 === "function") closeWorkPlannerV354();
+    } catch (e) {}
+    const noteInput = $("workPlannerNoteTextV354");
+    if (noteInput) noteInput.value = "";
+    document.querySelectorAll(".modal-bg.open").forEach(modal => modal.classList.remove("open"));
+    document.body.classList.remove("work-planner-open-v354");
+    const header = $("appHeader"), main = $("appMain");
+    if (header) header.style.display = "none";
+    if (main) main.style.display = "none";
+}
 
 function hideBoot() {
     const b = $("bootLoader");
@@ -4981,6 +5039,7 @@ async function afterLogin() {
 
 async function doLogout() {
     stopIdle();
+    closeSensitiveSessionUi();
     try {
         if (currentSid && ME.user_id) await db.from("active_session").delete().eq("user_id", ME.user_id);
     } catch (e) {}
@@ -4992,6 +5051,8 @@ async function doLogout() {
 
 function forceLogout(msg) {
     stopIdle();
+    closeSensitiveSessionUi();
+    authReady = false;
     try {
         db.auth.signOut();
     } catch (e) {}
@@ -5029,7 +5090,10 @@ async function claimSession() {
 
 function resetIdle() {
     if (idleTimer) clearTimeout(idleTimer);
-    idleTimer = setTimeout(lockApp, IDLE_LIMIT_MS);
+    idleTimer = null;
+    const minutes = idleTimeoutMinutes();
+    if (!minutes || !authReady) return;
+    idleTimer = setTimeout(lockApp, minutes * 60 * 1e3);
 }
 
 function stopIdle() {
@@ -5037,18 +5101,23 @@ function stopIdle() {
     idleTimer = null;
 }
 
-function lockApp() {
+async function lockApp() {
+    if (inactivityLogoutInProgress) return;
+    inactivityLogoutInProgress = true;
     stopIdle();
+    closeSensitiveSessionUi();
+    authReady = false;
     showAuth(true);
-    if (bioEnabled()) {
-        $("pwForm").style.display = "none";
-        $("pwToggle").style.display = "block";
-        $("forgotBtn").style.display = "none";
-        $("authSub").textContent = `Terkunci — tap ${biometricLabel()} untuk lanjut`;
-    } else {
-        $("authSub").textContent = "Terkunci — masuk lagi";
-        togglePwFormForce();
-    }
+    $("authSub").textContent = "Sesi berakhir karena tidak ada aktivitas.";
+    togglePwFormForce();
+    try {
+        if (currentSid && ME.user_id) await db.from("active_session").delete().eq("user_id", ME.user_id);
+    } catch (e) {}
+    try {
+        await db.auth.signOut();
+    } catch (e) {}
+    currentSid = null;
+    inactivityLogoutInProgress = false;
 }
 
 [ "click", "keydown", "mousemove", "touchstart" ].forEach(ev => document.addEventListener(ev, () => {
@@ -5226,6 +5295,7 @@ function openSettings() {
     $("bioToggleBtn").textContent = on ? "Nonaktifkan" : "Aktifkan";
     $("bioStatus").textContent = on ? `${biometricLabel(true)} aktif di perangkat ini.` : `Masuk cukup dengan ${biometricLabel()} di perangkat ini.`;
     if ($("setName")) $("setName").value = ME.name || "";
+    syncIdleTimeoutUi();
     if (typeof renderAvatarPrev === "function") renderAvatarPrev();
     openModal("settingsModal");
 }
@@ -8796,7 +8866,7 @@ initProductivityFeatures();
         if (!$("navHealth") && $("navTabs")) $("navTabs").insertAdjacentHTML("beforeend", `<button id="navHealth" onclick="showTab('health')">${I("shield")} Sistem</button>`);
         const f = $("tab-finance");
         if (f && !$("financeV34")) {
-            f.innerHTML = `<section class="rl-head"><div><span class="dashboard-kicker">Ringkasan operasional</span><h2>Keuangan & Pembayaran</h2><p>Pendapatan, uang masuk, piutang, modal, pengeluaran, dan laba ditampilkan terpisah.</p></div><div class="rl-actions"><button class="btn secondary rl-icon-btn" onclick="exportFinanceV34()">${I("download")}Ekspor CSV</button><button class="btn" onclick="openPaymentV34()">+ Pembayaran</button><button class="btn secondary" onclick="openExpenseV34()">+ Pengeluaran</button></div></section><div id="financeKindSwitch" class="rl-kind-switch" aria-label="Jenis laporan keuangan"><button data-kind="Service" onclick="setFinanceKindV34('Service')">${I("box")} Service</button><button data-kind="Garansi" onclick="setFinanceKindV34('Garansi')">${I("shield")} Garansi</button></div><nav id="finTabs" class="rl-tabs">${[ [ "overview", "Ringkasan" ], [ "transactions", "Pembayaran" ], [ "expenses", "Pengeluaran" ], [ "receivables", "Piutang" ], [ "cash", "Tutup Kas" ], [ "margin", "Margin" ] ].map(x => `<button data-v="${x[0]}" onclick="setFinanceV34('${x[0]}')">${x[1]}</button>`).join("")}</nav><div class="row"><span></span><select onchange="setFinanceRangeV34(this.value)"><option value="30d">30 hari</option><option value="90d" selected>90 hari</option><option value="year">Tahun berjalan</option><option value="all">Semua</option></select></div><div id="financeV34"></div>`;
+            f.innerHTML = `<section class="rl-head"><div><span class="dashboard-kicker">Ringkasan operasional</span><h2>Keuangan & Pembayaran</h2><p>Pendapatan, uang masuk, piutang, modal, pengeluaran, dan laba ditampilkan terpisah.</p></div><div class="rl-actions"><button class="btn secondary rl-icon-btn" onclick="exportFinanceV34()">${I("download")}Ekspor CSV</button><button class="btn" onclick="openPaymentV34()">+ Pembayaran</button><button class="btn secondary" onclick="openExpenseV34()">+ Pengeluaran</button></div></section><div id="financeKindSwitch" class="rl-kind-switch" aria-label="Jenis laporan keuangan"><button type="button" data-kind="Service" onclick="setFinanceKindV34('Service')">${I("box")} Service</button><button type="button" data-kind="Garansi" onclick="setFinanceKindV34('Garansi')">${I("shield")} Garansi</button></div><section class="finance-view-controls-v354" aria-label="Navigasi laporan keuangan"><nav id="finTabs" class="rl-tabs" role="tablist">${[ [ "overview", "Ringkasan" ], [ "transactions", "Pembayaran" ], [ "expenses", "Pengeluaran" ], [ "receivables", "Piutang" ], [ "cash", "Tutup Kas" ], [ "margin", "Margin" ] ].map(x => `<button type="button" role="tab" data-v="${x[0]}" onclick="setFinanceV34('${x[0]}')">${x[1]}</button>`).join("")}</nav><label class="finance-period-v354" for="financeRangeV34"><span>Periode</span><select id="financeRangeV34" onchange="setFinanceRangeV34(this.value)"><option value="30d">30 hari</option><option value="90d" selected>90 hari</option><option value="year">Tahun berjalan</option><option value="all">Semua</option></select></label></section><div id="financeV34" class="finance-content-v354"></div>`;
         }
         const c = $("tab-cust");
         if (c && !$("crmV34")) {
@@ -9138,8 +9208,14 @@ initProductivityFeatures();
         ensureShell();
         const b = $("financeV34");
         if (!b) return;
-        document.querySelectorAll("#finTabs button").forEach(x => x.classList.toggle("active", x.dataset.v === S.finance));
+        document.querySelectorAll("#finTabs button").forEach(x => {
+            const active = x.dataset.v === S.finance;
+            x.classList.toggle("active", active);
+            x.setAttribute("aria-selected", String(active));
+        });
         document.querySelectorAll("#financeKindSwitch button").forEach(x => x.classList.toggle("active", x.dataset.kind === S.financeKind));
+        const rangeSelect = $("financeRangeV34");
+        if (rangeSelect) rangeSelect.value = S.range;
         if (S.finReady === false) {
             b.innerHTML = errorState("Migrasi keuangan belum aktif", "Jalankan preflight dan migrasi Keamanan & keandalan–15.", "showTab('health')");
             return;
@@ -9176,7 +9252,7 @@ initProductivityFeatures();
                     d: due(r)
                 };
             }).filter(x => x.d > 0).sort((x, y) => y.age - x.age), sum = k => a.filter(x => x.b === k).reduce((s, x) => s + x.d, 0);
-            b.innerHTML = `<div class="rl-aging">${[ [ "7", "0–7 hari" ], [ "14", "8–14 hari" ], [ "30", "15–30 hari" ], [ "over", "> 30 hari" ] ].map(x => `<button><span>${x[1]}</span><strong>${RS(sum(x[0]))}</strong></button>`).join("")}</div>${a.length ? `<section class="rl-panel" style="margin-top:12px"><div class="rl-table"><table><thead><tr><th>Umur</th><th>Tiket</th><th>Pelanggan</th><th>Tagihan</th><th>Terbayar</th><th>Sisa</th><th>Aksi</th></tr></thead><tbody>${a.map(x => `<tr><td>${badge(x.age + " hari", x.age > 30 ? "bad" : x.age > 7 ? "warn" : "neutral")}</td><td>${E(x.r.ticket_no)}</td><td>${E(x.r.customer)}</td><td>${R(x.r.fee)}</td><td>${R(paid(x.r))}</td><td><strong>${R(x.d)}</strong></td><td><button class="btn small" onclick="openPaymentV34('${x.r.id}')">Catat bayar</button></td></tr>`).join("")}</tbody></table></div></section>` : empty("Tidak ada piutang", "Semua tiket sudah lunas.")}`;
+            b.innerHTML = `<div class="rl-aging">${[ [ "7", "0–7 hari" ], [ "14", "8–14 hari" ], [ "30", "15–30 hari" ], [ "over", "> 30 hari" ] ].map(x => `<button type="button"><span>${x[1]}</span><strong>${RS(sum(x[0]))}</strong></button>`).join("")}</div>${a.length ? `<section class="rl-panel"><div class="rl-table"><table><thead><tr><th>Umur</th><th>Tiket</th><th>Pelanggan</th><th>Tagihan</th><th>Terbayar</th><th>Sisa</th><th>Aksi</th></tr></thead><tbody>${a.map(x => `<tr><td>${badge(x.age + " hari", x.age > 30 ? "bad" : x.age > 7 ? "warn" : "neutral")}</td><td>${E(x.r.ticket_no)}</td><td>${E(x.r.customer)}</td><td>${R(x.r.fee)}</td><td>${R(paid(x.r))}</td><td><strong>${R(x.d)}</strong></td><td><button class="btn small" onclick="openPaymentV34('${x.r.id}')">Catat bayar</button></td></tr>`).join("")}</tbody></table></div></section>` : empty("Tidak ada piutang", "Semua tiket sudah lunas.")}`;
             return;
         }
         if (S.finance === "cash") {
@@ -13988,7 +14064,11 @@ boot();
       const label = banner.querySelector("strong");
       const meta = banner.querySelector("span");
       if (label) label.textContent = networkLabel();
-      if (meta) meta.textContent = conflicts ? `${conflicts} konflik perlu dipilih` : pending ? `${pending} perubahan menunggu sinkronisasi` : "Data lokal siap digunakan";
+      if (meta) {
+        const detail = conflicts ? `${conflicts} konflik perlu dipilih` : pending ? `${pending} perubahan menunggu sinkronisasi` : "";
+        meta.textContent = detail;
+        meta.hidden = !detail;
+      }
     }
     renderSyncCenter(queue);
     return queue;
@@ -14000,7 +14080,7 @@ boot();
     banner.id = "offlineBannerV352";
     banner.className = "offline-banner-v352";
     banner.hidden = true;
-    banner.innerHTML = '<div><i></i><div><strong>Online</strong><span>Data lokal siap digunakan</span></div></div><button type="button" onclick="syncOfflineQueueV352()">Sinkronkan</button>';
+    banner.innerHTML = '<div><i></i><div><strong>Online</strong><span hidden></span></div></div><button type="button" onclick="syncOfflineQueueV352()">Sinkronkan</button>';
     document.body.appendChild(banner);
   }
 

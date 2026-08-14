@@ -289,9 +289,17 @@
         <div id="warrantyAlert"></div>
         <div class="charts" id="chartsWrap">
           <div class="chartbox chartbox-wide profitOnly" id="revChartBox">
-            <h3 id="revenueChartTitle">📈 Omzet &amp; Laba • Bulan Ini</h3>
-            <p class="chart-caption">Perbandingan harian pada bulan berjalan.</p>
-            <canvas id="chartRevenue"></canvas>
+            <div class="revenue-chart-head-v354">
+              <div>
+                <h3 id="revenueChartTitle">📈 Omzet &amp; Laba • Bulan Ini</h3>
+                <p class="chart-caption">Perbandingan harian sampai tanggal berjalan.</p>
+              </div>
+              <div class="revenue-chart-definitions-v354" aria-label="Penjelasan metrik">
+                <span><i class="omzet"></i><strong>Omzet</strong> nilai servis selesai</span>
+                <span><i class="laba"></i><strong>Laba</strong> omzet dikurangi modal</span>
+              </div>
+            </div>
+            <div class="revenue-chart-frame-v354"><canvas id="chartRevenue"></canvas></div>
           </div>
           <div class="chartbox">
             <h3>📊 Pengerjaan 14 Hari Terakhir</h3>
@@ -941,6 +949,9 @@
               </div>
               <div class="settings-card-v349 set-row" id="bioSetRow">
                 <div class="settings-control-row-v349" style="width:100%"><div><strong id="bioSetTitle">Login biometrik</strong><small id="bioStatus">Masuk menggunakan biometrik perangkat ini.</small></div><button class="btn small" id="bioToggleBtn" type="button" onclick="toggleBiometric()">Aktifkan</button></div>
+              </div>
+              <div class="settings-card-v349">
+                <div class="settings-control-row-v349"><div><strong>Logout otomatis saat tidak aktif</strong><small>Menutup catatan teknisi dan keluar dari sesi pada perangkat ini.</small></div><select id="idleTimeoutSelect" onchange="setIdleTimeoutPreference(this.value)"><option value="15">15 menit</option><option value="30">30 menit</option><option value="60">1 jam</option><option value="120">2 jam</option><option value="0">Jangan logout otomatis</option></select></div>
               </div>
             </section>
 

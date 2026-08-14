@@ -31,6 +31,8 @@ const migration = read('20260813_v353_attendance_health.sql');
 const planner = read('assets/js/v354-work-planner.js');
 const plannerMigration = read('20260814_v354_work_planner.sql');
 const bundle = read('assets/js/repairlog-v354.bundle.js');
+const account = read('assets/js/account.js');
+const finance = read('assets/js/priority-13-15.js');
 
 assert(operations.includes('shouldQueueOfflineV352') && operations.indexOf('shouldQueueOfflineV352') < operations.indexOf('uploadList(formMedia.before)'), 'Offline ticket hook must run before upload');
 assert(offline.includes('indexedDB.open') && offline.includes('restoreSnapshot') && offline.includes('resolveConflict'), 'Offline queue primitives missing');
@@ -57,5 +59,9 @@ assert(plannerMigration.includes('technician_work_plan_items') && plannerMigrati
 assert(plannerMigration.includes("visibility = 'team' or author_id = auth.uid()") && plannerMigration.includes("visibility = 'personal' and technician_id = auth.uid()"), 'Private/team note RLS missing');
 assert(!/create\s+table[^;]*(payroll|salary)|salary_amount|payroll_export/i.test(plannerMigration), 'Work planner migration must not add payroll');
 assert(/@media\(max-width:700px\)/.test(read('assets/css/v354-work-planner.css')), 'Work planner mobile rules missing');
+assert(account.includes('IDLE_TIMEOUT_STORAGE_PREFIX') && account.includes('closeSensitiveSessionUi') && html.includes('idleTimeoutSelect'), 'Personal inactivity controls missing');
+assert(finance.includes('finance-view-controls-v354') && finance.includes('financeRangeV34') && read('assets/css/priority-13-15.css').includes('.finance-content-v354'), 'Shared finance tab layout missing');
+assert(!offline.includes('Data lokal siap digunakan'), 'Offline banner still contains legacy local-data copy');
+assert(dashboard.includes('length: Math.min(currentDay, daysInMonth)') && html.includes('revenue-chart-frame-v354'), 'Revenue chart polish missing');
 
-console.log(JSON.stringify({ suite: 'static', jsFiles: jsFiles.length, htmlIds: ids.length, assets: assets.length, checks: 25 }, null, 2));
+console.log(JSON.stringify({ suite: 'static', jsFiles: jsFiles.length, htmlIds: ids.length, assets: assets.length, checks: 29 }, null, 2));

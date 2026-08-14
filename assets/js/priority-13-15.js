@@ -123,7 +123,7 @@
         if (!$("navHealth") && $("navTabs")) $("navTabs").insertAdjacentHTML("beforeend", `<button id="navHealth" onclick="showTab('health')">${I("shield")} Sistem</button>`);
         const f = $("tab-finance");
         if (f && !$("financeV34")) {
-            f.innerHTML = `<section class="rl-head"><div><span class="dashboard-kicker">Ringkasan operasional</span><h2>Keuangan & Pembayaran</h2><p>Pendapatan, uang masuk, piutang, modal, pengeluaran, dan laba ditampilkan terpisah.</p></div><div class="rl-actions"><button class="btn secondary rl-icon-btn" onclick="exportFinanceV34()">${I("download")}Ekspor CSV</button><button class="btn" onclick="openPaymentV34()">+ Pembayaran</button><button class="btn secondary" onclick="openExpenseV34()">+ Pengeluaran</button></div></section><div id="financeKindSwitch" class="rl-kind-switch" aria-label="Jenis laporan keuangan"><button data-kind="Service" onclick="setFinanceKindV34('Service')">${I("box")} Service</button><button data-kind="Garansi" onclick="setFinanceKindV34('Garansi')">${I("shield")} Garansi</button></div><nav id="finTabs" class="rl-tabs">${[ [ "overview", "Ringkasan" ], [ "transactions", "Pembayaran" ], [ "expenses", "Pengeluaran" ], [ "receivables", "Piutang" ], [ "cash", "Tutup Kas" ], [ "margin", "Margin" ] ].map(x => `<button data-v="${x[0]}" onclick="setFinanceV34('${x[0]}')">${x[1]}</button>`).join("")}</nav><div class="row"><span></span><select onchange="setFinanceRangeV34(this.value)"><option value="30d">30 hari</option><option value="90d" selected>90 hari</option><option value="year">Tahun berjalan</option><option value="all">Semua</option></select></div><div id="financeV34"></div>`;
+            f.innerHTML = `<section class="rl-head"><div><span class="dashboard-kicker">Ringkasan operasional</span><h2>Keuangan & Pembayaran</h2><p>Pendapatan, uang masuk, piutang, modal, pengeluaran, dan laba ditampilkan terpisah.</p></div><div class="rl-actions"><button class="btn secondary rl-icon-btn" onclick="exportFinanceV34()">${I("download")}Ekspor CSV</button><button class="btn" onclick="openPaymentV34()">+ Pembayaran</button><button class="btn secondary" onclick="openExpenseV34()">+ Pengeluaran</button></div></section><div id="financeKindSwitch" class="rl-kind-switch" aria-label="Jenis laporan keuangan"><button type="button" data-kind="Service" onclick="setFinanceKindV34('Service')">${I("box")} Service</button><button type="button" data-kind="Garansi" onclick="setFinanceKindV34('Garansi')">${I("shield")} Garansi</button></div><section class="finance-view-controls-v354" aria-label="Navigasi laporan keuangan"><nav id="finTabs" class="rl-tabs" role="tablist">${[ [ "overview", "Ringkasan" ], [ "transactions", "Pembayaran" ], [ "expenses", "Pengeluaran" ], [ "receivables", "Piutang" ], [ "cash", "Tutup Kas" ], [ "margin", "Margin" ] ].map(x => `<button type="button" role="tab" data-v="${x[0]}" onclick="setFinanceV34('${x[0]}')">${x[1]}</button>`).join("")}</nav><label class="finance-period-v354" for="financeRangeV34"><span>Periode</span><select id="financeRangeV34" onchange="setFinanceRangeV34(this.value)"><option value="30d">30 hari</option><option value="90d" selected>90 hari</option><option value="year">Tahun berjalan</option><option value="all">Semua</option></select></label></section><div id="financeV34" class="finance-content-v354"></div>`;
         }
         const c = $("tab-cust");
         if (c && !$("crmV34")) {
@@ -465,8 +465,14 @@
         ensureShell();
         const b = $("financeV34");
         if (!b) return;
-        document.querySelectorAll("#finTabs button").forEach(x => x.classList.toggle("active", x.dataset.v === S.finance));
+        document.querySelectorAll("#finTabs button").forEach(x => {
+            const active = x.dataset.v === S.finance;
+            x.classList.toggle("active", active);
+            x.setAttribute("aria-selected", String(active));
+        });
         document.querySelectorAll("#financeKindSwitch button").forEach(x => x.classList.toggle("active", x.dataset.kind === S.financeKind));
+        const rangeSelect = $("financeRangeV34");
+        if (rangeSelect) rangeSelect.value = S.range;
         if (S.finReady === false) {
             b.innerHTML = errorState("Migrasi keuangan belum aktif", "Jalankan preflight dan migrasi Keamanan & keandalan–15.", "showTab('health')");
             return;
@@ -503,7 +509,7 @@
                     d: due(r)
                 };
             }).filter(x => x.d > 0).sort((x, y) => y.age - x.age), sum = k => a.filter(x => x.b === k).reduce((s, x) => s + x.d, 0);
-            b.innerHTML = `<div class="rl-aging">${[ [ "7", "0–7 hari" ], [ "14", "8–14 hari" ], [ "30", "15–30 hari" ], [ "over", "> 30 hari" ] ].map(x => `<button><span>${x[1]}</span><strong>${RS(sum(x[0]))}</strong></button>`).join("")}</div>${a.length ? `<section class="rl-panel" style="margin-top:12px"><div class="rl-table"><table><thead><tr><th>Umur</th><th>Tiket</th><th>Pelanggan</th><th>Tagihan</th><th>Terbayar</th><th>Sisa</th><th>Aksi</th></tr></thead><tbody>${a.map(x => `<tr><td>${badge(x.age + " hari", x.age > 30 ? "bad" : x.age > 7 ? "warn" : "neutral")}</td><td>${E(x.r.ticket_no)}</td><td>${E(x.r.customer)}</td><td>${R(x.r.fee)}</td><td>${R(paid(x.r))}</td><td><strong>${R(x.d)}</strong></td><td><button class="btn small" onclick="openPaymentV34('${x.r.id}')">Catat bayar</button></td></tr>`).join("")}</tbody></table></div></section>` : empty("Tidak ada piutang", "Semua tiket sudah lunas.")}`;
+            b.innerHTML = `<div class="rl-aging">${[ [ "7", "0–7 hari" ], [ "14", "8–14 hari" ], [ "30", "15–30 hari" ], [ "over", "> 30 hari" ] ].map(x => `<button type="button"><span>${x[1]}</span><strong>${RS(sum(x[0]))}</strong></button>`).join("")}</div>${a.length ? `<section class="rl-panel"><div class="rl-table"><table><thead><tr><th>Umur</th><th>Tiket</th><th>Pelanggan</th><th>Tagihan</th><th>Terbayar</th><th>Sisa</th><th>Aksi</th></tr></thead><tbody>${a.map(x => `<tr><td>${badge(x.age + " hari", x.age > 30 ? "bad" : x.age > 7 ? "warn" : "neutral")}</td><td>${E(x.r.ticket_no)}</td><td>${E(x.r.customer)}</td><td>${R(x.r.fee)}</td><td>${R(paid(x.r))}</td><td><strong>${R(x.d)}</strong></td><td><button class="btn small" onclick="openPaymentV34('${x.r.id}')">Catat bayar</button></td></tr>`).join("")}</tbody></table></div></section>` : empty("Tidak ada piutang", "Semua tiket sudah lunas.")}`;
             return;
         }
         if (S.finance === "cash") {

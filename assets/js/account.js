@@ -1,6 +1,50 @@
-let authReady = false, lastCred = null, sessChannel = null, idleTimer = null, currentSid = null;
+let authReady = false, lastCred = null, sessChannel = null, idleTimer = null, currentSid = null, inactivityLogoutInProgress = false;
 
-const IDLE_LIMIT_MS = 30 * 60 * 1e3;
+const DEFAULT_IDLE_TIMEOUT_MINUTES = 30;
+const IDLE_TIMEOUT_OPTIONS = new Set([ 0, 15, 30, 60, 120 ]);
+const IDLE_TIMEOUT_STORAGE_PREFIX = "rl_idle_timeout_minutes_v354";
+
+function idleTimeoutStorageKey() {
+    return `${IDLE_TIMEOUT_STORAGE_PREFIX}:${ME && ME.user_id || "device"}`;
+}
+
+function idleTimeoutMinutes() {
+    try {
+        const stored = Number(localStorage.getItem(idleTimeoutStorageKey()));
+        return IDLE_TIMEOUT_OPTIONS.has(stored) ? stored : DEFAULT_IDLE_TIMEOUT_MINUTES;
+    } catch (e) {
+        return DEFAULT_IDLE_TIMEOUT_MINUTES;
+    }
+}
+
+function syncIdleTimeoutUi() {
+    const select = $("idleTimeoutSelect");
+    if (select) select.value = String(idleTimeoutMinutes());
+}
+
+function setIdleTimeoutPreference(value) {
+    const minutes = Number(value);
+    const next = IDLE_TIMEOUT_OPTIONS.has(minutes) ? minutes : DEFAULT_IDLE_TIMEOUT_MINUTES;
+    try {
+        localStorage.setItem(idleTimeoutStorageKey(), String(next));
+    } catch (e) {}
+    syncIdleTimeoutUi();
+    resetIdle();
+    toast(next ? `Logout otomatis diatur setelah ${next} menit tidak aktif.` : "Logout otomatis dinonaktifkan pada perangkat ini.", "success");
+}
+
+function closeSensitiveSessionUi() {
+    try {
+        if (typeof closeWorkPlannerV354 === "function") closeWorkPlannerV354();
+    } catch (e) {}
+    const noteInput = $("workPlannerNoteTextV354");
+    if (noteInput) noteInput.value = "";
+    document.querySelectorAll(".modal-bg.open").forEach(modal => modal.classList.remove("open"));
+    document.body.classList.remove("work-planner-open-v354");
+    const header = $("appHeader"), main = $("appMain");
+    if (header) header.style.display = "none";
+    if (main) main.style.display = "none";
+}
 
 function hideBoot() {
     const b = $("bootLoader");
@@ -100,6 +144,7 @@ async function afterLogin() {
 
 async function doLogout() {
     stopIdle();
+    closeSensitiveSessionUi();
     try {
         if (currentSid && ME.user_id) await db.from("active_session").delete().eq("user_id", ME.user_id);
     } catch (e) {}
@@ -111,6 +156,8 @@ async function doLogout() {
 
 function forceLogout(msg) {
     stopIdle();
+    closeSensitiveSessionUi();
+    authReady = false;
     try {
         db.auth.signOut();
     } catch (e) {}
@@ -148,7 +195,10 @@ async function claimSession() {
 
 function resetIdle() {
     if (idleTimer) clearTimeout(idleTimer);
-    idleTimer = setTimeout(lockApp, IDLE_LIMIT_MS);
+    idleTimer = null;
+    const minutes = idleTimeoutMinutes();
+    if (!minutes || !authReady) return;
+    idleTimer = setTimeout(lockApp, minutes * 60 * 1e3);
 }
 
 function stopIdle() {
@@ -156,18 +206,23 @@ function stopIdle() {
     idleTimer = null;
 }
 
-function lockApp() {
+async function lockApp() {
+    if (inactivityLogoutInProgress) return;
+    inactivityLogoutInProgress = true;
     stopIdle();
+    closeSensitiveSessionUi();
+    authReady = false;
     showAuth(true);
-    if (bioEnabled()) {
-        $("pwForm").style.display = "none";
-        $("pwToggle").style.display = "block";
-        $("forgotBtn").style.display = "none";
-        $("authSub").textContent = `Terkunci — tap ${biometricLabel()} untuk lanjut`;
-    } else {
-        $("authSub").textContent = "Terkunci — masuk lagi";
-        togglePwFormForce();
-    }
+    $("authSub").textContent = "Sesi berakhir karena tidak ada aktivitas.";
+    togglePwFormForce();
+    try {
+        if (currentSid && ME.user_id) await db.from("active_session").delete().eq("user_id", ME.user_id);
+    } catch (e) {}
+    try {
+        await db.auth.signOut();
+    } catch (e) {}
+    currentSid = null;
+    inactivityLogoutInProgress = false;
 }
 
 [ "click", "keydown", "mousemove", "touchstart" ].forEach(ev => document.addEventListener(ev, () => {
@@ -345,6 +400,7 @@ function openSettings() {
     $("bioToggleBtn").textContent = on ? "Nonaktifkan" : "Aktifkan";
     $("bioStatus").textContent = on ? `${biometricLabel(true)} aktif di perangkat ini.` : `Masuk cukup dengan ${biometricLabel()} di perangkat ini.`;
     if ($("setName")) $("setName").value = ME.name || "";
+    syncIdleTimeoutUi();
     if (typeof renderAvatarPrev === "function") renderAvatarPrev();
     openModal("settingsModal");
 }

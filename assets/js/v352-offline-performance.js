@@ -397,7 +397,11 @@
       const label = banner.querySelector("strong");
       const meta = banner.querySelector("span");
       if (label) label.textContent = networkLabel();
-      if (meta) meta.textContent = conflicts ? `${conflicts} konflik perlu dipilih` : pending ? `${pending} perubahan menunggu sinkronisasi` : "Data lokal siap digunakan";
+      if (meta) {
+        const detail = conflicts ? `${conflicts} konflik perlu dipilih` : pending ? `${pending} perubahan menunggu sinkronisasi` : "";
+        meta.textContent = detail;
+        meta.hidden = !detail;
+      }
     }
     renderSyncCenter(queue);
     return queue;
@@ -409,7 +413,7 @@
     banner.id = "offlineBannerV352";
     banner.className = "offline-banner-v352";
     banner.hidden = true;
-    banner.innerHTML = '<div><i></i><div><strong>Online</strong><span>Data lokal siap digunakan</span></div></div><button type="button" onclick="syncOfflineQueueV352()">Sinkronkan</button>';
+    banner.innerHTML = '<div><i></i><div><strong>Online</strong><span hidden></span></div></div><button type="button" onclick="syncOfflineQueueV352()">Sinkronkan</button>';
     document.body.appendChild(banner);
   }
 

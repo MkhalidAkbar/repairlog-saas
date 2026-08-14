@@ -7,19 +7,67 @@
 }
 
 #revChartBox {
-  min-height: 350px;
+  min-height: 0;
 }
 
-#revChartBox canvas {
+.revenue-chart-head-v354 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.revenue-chart-head-v354 h3 {
+  margin-bottom: 8px;
+}
+
+.revenue-chart-definitions-v354 {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.revenue-chart-definitions-v354 span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card2);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.revenue-chart-definitions-v354 strong { color: var(--text); }
+.revenue-chart-definitions-v354 i { width: 8px;height: 8px;border-radius: 50%;background: #2783de; }
+.revenue-chart-definitions-v354 i.laba { background: #46a171; }
+
+.revenue-chart-frame-v354 {
+  width: min(100%, 1120px);
+  height: 300px;
+  margin: 12px auto 0;
+}
+
+.revenue-chart-frame-v354 canvas {
   width: 100% !important;
-  height: 278px !important;
+  height: 100% !important;
   max-height: none;
 }
 
 .chart-caption {
-  margin: -5px 0 12px;
+  margin: 0;
   color: var(--muted);
   font-size: 12px;
+}
+
+@media(max-width:700px) {
+  .revenue-chart-head-v354 { display: grid;gap: 12px; }
+  .revenue-chart-definitions-v354 { justify-content: flex-start; }
+  .revenue-chart-definitions-v354 span { flex: 1 1 150px; }
+  .revenue-chart-frame-v354 { height: 250px;margin-top: 8px; }
 }
 
 .report-action-center {
