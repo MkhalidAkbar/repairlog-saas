@@ -28,6 +28,9 @@ const inventory = read('assets/js/inventory-core.js');
 const attendance = read('assets/js/boot.js');
 const advanced = read('assets/js/v353-attendance-health.js');
 const migration = read('20260813_v353_attendance_health.sql');
+const planner = read('assets/js/v354-work-planner.js');
+const plannerMigration = read('20260814_v354_work_planner.sql');
+const bundle = read('assets/js/repairlog-v354.bundle.js');
 
 assert(operations.includes('shouldQueueOfflineV352') && operations.indexOf('shouldQueueOfflineV352') < operations.indexOf('uploadList(formMedia.before)'), 'Offline ticket hook must run before upload');
 assert(offline.includes('indexedDB.open') && offline.includes('restoreSnapshot') && offline.includes('resolveConflict'), 'Offline queue primitives missing');
@@ -43,9 +46,16 @@ assert(attendance.includes('attendCheckIn') && attendance.includes('attendCheckO
 assert(/@media\(max-width:700px\)/.test(read('assets/css/v352-offline-performance.css')), '390px responsive rules missing');
 assert(advanced.includes('attendance_schedules') && advanced.includes('attendance_requests') && advanced.includes('geofence') && advanced.includes('lateMinutes'), 'Advanced attendance missing');
 assert(advanced.includes('resource-load') && advanced.includes('runHealthMonitorV353') && advanced.includes('openIssueReportV353'), 'Automatic error monitoring missing');
-assert(migration.includes('attendance_settings') && migration.includes('attendance_details') && migration.includes('app_issue_reports') && !/create\s+table[^;]*(payroll|salary)|salary_amount|payroll_export/i.test(migration), 'Migration scope invalid');
-assert(core.includes('const APP_VERSION = "v3.5.3"'), 'App version is not v3.5.3');
-assert(assets.includes('assets/css/repairlog-v353.bundle.css') && assets.includes('assets/js/repairlog-v353.bundle.js') && assets.length <= 3, 'Runtime assets are not bundled');
-assert(read('assets/js/repairlog-v353.bundle.js').includes('source: assets/js/v353-attendance-health.js'), 'v3.5.3 is missing from JS bundle');
+assert(migration.includes('attendance_settings') && migration.includes('attendance_details') && migration.includes('app_issue_reports') && !/create\s+table[^;]*(payroll|salary)|salary_amount|payroll_export/i.test(migration), 'v3.5.3 migration scope invalid');
+assert(migration.includes('migration_key, app_version') && migration.includes("'v3.5.3'"), 'v3.5.3 migration registry hotfix missing');
+assert(core.includes('const APP_VERSION = "v3.5.4"'), 'App version is not v3.5.4');
+assert(assets.includes('assets/css/repairlog-v354.bundle.css') && assets.includes('assets/js/repairlog-v354.bundle.js') && assets.length <= 3, 'Runtime assets are not bundled');
+assert(bundle.includes('source: assets/js/v353-attendance-health.js'), 'v3.5.3 regression source is missing from JS bundle');
+assert(bundle.includes('source: assets/js/v354-work-planner.js'), 'v3.5.4 is missing from JS bundle');
+assert(planner.includes('technician_work_plan_items') && planner.includes('visibility === "personal"') && planner.includes('workPlannerDropV354') && planner.includes('extractTicketReference'), 'Work planner behavior missing');
+assert(plannerMigration.includes('technician_work_plan_items') && plannerMigration.includes('technician_work_plan_notes') && plannerMigration.includes('technician_work_preferences'), 'Work planner schema missing');
+assert(plannerMigration.includes("visibility = 'team' or author_id = auth.uid()") && plannerMigration.includes("visibility = 'personal' and technician_id = auth.uid()"), 'Private/team note RLS missing');
+assert(!/create\s+table[^;]*(payroll|salary)|salary_amount|payroll_export/i.test(plannerMigration), 'Work planner migration must not add payroll');
+assert(/@media\(max-width:700px\)/.test(read('assets/css/v354-work-planner.css')), 'Work planner mobile rules missing');
 
-console.log(JSON.stringify({ suite: 'static', jsFiles: jsFiles.length, htmlIds: ids.length, assets: assets.length, checks: 20 }, null, 2));
+console.log(JSON.stringify({ suite: 'static', jsFiles: jsFiles.length, htmlIds: ids.length, assets: assets.length, checks: 25 }, null, 2));

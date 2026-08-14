@@ -1,4 +1,4 @@
-# Deployment RepairLog v3.5.1
+# Deployment RepairLog v3.5.4
 
 1. Backup website, `config.js`, dan database Supabase.
 2. Jalankan `20260811_priority_13_14_15_preflight.sql`.
@@ -92,3 +92,16 @@ Panel lama sudah dihapus sepenuhnya; data historis tetap dibaca oleh tampilan te
 8. Buka Pengaturan → Sistem; periksa Supabase, Storage, sinkronisasi, error, Web Vitals, unduhan diagnostik, dan laporan masalah.
 9. Jalankan `npm install` lalu `npm test` sebelum deploy.
 10. Rilis ini tidak menambahkan penggajian.
+
+## Deploy v3.5.4 — Rencana Kerja Teknisi
+
+1. Backup website dan database Supabase.
+2. Pastikan migrasi v3.5.3 memakai registry yang sudah diperbaiki (`migration_key, app_version`).
+3. Jalankan `20260814_v354_work_planner.sql` melalui Supabase SQL Editor.
+4. Pastikan akun owner memiliki `profiles.role = 'owner'`.
+5. Upload seluruh aplikasi, termasuk bundle `repairlog-v354.bundle`, source `v354-work-planner`, SQL, dan `SUPABASE_V354_SETUP.md`.
+6. Cache baru: `repairlog-v3.5.4-work-planner`.
+7. Refresh dua kali atau tutup/buka PWA agar service worker lama diganti.
+8. Uji Rencana Hari Ini/Besok, drag-and-drop, pencarian tiket, prioritas, estimasi, catatan tim, catatan pribadi, checklist, dan personalisasi.
+9. Masuk menggunakan dua akun berbeda untuk memastikan catatan pribadi tidak terbaca akun lain.
+10. Jalankan `npm install` dan `npm test` sebelum deploy.

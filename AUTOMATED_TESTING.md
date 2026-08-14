@@ -1,4 +1,4 @@
-# Pengujian Otomatis RepairLog v3.5.2
+# Pengujian Otomatis RepairLog v3.5.4
 
 ## Menjalankan
 
@@ -36,3 +36,15 @@ Pengujian ini tidak memakai database produksi. Browser test menjalankan Supabase
 - Konteks error mencakup versi, halaman, viewport, browser/perangkat, koneksi, dan zona waktu.
 - Layout absensi serta kesehatan pada desktop, tablet, dan 390 px tanpa horizontal overflow.
 - Verifikasi bahwa tidak ada kontrol atau skema penggajian.
+
+
+## Tambahan cakupan v3.5.4
+
+- Injeksi tombol dan panel Rencana Kerja pada Papan.
+- Tanggal lokal Hari Ini/Besok dengan zona waktu Asia/Jakarta.
+- Penambahan tiket tanpa mengubah tahap servis.
+- Prioritas, estimasi kapasitas, dan kartu rencana.
+- Catatan tim, catatan pribadi, checklist, dan referensi `#nomor-tiket`.
+- Catatan pribadi tidak dapat dibaca pengguna lain maupun owner lain.
+- Migrasi dan RLS untuk rencana, catatan, serta personalisasi.
+- Layout panel pada desktop, tablet, dan 390 px tanpa horizontal overflow.

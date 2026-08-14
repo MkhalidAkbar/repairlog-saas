@@ -1,6 +1,6 @@
-const CACHE = "repairlog-v3.5.3-attendance-health-performance";
+const CACHE = "repairlog-v3.5.4-work-planner";
 
-const LOCAL_ASSETS = ["./", "./index.html", "./config.js", "./manifest.json", "./icon.png", "./assets/css/repairlog-v353.bundle.css", "./assets/js/repairlog-v353.bundle.js", "./AUTOMATED_TESTING.md", "./20260813_v353_attendance_health.sql"];
+const LOCAL_ASSETS = ["./", "./index.html", "./config.js", "./manifest.json", "./icon.png", "./assets/css/repairlog-v354.bundle.css", "./assets/js/repairlog-v354.bundle.js", "./AUTOMATED_TESTING.md", "./20260813_v353_attendance_health.sql", "./20260814_v354_work_planner.sql"];
 
 const CDN_ASSETS = [ "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2", "https://cdn.jsdelivr.net/npm/chart.js@4", "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js", "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" ];
 

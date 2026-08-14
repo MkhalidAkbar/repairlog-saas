@@ -1,4 +1,4 @@
-# RepairLog SaaS v3.5.1
+# RepairLog SaaS v3.5.4
 
 ## Penyempurnaan v3.4.3
 - Dashboard memiliki grafik gabungan omzet dan laba harian untuk bulan kalender berjalan.
@@ -145,3 +145,15 @@ Tidak ada build step. Jalankan lokal dengan `python3 -m http.server 8080`. Perta
 - Tombol **Kirim laporan masalah** mendukung diagnostik dan screenshot opsional.
 - Runtime CSS/JavaScript digabung dari 51 request aset menjadi 2 request bundle; source modular tetap disertakan untuk pemeliharaan.
 - Setup Supabase tersedia di `SUPABASE_V353_SETUP.md`.
+
+## RepairLog v3.5.4 — Rencana Kerja Teknisi
+
+- Tombol **Rencana Besok** tersedia langsung pada Papan tanpa menambah menu utama.
+- Owner dapat memilih teknisi; teknisi hanya mengelola rencana sendiri.
+- Tiket dapat dimasukkan dengan drag-and-drop atau pencarian nomor tiket tanpa mengubah tahap servis.
+- Setiap rencana mendukung urutan, prioritas, estimasi, kesiapan, dan penandaan selesai.
+- Notepad mendukung catatan tim, catatan pribadi, checklist, dan pemanggilan tiket menggunakan `#nomor-tiket`.
+- Catatan pribadi dilindungi RLS dan hanya dapat dibaca pembuatnya; owner lain tidak memperoleh akses.
+- Personalisasi teknisi mencakup kapasitas harian, warna, spesialisasi, dan kepadatan tampilan.
+- Layout panel samping desktop berubah menjadi layar penuh pada HP dan tidak menambah horizontal overflow.
+- Jalankan `20260814_v354_work_planner.sql`; panduan tersedia di `SUPABASE_V354_SETUP.md`.
