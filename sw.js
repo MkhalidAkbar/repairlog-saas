@@ -1,4 +1,4 @@
-const CACHE = "repairlog-v3.5.4-work-planner";
+const CACHE = "repairlog-v3.5.4-work-planner-notes-hotfix";
 
 const LOCAL_ASSETS = ["./", "./index.html", "./config.js", "./manifest.json", "./icon.png", "./assets/css/repairlog-v354.bundle.css", "./assets/js/repairlog-v354.bundle.js", "./AUTOMATED_TESTING.md", "./20260813_v353_attendance_health.sql", "./20260814_v354_work_planner.sql"];
 

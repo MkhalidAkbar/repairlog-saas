@@ -14635,6 +14635,39 @@ boot();
     return String(note.author_id) === currentUserId() || actualOwner();
   }
 
+  let confirmResolverV354 = null;
+
+  function formatNoteTime(value) {
+    if (!value) return "Baru saja";
+    try {
+      return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+    } catch (_) {
+      return "Baru saja";
+    }
+  }
+
+  function requestConfirmV354({ title, message, confirmLabel = "Hapus", tone = "danger" }) {
+    ensureShell();
+    const dialog = byId("workPlannerConfirmV354");
+    if (!dialog) return Promise.resolve(false);
+    byId("workPlannerConfirmTitleV354").textContent = title;
+    byId("workPlannerConfirmMessageV354").textContent = message;
+    const action = byId("workPlannerConfirmActionV354");
+    action.textContent = confirmLabel;
+    action.className = `work-confirm-action-v354 ${tone}`;
+    dialog.classList.add("is-open");
+    action.focus();
+    return new Promise(resolve => { confirmResolverV354 = resolve; });
+  }
+
+  function settleConfirmV354(result) {
+    const dialog = byId("workPlannerConfirmV354");
+    dialog?.classList.remove("is-open");
+    const resolve = confirmResolverV354;
+    confirmResolverV354 = null;
+    if (resolve) resolve(Boolean(result));
+  }
+
   function isMissingTable(error) {
     const code = String(error?.code || "");
     const message = String(error?.message || error || "").toLowerCase();
@@ -14686,8 +14719,11 @@ boot();
     notes: [],
     preference: null,
     noteFilter: "all",
+    noteVisibility: "team",
+    noteType: "note",
+    noteDraft: "",
     showPersonalize: false,
-    noteSuggestionQuery: "",
+    noteSuggestionQuery: null,
     draggingItemId: "",
     countTomorrow: 0
   };
@@ -14888,7 +14924,13 @@ boot();
 
   async function removeItem(rowId) {
     const item = S.items.find(row => String(row.id) === String(rowId));
-    if (!item || !confirm(`Hapus ${item.ticket_no} dari rencana kerja?`)) return;
+    if (!item) return;
+    const approved = await requestConfirmV354({
+      title: "Hapus tiket dari rencana?",
+      message: `${item.ticket_no} hanya dihapus dari Rencana Kerja. Tahap dan data servis tetap aman.`,
+      confirmLabel: "Hapus dari rencana"
+    });
+    if (!approved) return;
     try {
       await deleteRemote(ITEM_TABLE, rowId, "items");
       S.items = S.items.filter(row => String(row.id) !== String(rowId));
@@ -14920,9 +14962,11 @@ boot();
     const textarea = byId("workPlannerNoteTextV354");
     const visibilityEl = byId("workPlannerNoteVisibilityV354");
     const typeEl = byId("workPlannerNoteTypeV354");
-    const content = String(textarea?.value || "").trim();
-    const visibility = visibilityEl?.value || "team";
-    const noteType = typeEl?.value || "note";
+    const content = String(textarea?.value || S.noteDraft || "").trim();
+    const visibility = visibilityEl?.value || S.noteVisibility || "team";
+    const noteType = typeEl?.value || S.noteType || "note";
+    S.noteVisibility = visibility;
+    S.noteType = noteType;
     if (!content) return notify("Isi catatan terlebih dahulu.", "error");
     if (visibility === "personal" && String(S.technicianId) !== currentUserId()) return notify("Catatan pribadi hanya dapat dibuat di rencana Anda sendiri.", "error");
     const linked = extractTicketReference(content);
@@ -14947,6 +14991,8 @@ boot();
       S.notes.push(row);
       textarea.value = "";
       textarea.dataset.linkedReport = "";
+      S.noteDraft = "";
+      S.noteType = "note";
       S.noteSuggestionQuery = null;
       renderPanel();
       notify(visibility === "personal" ? "Catatan pribadi disimpan." : "Catatan tim disimpan.");
@@ -14972,7 +15018,12 @@ boot();
   async function deleteNote(rowId) {
     const note = S.notes.find(row => String(row.id) === String(rowId));
     if (!note || !canEditNote(note)) return notify("Anda tidak dapat menghapus catatan ini.", "error");
-    if (!confirm("Hapus catatan ini?")) return;
+    const approved = await requestConfirmV354({
+      title: "Hapus catatan?",
+      message: note.visibility === "personal" ? "Catatan pribadi ini akan dihapus permanen dari notepad Anda." : "Catatan tim ini akan dihapus untuk semua anggota toko.",
+      confirmLabel: "Ya, hapus catatan"
+    });
+    if (!approved) return;
     try {
       await deleteRemote(NOTE_TABLE, rowId, "notes");
       S.notes = S.notes.filter(row => String(row.id) !== String(rowId));
@@ -15055,10 +15106,15 @@ boot();
   function renderNote(note) {
     const editable = canEditNote(note);
     const checklist = note.note_type === "checklist";
-    return `<article class="work-note-v354 ${checklist && note.is_completed ? "is-completed" : ""} visibility-${text(note.visibility)}">
-      ${checklist ? `<button type="button" class="work-note-check-v354" ${editable ? "" : "disabled"} onclick="patchWorkPlanNoteV354('${text(note.id)}',{is_completed:${note.is_completed ? "false" : "true"}})">${note.is_completed ? "✓" : "○"}</button>` : `<span class="work-note-icon-v354">${note.visibility === "personal" ? "🔒" : "👥"}</span>`}
-      <div class="work-note-main-v354"><div class="work-note-meta-v354"><strong>${note.visibility === "personal" ? "Pribadi" : "Tim"}</strong><span>${text(note.author_name || "Pengguna")}</span>${checklist ? "<span>Checklist</span>" : ""}</div><p>${text(note.content)}</p>${noteTicketChip(note)}</div>
-      ${editable ? `<button type="button" class="work-note-delete-v354" onclick="deleteWorkPlanNoteV354('${text(note.id)}')" aria-label="Hapus catatan">×</button>` : ""}
+    const personal = note.visibility === "personal";
+    const initial = String(note.author_name || "P").trim().slice(0, 1).toUpperCase();
+    return `<article class="work-note-v354 work-note-card-v354 ${checklist && note.is_completed ? "is-completed" : ""} visibility-${text(note.visibility)}">
+      <header class="work-note-card-head-v354">
+        <div class="work-note-author-v354"><span class="work-note-avatar-v354">${personal ? "🔒" : text(initial)}</span><div><strong>${personal ? "Catatan Pribadi" : "Catatan Tim"}</strong><small>${text(note.author_name || "Pengguna")} · ${text(formatNoteTime(note.created_at))}</small></div></div>
+        <div class="work-note-card-actions-v354">${checklist ? `<button type="button" class="work-note-check-v354" ${editable ? "" : "disabled"} onclick="patchWorkPlanNoteV354('${text(note.id)}',{is_completed:${note.is_completed ? "false" : "true"}})">${note.is_completed ? "✓ Selesai" : "○ Checklist"}</button>` : `<span class="work-note-kind-v354">Catatan</span>`}${editable ? `<button type="button" class="work-note-delete-v354" onclick="deleteWorkPlanNoteV354('${text(note.id)}')" aria-label="Hapus catatan" title="Hapus catatan">🗑</button>` : ""}</div>
+      </header>
+      <div class="work-note-card-body-v354"><p>${text(note.content)}</p>${noteTicketChip(note)}</div>
+      <footer class="work-note-card-foot-v354"><span>${personal ? "Hanya Anda yang dapat melihat" : "Dibagikan kepada tim toko"}</span>${checklist ? `<b>${note.is_completed ? "Sudah dikerjakan" : "Belum selesai"}</b>` : ""}</footer>
     </article>`;
   }
 
@@ -15111,9 +15167,16 @@ boot();
         <div class="work-ticket-search-v354"><span>#</span><input id="workPlannerTicketSearchV354" placeholder="Cari nomor tiket, perangkat, atau pelanggan" oninput="searchWorkPlanTicketsV354(this.value)"></div><div id="workPlannerTicketResultsV354" class="work-ticket-results-v354"></div>
         <div class="work-plan-list-v354">${S.items.length ? S.items.map(renderItem).join("") : emptyItems}</div>
       </section>
-      <section class="work-notes-section-v354"><div class="work-section-title-v354"><div><span>NOTEPAD TEKNISI</span><h4>Catatan pribadi & tim</h4></div><div class="work-note-filters-v354"><button class="${S.noteFilter === "all" ? "active" : ""}" onclick="setWorkPlanNoteFilterV354('all')">Semua</button><button class="${S.noteFilter === "team" ? "active" : ""}" onclick="setWorkPlanNoteFilterV354('team')">Tim</button><button class="${S.noteFilter === "personal" ? "active" : ""}" onclick="setWorkPlanNoteFilterV354('personal')">Pribadi</button></div></div>
-        <div class="work-note-composer-v354"><textarea id="workPlannerNoteTextV354" rows="3" placeholder="Tulis catatan… Ketik # untuk memanggil tiket" oninput="handleWorkPlanNoteInputV354(this)"></textarea>${noteSuggestions()}<div><select id="workPlannerNoteVisibilityV354" aria-label="Visibilitas catatan"><option value="team">👥 Tim</option><option value="personal" ${ownPlan ? "" : "disabled"}>🔒 Pribadi</option></select><select id="workPlannerNoteTypeV354" aria-label="Jenis catatan"><option value="note">Catatan</option><option value="checklist">Checklist</option></select><button class="btn small" type="button" onclick="addWorkPlanNoteV354()">Simpan</button></div><small>${ownPlan ? "Catatan pribadi hanya terlihat oleh Anda. Catatan tim terlihat oleh anggota toko." : "Saat melihat teknisi lain, hanya catatan tim yang dapat dibuat dan dilihat."}</small></div>
-        <div class="work-notes-list-v354">${notes.length ? notes.map(renderNote).join("") : `<div class="work-notes-empty-v354">Belum ada catatan pada tanggal ini.</div>`}</div>
+      <section class="work-notes-section-v354">
+        <header class="work-notes-head-v354"><div><span>NOTEPAD TEKNISI</span><h4>Catatan pribadi & tim</h4><p>Simpan persiapan kerja, checklist, dan kaitkan langsung ke tiket.</p></div><div class="work-note-filters-v354"><button class="${S.noteFilter === "all" ? "active" : ""}" onclick="setWorkPlanNoteFilterV354('all')">Semua <b>${S.notes.length}</b></button><button class="${S.noteFilter === "team" ? "active" : ""}" onclick="setWorkPlanNoteFilterV354('team')">Tim <b>${S.notes.filter(note => note.visibility === "team").length}</b></button><button class="${S.noteFilter === "personal" ? "active" : ""}" onclick="setWorkPlanNoteFilterV354('personal')">Pribadi <b>${S.notes.filter(note => note.visibility === "personal").length}</b></button></div></header>
+        <div class="work-note-studio-v354">
+          <div class="work-note-mode-row-v354"><div><span>Dibagikan kepada</span><div class="work-note-segment-v354"><button type="button" class="${S.noteVisibility === "team" ? "active team" : ""}" onclick="setWorkPlanNoteModeV354('visibility','team')">👥 Tim</button><button type="button" class="${S.noteVisibility === "personal" ? "active personal" : ""}" ${ownPlan ? "" : "disabled"} onclick="setWorkPlanNoteModeV354('visibility','personal')">🔒 Pribadi</button></div></div><div><span>Jenis isi</span><div class="work-note-segment-v354"><button type="button" class="${S.noteType === "note" ? "active" : ""}" onclick="setWorkPlanNoteModeV354('type','note')">Catatan</button><button type="button" class="${S.noteType === "checklist" ? "active" : ""}" onclick="setWorkPlanNoteModeV354('type','checklist')">Checklist</button></div></div></div>
+          <select id="workPlannerNoteVisibilityV354" class="work-note-legacy-select-v354" aria-hidden="true" tabindex="-1"><option value="team" ${S.noteVisibility === "team" ? "selected" : ""}>Tim</option><option value="personal" ${S.noteVisibility === "personal" ? "selected" : ""}>Pribadi</option></select><select id="workPlannerNoteTypeV354" class="work-note-legacy-select-v354" aria-hidden="true" tabindex="-1"><option value="note" ${S.noteType === "note" ? "selected" : ""}>Catatan</option><option value="checklist" ${S.noteType === "checklist" ? "selected" : ""}>Checklist</option></select>
+          <div class="work-note-editor-v354"><textarea id="workPlannerNoteTextV354" rows="4" maxlength="4000" placeholder="Tulis persiapan atau hal penting untuk teknisi…" oninput="handleWorkPlanNoteInputV354(this)" onkeydown="workPlannerNoteKeydownV354(event)">${text(S.noteDraft)}</textarea>${noteSuggestions()}<div class="work-note-editor-foot-v354"><button type="button" onclick="insertWorkPlanMentionV354()"><b>#</b> Hubungkan tiket</button><span>${String(S.noteDraft || "").length}/4000</span></div></div>
+          <div class="work-note-privacy-v354 ${S.noteVisibility}"><span>${S.noteVisibility === "personal" ? "🔒" : "👥"}</span><div><strong>${S.noteVisibility === "personal" ? "Benar-benar pribadi" : "Kolaborasi tim"}</strong><small>${S.noteVisibility === "personal" ? "Hanya Anda yang dapat membaca, termasuk tidak terlihat oleh owner lain." : "Catatan akan terlihat oleh anggota toko yang memiliki akses."}</small></div></div>
+          <div class="work-note-save-row-v354"><span>Tekan <kbd>Ctrl</kbd> + <kbd>Enter</kbd> untuk menyimpan</span><button class="btn" type="button" onclick="addWorkPlanNoteV354()">${S.noteType === "checklist" ? "＋ Tambah checklist" : "＋ Simpan catatan"}</button></div>
+        </div>
+        <div class="work-notes-list-v354">${notes.length ? notes.map(renderNote).join("") : `<div class="work-notes-empty-v354"><span>📝</span><strong>Belum ada ${S.noteFilter === "personal" ? "catatan pribadi" : S.noteFilter === "team" ? "catatan tim" : "catatan"}</strong><small>Catatan baru akan tersusun rapi di bagian ini.</small></div>`}</div>
       </section>
     </div>`;
   }
@@ -15134,7 +15197,7 @@ boot();
       const shell = document.createElement("div");
       shell.id = "workPlannerShellV354";
       shell.className = "work-planner-shell-v354";
-      shell.innerHTML = `<button class="work-planner-backdrop-v354" aria-label="Tutup rencana kerja" onclick="closeWorkPlannerV354()"></button><aside class="work-planner-panel-v354" role="dialog" aria-modal="true" aria-labelledby="workPlannerTitleV354"><header><div><span>RUANG KERJA TEKNISI</span><h3 id="workPlannerTitleV354">🗓️ Rencana Kerja</h3><p id="workPlannerTitleDateV354">${prettyDate(S.date)}</p></div><button type="button" onclick="closeWorkPlannerV354()" aria-label="Tutup">×</button></header><div id="workPlannerPanelBodyV354"></div></aside>`;
+      shell.innerHTML = `<button class="work-planner-backdrop-v354" aria-label="Tutup rencana kerja" onclick="closeWorkPlannerV354()"></button><aside class="work-planner-panel-v354" role="dialog" aria-modal="true" aria-labelledby="workPlannerTitleV354"><header><div><span>RUANG KERJA TEKNISI</span><h3 id="workPlannerTitleV354">🗓️ Rencana Kerja</h3><p id="workPlannerTitleDateV354">${prettyDate(S.date)}</p></div><button type="button" onclick="closeWorkPlannerV354()" aria-label="Tutup">×</button></header><div id="workPlannerPanelBodyV354"></div></aside><div id="workPlannerConfirmV354" class="work-confirm-v354" role="alertdialog" aria-modal="true" aria-labelledby="workPlannerConfirmTitleV354"><button class="work-confirm-backdrop-v354" type="button" aria-label="Batal" onclick="settleWorkPlannerConfirmV354(false)"></button><section><span class="work-confirm-icon-v354">🗑️</span><h4 id="workPlannerConfirmTitleV354">Hapus catatan?</h4><p id="workPlannerConfirmMessageV354"></p><div><button type="button" class="work-confirm-cancel-v354" onclick="settleWorkPlannerConfirmV354(false)">Batal</button><button type="button" id="workPlannerConfirmActionV354" class="work-confirm-action-v354 danger" onclick="settleWorkPlannerConfirmV354(true)">Hapus</button></div></section></div>`;
       document.body.appendChild(shell);
     }
   }
@@ -15176,6 +15239,7 @@ boot();
   }
 
   function closePlanner() {
+    if (confirmResolverV354) settleConfirmV354(false);
     S.open = false;
     byId("workPlannerShellV354")?.classList.remove("is-open");
     document.body.classList.remove("work-planner-open-v354");
@@ -15192,14 +15256,37 @@ boot();
   function handleNoteInput(element) {
     const value = String(element?.value || "");
     const match = value.match(/#([^\s#]*)$/);
+    S.noteDraft = value;
     S.noteSuggestionQuery = match ? match[1] : null;
-    const oldValue = value;
     renderPanel();
     const next = byId("workPlannerNoteTextV354");
     if (next) {
-      next.value = oldValue;
       next.focus();
-      next.setSelectionRange(oldValue.length, oldValue.length);
+      next.setSelectionRange(value.length, value.length);
+    }
+  }
+
+  function setNoteMode(kind, value) {
+    if (kind === "visibility" && value === "personal" && String(S.technicianId) !== currentUserId()) return notify("Catatan pribadi hanya tersedia pada rencana Anda sendiri.", "error");
+    if (kind === "visibility") S.noteVisibility = value;
+    if (kind === "type") S.noteType = value;
+    renderPanel();
+    byId("workPlannerNoteTextV354")?.focus();
+  }
+
+  function insertMentionToken() {
+    S.noteDraft = `${S.noteDraft || ""}${S.noteDraft ? " " : ""}#`;
+    S.noteSuggestionQuery = "";
+    renderPanel();
+    const next = byId("workPlannerNoteTextV354");
+    next?.focus();
+    next?.setSelectionRange(S.noteDraft.length, S.noteDraft.length);
+  }
+
+  function noteKeydown(event) {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
+      addNote();
     }
   }
 
@@ -15207,7 +15294,8 @@ boot();
     const report = reportById(reportId);
     const textarea = byId("workPlannerNoteTextV354");
     if (!report || !textarea) return;
-    textarea.value = textarea.value.replace(/#([^\s#]*)$/, `#${report.ticket_no} `);
+    S.noteDraft = textarea.value.replace(/#([^\s#]*)$/, `#${report.ticket_no} `);
+    textarea.value = S.noteDraft;
     textarea.dataset.linkedReport = String(report.id);
     S.noteSuggestionQuery = null;
     textarea.focus();
@@ -15280,6 +15368,10 @@ boot();
   window.patchWorkPlanNoteV354 = patchNote;
   window.deleteWorkPlanNoteV354 = deleteNote;
   window.setWorkPlanNoteFilterV354 = value => { S.noteFilter = value; renderPanel(); };
+  window.setWorkPlanNoteModeV354 = setNoteMode;
+  window.insertWorkPlanMentionV354 = insertMentionToken;
+  window.workPlannerNoteKeydownV354 = noteKeydown;
+  window.settleWorkPlannerConfirmV354 = settleConfirmV354;
   window.handleWorkPlanNoteInputV354 = handleNoteInput;
   window.insertWorkPlanTicketRefV354 = insertTicketReference;
   window.openWorkPlanTicketV354 = openTicket;
@@ -15306,7 +15398,9 @@ boot();
       window.showTab = enhanced;
     }
     document.addEventListener("keydown", event => {
-      if (event.key === "Escape" && S.open) closePlanner();
+      if (event.key !== "Escape" || !S.open) return;
+      if (confirmResolverV354) settleConfirmV354(false);
+      else closePlanner();
     });
     setTimeout(refreshPlannerBadge, 1800);
   }
